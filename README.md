@@ -36,7 +36,7 @@ Start the dev server, then:
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to remove that pick; **Clear all** empties the list
-- **⚙** opens the settings panel; **–** collapses the toolbar
+- **⚙** opens the settings panel (HTML capture, clipboard); **–** collapses the toolbar
 - **Drag the ⠿ grip** to move the toolbar anywhere
 - **Esc** closes the panel if it is open, otherwise leaves picker mode
 
@@ -110,6 +110,24 @@ in between is the least identifying part. A `1000`-character budget on a long se
 `<section class="card-list"><article class="card"> … .json by the dev server.</p></section>`, and
 the result is never longer than the budget. The budget is clamped to 50–100000.
 
+#### Copy to clipboard
+
+**Copy on pick** mirrors each selection to the clipboard as you make it, so you can paste straight
+into a chat instead of pointing the agent at the file. Two scopes:
+
+| Scope | What lands on the clipboard |
+| --- | --- |
+| **Last pick** *(default)* | the pick you just made, as one JSON object |
+| **Whole list** | every pick so far, as a JSON array |
+
+Both use the same shape as `.quello/picks.json`, pretty-printed, so a pasted pick is something the
+agent already knows how to read. The toolbar flashes `Copied PICK 3` (or `Copied 3 picks`) to
+confirm, and turns red if the browser refused the write.
+
+It is **off by default**: the clipboard belongs to you, not to the tool. Copying needs the user
+activation that a real click provides, which is exactly when it runs — but a pick made
+programmatically (`window.__quello__` from the console) will report a failed copy.
+
 The panel follows the toolbar, flipping below it when there is no room above. Changing an HTML
 setting re-describes the picks you have already made, so the file on disk always matches
 what the panel shows. Choices are per-developer, not per-project: they live in `localStorage`, so a
@@ -168,7 +186,7 @@ stick. Pass `claudeMd: false` to opt out.
 ```bash
 pnpm install
 pnpm build          # build both packages
-pnpm test           # vitest unit tests (selectors, style, attributes, settings, drag)
+pnpm test           # vitest unit tests (selectors, style, attributes, settings, drag, clipboard)
 pnpm typecheck
 pnpm play:vue       # http://localhost:5175
 pnpm play:react     # http://localhost:5176

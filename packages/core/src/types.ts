@@ -45,6 +45,13 @@ export type QuelloHtmlMode =
   /** The complete `outerHTML`, however long. */
   | 'full'
 
+/** How much of the pick list a copy carries. */
+export type QuelloCopyScope =
+  /** Only the element just picked. */
+  | 'last'
+  /** Every pick made so far, as an array. */
+  | 'all'
+
 /** Where the toolbar sits, as px from the viewport's top-left. */
 export interface QuelloPoint {
   x: number
@@ -60,6 +67,10 @@ export interface QuelloSettings {
   toolbarPosition: QuelloPoint | null
   /** Toolbar collapsed to the compact puck. */
   toolbarCompact: boolean
+  /** Write to the clipboard every time an element is picked. Off by default. */
+  copyOnPick: boolean
+  /** What `copyOnPick` copies. */
+  copyScope: QuelloCopyScope
 }
 
 /** The page a pick was made on. */

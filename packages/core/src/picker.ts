@@ -1,4 +1,5 @@
 import { collectAttributes } from './attributes'
+import { copyText, describeCopy, formatPicks } from './clipboard'
 import { detectFramework } from './framework'
 import { Overlay } from './overlay'
 import { collapseText, domPath, stableClasses, uniqueSelector } from './selector'
@@ -154,6 +155,7 @@ export class QuelloPicker implements QuelloInstance {
     }
     this.entries.push({ element, pick: this.describe(element, this.nextId++) })
     this.sync()
+    void this.copyOnPick()
   }
 
   private describe(element: Element, id: number): QuelloPick {
@@ -179,6 +181,17 @@ export class QuelloPicker implements QuelloInstance {
   /** Re-read an existing pick from its element, keeping only its identity. */
   private redescribe(element: Element, pick: QuelloPick): QuelloPick {
     return { ...this.describe(element, pick.id), pickedAt: pick.pickedAt }
+  }
+
+  /** Mirror the pick to the clipboard, when the developer asked for that. */
+  private async copyOnPick(): Promise<void> {
+    const { copyOnPick, copyScope } = this.currentSettings
+    if (!copyOnPick) return
+    const picks = this.getPicks()
+    const text = formatPicks(picks, copyScope)
+    if (!text) return
+    const copied = await copyText(text)
+    this.overlay.flash(copied ? describeCopy(picks, copyScope) : 'Copy failed', !copied)
   }
 
   /** Push state to the overlay and persist it. */

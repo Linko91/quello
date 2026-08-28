@@ -1,4 +1,4 @@
-import type { QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
+import type { QuelloCopyScope, QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
 
 const STORAGE_KEY = 'quello.settings'
 
@@ -6,6 +6,7 @@ const STORAGE_KEY = 'quello.settings'
 const ELISION = ' … '
 
 const HTML_MODES: readonly QuelloHtmlMode[] = ['none', 'truncated', 'full']
+const COPY_SCOPES: readonly QuelloCopyScope[] = ['last', 'all']
 
 export const MIN_HTML_LIMIT = 50
 export const MAX_HTML_LIMIT = 100_000
@@ -15,6 +16,9 @@ export const DEFAULT_SETTINGS: QuelloSettings = {
   htmlLimit: 1000,
   toolbarPosition: null,
   toolbarCompact: false,
+  // Off by default: the clipboard belongs to the user, not to the tool.
+  copyOnPick: false,
+  copyScope: 'last',
 }
 
 /**
@@ -69,6 +73,10 @@ export function normalizeSettings(
     htmlLimit: clampLimit(raw.htmlLimit ?? fallback.htmlLimit, fallback.htmlLimit),
     toolbarPosition: normalizePoint(raw.toolbarPosition ?? fallback.toolbarPosition),
     toolbarCompact: Boolean(raw.toolbarCompact ?? fallback.toolbarCompact),
+    copyOnPick: Boolean(raw.copyOnPick ?? fallback.copyOnPick),
+    copyScope: COPY_SCOPES.includes(raw.copyScope as QuelloCopyScope)
+      ? (raw.copyScope as QuelloCopyScope)
+      : fallback.copyScope,
   }
 }
 

@@ -1,6 +1,6 @@
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 import { MAX_HTML_LIMIT, MIN_HTML_LIMIT } from './settings'
-import type { QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
+import type { QuelloCopyScope, QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
 
 /**
  * All quello UI lives inside a single shadow root so that the host page's
@@ -97,7 +97,7 @@ const STYLES = `
   color: #fff;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
-.toolbar[hidden], .puck[hidden], .panel[hidden], .tally[hidden] { display: none; }
+.toolbar[hidden], .puck[hidden], .panel[hidden], .tally[hidden], .toast[hidden] { display: none; }
 
 .grip {
   padding: 0 4px 0 6px;
@@ -188,6 +188,23 @@ button.icon[data-on="true"] { background: #37343f; }
   pointer-events: auto;
 }
 
+.toast {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #7c5cff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.toast[data-failed="true"] { background: #ef4444; }
+.dock[data-flip="true"] .toast { bottom: auto; top: calc(100% + 8px); }
+
 .panel h2 {
   margin: 0 0 10px;
   font-size: 11px;
@@ -196,6 +213,8 @@ button.icon[data-on="true"] { background: #37343f; }
   text-transform: uppercase;
   opacity: 0.5;
 }
+
+.limit + h2 { margin-top: 14px; }
 
 .field { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; }
 .field input { accent-color: #7c5cff; margin: 0; cursor: pointer; }
@@ -210,6 +229,10 @@ button.icon[data-on="true"] { background: #37343f; }
   opacity: 0.75;
 }
 .limit[data-disabled="true"] { opacity: 0.3; pointer-events: none; }
+
+.scopes { margin-left: 22px; }
+.scopes .field { padding: 3px 0; }
+.scopes[data-disabled="true"] { opacity: 0.3; pointer-events: none; }
 .limit input {
   width: 74px;
   padding: 4px 6px;
@@ -249,6 +272,7 @@ export class Overlay {
   private readonly toolbar: HTMLElement
   private readonly puck: HTMLElement
   private readonly tally: HTMLElement
+  private readonly toast: HTMLElement
   private readonly toggleButton: HTMLButtonElement
   private readonly clearButton: HTMLButtonElement
   private readonly settingsButton: HTMLButtonElement
@@ -258,6 +282,10 @@ export class Overlay {
   private readonly modeInputs = new Map<QuelloHtmlMode, HTMLInputElement>()
   private readonly limitRow: HTMLElement
   private readonly limitInput: HTMLInputElement
+  private readonly copyToggle: HTMLInputElement
+  private readonly scopeRow: HTMLElement
+  private readonly scopeInputs = new Map<QuelloCopyScope, HTMLInputElement>()
+  private toastTimer: number | null = null
 
   private readonly nodes = new Map<number, BadgeNodes>()
   private readonly teardown: Array<() => void> = []
@@ -323,13 +351,18 @@ export class Overlay {
     this.puck.append(this.tally)
     this.puck.hidden = true
 
+    this.toast = el('div', 'toast')
+    this.toast.hidden = true
+
     this.dock = el('div', 'dock')
-    this.dock.append(this.toolbar, this.puck)
+    this.dock.append(this.toolbar, this.puck, this.toast)
 
     const panel = this.buildPanel()
     this.panel = panel.root
     this.limitRow = panel.limitRow
     this.limitInput = panel.limitInput
+    this.copyToggle = panel.copyToggle
+    this.scopeRow = panel.scopeRow
 
     this.root.append(style, this.layer, this.panel, this.dock)
 
@@ -410,6 +443,7 @@ export class Overlay {
         bottom: 'auto',
       })
     }
+    this.dock.dataset.flip = String(this.dock.getBoundingClientRect().top < window.innerHeight / 3)
     if (this.panelOpen) this.positionPanel()
   }
 
@@ -434,7 +468,13 @@ export class Overlay {
 
   // --- settings panel ----------------------------------------------------
 
-  private buildPanel(): { root: HTMLElement; limitRow: HTMLElement; limitInput: HTMLInputElement } {
+  private buildPanel(): {
+    root: HTMLElement
+    limitRow: HTMLElement
+    limitInput: HTMLInputElement
+    copyToggle: HTMLInputElement
+    scopeRow: HTMLElement
+  } {
     const root = el('div', 'panel')
     root.hidden = true
 
@@ -486,7 +526,61 @@ export class Overlay {
     limitRow.append(limitLabel, unit)
     root.append(limitRow)
 
-    return { root, limitRow, limitInput }
+    const copyHeading = document.createElement('h2')
+    copyHeading.textContent = 'Copy to clipboard'
+    root.append(copyHeading)
+
+    const copyField = document.createElement('label')
+    copyField.className = 'field'
+    const copyToggle = document.createElement('input')
+    copyToggle.type = 'checkbox'
+    copyToggle.addEventListener('change', () => {
+      this.handlers.onSettingsChange({ copyOnPick: copyToggle.checked })
+    })
+    const copyText = document.createElement('span')
+    copyText.textContent = 'Copy on pick'
+    const copyNote = el('span', 'note')
+    copyNote.textContent = 'Every time you select an element'
+    copyText.append(copyNote)
+    copyField.append(copyToggle, copyText)
+    root.append(copyField)
+
+    const scopeRow = el('div', 'scopes')
+    const scopes: Array<{ scope: QuelloCopyScope; label: string }> = [
+      { scope: 'last', label: 'Last pick' },
+      { scope: 'all', label: 'Whole list' },
+    ]
+    for (const { scope, label } of scopes) {
+      const field = document.createElement('label')
+      field.className = 'field'
+      const input = document.createElement('input')
+      input.type = 'radio'
+      input.name = 'quello-copy-scope'
+      input.value = scope
+      input.addEventListener('change', () => {
+        if (input.checked) this.handlers.onSettingsChange({ copyScope: scope })
+      })
+      const text = document.createElement('span')
+      text.textContent = label
+      field.append(input, text)
+      scopeRow.append(field)
+      this.scopeInputs.set(scope, input)
+    }
+    root.append(scopeRow)
+
+    return { root, limitRow, limitInput, copyToggle, scopeRow }
+  }
+
+  /** Briefly confirm an action next to the toolbar. */
+  flash(message: string, failed = false): void {
+    this.toast.textContent = message
+    this.toast.dataset.failed = String(failed)
+    this.toast.hidden = false
+    if (this.toastTimer !== null) clearTimeout(this.toastTimer)
+    this.toastTimer = window.setTimeout(() => {
+      this.toast.hidden = true
+      this.toastTimer = null
+    }, 1400)
   }
 
   get panelOpen(): boolean {
@@ -504,6 +598,10 @@ export class Overlay {
     for (const [mode, input] of this.modeInputs) input.checked = mode === settings.htmlMode
     this.limitInput.value = String(settings.htmlLimit)
     this.limitRow.dataset.disabled = String(settings.htmlMode !== 'truncated')
+
+    this.copyToggle.checked = settings.copyOnPick
+    for (const [scope, input] of this.scopeInputs) input.checked = scope === settings.copyScope
+    this.scopeRow.dataset.disabled = String(!settings.copyOnPick)
 
     this.position = settings.toolbarPosition
     this.compact = settings.toolbarCompact
@@ -605,6 +703,7 @@ export class Overlay {
 
   destroy(): void {
     this.stopTracking()
+    if (this.toastTimer !== null) clearTimeout(this.toastTimer)
     for (const off of this.teardown) off()
     this.host.remove()
   }

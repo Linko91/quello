@@ -3,6 +3,7 @@ import type { QuelloInstance, QuelloOptions } from './types'
 
 export { QuelloPicker } from './picker'
 export { collectAttributes } from './attributes'
+export { copyText, describeCopy, formatPicks } from './clipboard'
 export { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 export { Overlay } from './overlay'
 export { collectStyle } from './style'
