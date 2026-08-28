@@ -1,0 +1,10 @@
+:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; padding: 32px; background: #0f0e13; color: #eee; }
+.page { max-width: 720px; margin: 0 auto; display: grid; gap: 24px; }
+h1 { margin: 0; font-size: 24px; }
+.hint { opacity: 0.6; font-size: 14px; line-height: 1.6; }
+.card-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.card { padding: 16px; border: 1px solid #2a2833; border-radius: 10px; background: #17161d; }
+.card h3 { margin: 0 0 6px; font-size: 15px; }
+.card p { margin: 0; font-size: 13px; opacity: 0.7; }
+.cta { padding: 10px 16px; border: 0; border-radius: 8px; background: #7c5cff; color: #fff; font-weight: 600; cursor: pointer; }
