@@ -681,8 +681,10 @@ export class Overlay {
       node.badge.style.display = visible ? '' : 'none'
       if (!visible) continue
       place(node.marker, rect.left, rect.top, rect.width, rect.height)
-      node.badge.style.left = `${Math.max(2, rect.left - 8)}px`
-      node.badge.style.top = `${Math.max(2, rect.top - 8)}px`
+      // Deliberately unclamped: a badge pinned to the viewport edge would keep
+      // pointing at an element that has already scrolled away.
+      node.badge.style.left = `${rect.left - 8}px`
+      node.badge.style.top = `${rect.top - 8}px`
     }
   }
 

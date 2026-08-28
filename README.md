@@ -16,7 +16,18 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
 
 Plus two manual test apps: [`playgrounds/vue`](playgrounds/vue) and
-[`playgrounds/react`](playgrounds/react).
+[`playgrounds/react`](playgrounds/react). They mirror each other — same three routes, same content,
+one built on vue-router and the other on react-router:
+
+| Route | What it is for |
+| --- | --- |
+| `/` **Overview** | hero, feature grid, and a sticky rail beside long sections |
+| `/gallery` **Gallery** | 28 near-identical tiles, plus filters that unmount them |
+| `/article` **Article** | long-form text, a table, and a form with inputs and a select |
+
+Every page is taller than the viewport, the nav is sticky, and navigation is client-side, so the
+three things worth exercising by hand — scrolling, sticky positioning and route changes — are all
+reachable in a few clicks.
 
 ## Usage
 
@@ -92,6 +103,18 @@ Position and collapsed state are remembered alongside the other settings. A drag
 clamped inside the viewport — on drop, on window resize and on load — and the clamped value is what
 gets stored, so what is persisted is always what you saw. Moving or collapsing the toolbar never
 rewrites `picks.json`.
+
+### Picks across scrolling and navigation
+
+Badges are re-anchored on every animation frame, so they track their element through scrolling and
+through sticky repositioning, and they scroll off the top of the screen with it rather than piling
+up at the edge.
+
+A client-side route change is a different matter. The picks survive it — they are still in the list
+and still in `picks.json`, each remembering the `page` it was made on — but the elements they point
+at are unmounted, so their badges hide. **They do not come back when you return to the route**: the
+picker holds the original DOM node, and the framework mounts a fresh one. A full reload does resolve
+this, because the runtime starts over and re-resolves each stored selector.
 
 ### Settings panel
 
@@ -193,7 +216,8 @@ pnpm play:react     # http://localhost:5176
 ```
 
 The playgrounds consume the packages' built `dist/`, so run `pnpm build` (or `pnpm dev` for watch
-mode) before starting one.
+mode) before starting one. If a port is already taken Vite silently moves to the next free one, so
+check the URL it prints rather than assuming 5175/5176.
 
 ## Design notes
 

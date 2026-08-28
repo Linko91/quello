@@ -1,19 +1,36 @@
-import { useState } from 'react'
-import { CardList } from './components/CardList'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { SiteNav } from './components/SiteNav'
+import { OverviewPage } from './pages/OverviewPage'
+import { GalleryPage } from './pages/GalleryPage'
+import { ArticlePage } from './pages/ArticlePage'
+
+const TITLES: Record<string, string> = {
+  '/': 'Overview',
+  '/gallery': 'Gallery',
+  '/article': 'Article',
+}
 
 export function App() {
-  const [clicks, setClicks] = useState(0)
+  const { pathname } = useLocation()
+
+  // The pick's `page.title` should differ per route, so keep the document title in step.
+  useEffect(() => {
+    document.title = `${TITLES[pathname] ?? 'Not found'} · quello React playground`
+    window.scrollTo(0, 0)
+  }, [pathname])
+
   return (
-    <main className="page">
-      <h1>quello · React playground</h1>
-      <p className="hint">
-        Hit <strong>Alt+Q</strong> (or the button, bottom right) to start picking, then click any
-        element. Picks land in <code>.quello/picks.json</code>.
-      </p>
-      <CardList />
-      <button className="cta" onClick={() => setClicks((n) => n + 1)}>
-        Clicked {clicks} times
-      </button>
-    </main>
+    <>
+      <SiteNav />
+      <Routes>
+        <Route path="/" element={<OverviewPage />} />
+        <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/article" element={<ArticlePage />} />
+      </Routes>
+      <footer className="site-footer">
+        quello · React playground — three routes, all of them longer than the viewport.
+      </footer>
+    </>
   )
 }
