@@ -2,8 +2,20 @@ import { QuelloPicker } from './picker'
 import type { QuelloInstance, QuelloOptions } from './types'
 
 export { QuelloPicker } from './picker'
+export { collectAttributes } from './attributes'
+export { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 export { Overlay } from './overlay'
 export { collectStyle } from './style'
+export {
+  collectHtml,
+  DEFAULT_SETTINGS,
+  loadSettings,
+  MAX_HTML_LIMIT,
+  MIN_HTML_LIMIT,
+  normalizeSettings,
+  saveSettings,
+  truncateMiddle,
+} from './settings'
 export { PicksTransport } from './transport'
 export { detectFramework, detectReact, detectVue } from './framework'
 export {

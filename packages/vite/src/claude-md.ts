@@ -14,7 +14,8 @@ When the user references \`PICK <n>\` (or says "quello"), read \`${picksFile}\` 
 entry whose \`id\` is \`<n>\` to locate the source element/component. Each entry carries:
 
 - \`selector\` / \`domPath\` — where the element sits in the DOM
-- \`tag\`, \`classes\`, \`text\` — what it is
+- \`tag\`, \`classes\`, \`attributes\`, \`text\` — what it is
+- \`html\` — its markup, when the developer enabled it (may be elided in the middle with \` … \`)
 - \`rect\` / \`style\` — its computed box and presentation (font, color, spacing, radius)
 - \`framework\` — component name and, when available, the source \`file\` and \`line\`
 - \`page\` — the URL and title of the page the pick was made on

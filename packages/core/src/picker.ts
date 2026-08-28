@@ -1,9 +1,17 @@
+import { collectAttributes } from './attributes'
 import { detectFramework } from './framework'
 import { Overlay } from './overlay'
 import { collapseText, domPath, stableClasses, uniqueSelector } from './selector'
+import { collectHtml, DEFAULT_SETTINGS, loadSettings, normalizeSettings, saveSettings } from './settings'
 import { collectStyle } from './style'
 import { PicksTransport } from './transport'
-import type { QuelloInstance, QuelloOptions, QuelloPick, QuelloRect } from './types'
+import type {
+  QuelloInstance,
+  QuelloOptions,
+  QuelloPick,
+  QuelloRect,
+  QuelloSettings,
+} from './types'
 
 const DEFAULT_ENDPOINT = '/__quello/picks'
 const DEFAULT_TEXT_LIMIT = 120
@@ -34,6 +42,7 @@ export class QuelloPicker implements QuelloInstance {
   private readonly shortcutKey: string
   private readonly entries: Entry[] = []
   private isEnabled = false
+  private currentSettings: QuelloSettings
   private nextId = 1
   private hovered: Element | null = null
 
@@ -43,13 +52,21 @@ export class QuelloPicker implements QuelloInstance {
     this.transport = new PicksTransport(
       options.endpoint === undefined ? DEFAULT_ENDPOINT : options.endpoint,
     )
+    this.currentSettings = loadSettings(
+      normalizeSettings(
+        { htmlMode: options.htmlMode, htmlLimit: options.htmlLimit },
+        DEFAULT_SETTINGS,
+      ),
+    )
     this.overlay = new Overlay({
       onToggle: () => this.toggle(),
       onClear: () => this.clear(),
       onRemovePick: (id) => this.remove(id),
+      onSettingsChange: (patch) => this.setSettings(patch),
     })
 
     this.overlay.mount()
+    this.overlay.setSettings(this.currentSettings)
     window.addEventListener('keydown', this.onKeyDown, true)
     void this.restore()
     if (options.autoEnable) this.enable()
@@ -85,6 +102,30 @@ export class QuelloPicker implements QuelloInstance {
     return this.entries.map((entry) => entry.pick)
   }
 
+  getSettings(): QuelloSettings {
+    return { ...this.currentSettings }
+  }
+
+  /** Re-describes existing picks, so a change in the panel is reflected immediately. */
+  setSettings(patch: Partial<QuelloSettings>): void {
+    const previous = this.currentSettings
+    this.currentSettings = normalizeSettings({ ...previous, ...patch })
+    saveSettings(this.currentSettings)
+    this.overlay.setSettings(this.currentSettings)
+
+    // Moving or collapsing the toolbar changes no pick, and re-writing picks.json
+    // on every frame of a drag would be nothing but noise.
+    const affectsPicks =
+      previous.htmlMode !== this.currentSettings.htmlMode ||
+      previous.htmlLimit !== this.currentSettings.htmlLimit
+    if (!affectsPicks) return
+
+    for (const entry of this.entries) {
+      entry.pick = this.redescribe(entry.element, entry.pick)
+    }
+    this.sync()
+  }
+
   clear(): void {
     this.entries.length = 0
     this.nextId = 1
@@ -116,6 +157,7 @@ export class QuelloPicker implements QuelloInstance {
   }
 
   private describe(element: Element, id: number): QuelloPick {
+    const html = collectHtml(element, this.currentSettings)
     return {
       id,
       label: `PICK ${id}`,
@@ -123,13 +165,20 @@ export class QuelloPicker implements QuelloInstance {
       domPath: domPath(element),
       tag: element.tagName.toLowerCase(),
       classes: stableClasses(element),
+      attributes: collectAttributes(element),
       text: collapseText(element.textContent, this.textLimit),
+      ...(html === undefined ? {} : { html }),
       rect: toRect(element.getBoundingClientRect()),
       style: collectStyle(element),
       framework: detectFramework(element),
       page: { url: location.href, title: document.title },
       pickedAt: new Date().toISOString(),
     }
+  }
+
+  /** Re-read an existing pick from its element, keeping only its identity. */
+  private redescribe(element: Element, pick: QuelloPick): QuelloPick {
+    return { ...this.describe(element, pick.id), pickedAt: pick.pickedAt }
   }
 
   /** Push state to the overlay and persist it. */
@@ -145,16 +194,9 @@ export class QuelloPicker implements QuelloInstance {
       if (pick.page?.url !== location.href) continue
       const element = document.querySelector(pick.selector)
       if (!element || this.overlay.host.contains(element)) continue
-      // `rect` and `style` describe the element as it is now, not as it was
-      // before the reload, so they are re-read rather than trusted from disk.
-      this.entries.push({
-        element,
-        pick: {
-          ...pick,
-          rect: toRect(element.getBoundingClientRect()),
-          style: collectStyle(element),
-        },
-      })
+      // Everything but the identity of the pick is re-read: `rect`, `style` and
+      // `html` describe the element as it is now, not as it was before the reload.
+      this.entries.push({ element, pick: this.redescribe(element, pick) })
       this.nextId = Math.max(this.nextId, pick.id + 1)
     }
     if (this.entries.length > 0) this.sync()
@@ -201,6 +243,8 @@ export class QuelloPicker implements QuelloInstance {
       this.toggle()
       return
     }
-    if (event.key === 'Escape' && this.isEnabled) this.disable()
+    if (event.key !== 'Escape') return
+    if (this.overlay.panelOpen) this.overlay.togglePanel(false)
+    else if (this.isEnabled) this.disable()
   }
 }

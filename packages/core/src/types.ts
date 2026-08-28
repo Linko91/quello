@@ -36,6 +36,32 @@ export interface QuelloStyle {
   borderRadius: string
 }
 
+/** How much of an element's markup a pick should carry. */
+export type QuelloHtmlMode =
+  /** No `html` field at all. */
+  | 'none'
+  /** The middle of `outerHTML` is elided to fit `htmlLimit` characters. */
+  | 'truncated'
+  /** The complete `outerHTML`, however long. */
+  | 'full'
+
+/** Where the toolbar sits, as px from the viewport's top-left. */
+export interface QuelloPoint {
+  x: number
+  y: number
+}
+
+/** Per-developer preferences, kept in localStorage rather than in the project. */
+export interface QuelloSettings {
+  htmlMode: QuelloHtmlMode
+  /** Maximum length of `html` when `htmlMode` is `truncated`. */
+  htmlLimit: number
+  /** Dragged position of the toolbar. `null` parks it in the bottom-right corner. */
+  toolbarPosition: QuelloPoint | null
+  /** Toolbar collapsed to the compact puck. */
+  toolbarCompact: boolean
+}
+
 /** The page a pick was made on. */
 export interface QuelloPage {
   url: string
@@ -52,8 +78,12 @@ export interface QuelloPick {
   domPath: string
   tag: string
   classes: string[]
+  /** Every attribute as written in the markup, values truncated. */
+  attributes: Record<string, string>
   /** `textContent`, collapsed and truncated. */
   text: string
+  /** `outerHTML`, subject to the `htmlMode` setting. Absent when that setting is `none`. */
+  html?: string
   rect: QuelloRect
   style: QuelloStyle
   framework: FrameworkInfo | null
@@ -78,6 +108,10 @@ export interface QuelloOptions {
   textLimit?: number
   /** Start with picker mode already enabled. */
   autoEnable?: boolean
+  /** Initial value for the `htmlMode` setting, used until the user changes it in the panel. */
+  htmlMode?: QuelloHtmlMode
+  /** Initial value for the `htmlLimit` setting. */
+  htmlLimit?: number
 }
 
 export interface QuelloInstance {
@@ -86,6 +120,9 @@ export interface QuelloInstance {
   toggle(): void
   readonly enabled: boolean
   getPicks(): QuelloPick[]
+  getSettings(): QuelloSettings
+  /** Merge a partial change; picks already made are re-described with the new settings. */
+  setSettings(patch: Partial<QuelloSettings>): void
   clear(): void
   destroy(): void
 }

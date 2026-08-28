@@ -5,7 +5,9 @@ import type { Plugin } from 'vite'
 import { ensureClaudeMd } from './claude-md'
 import { DEFAULT_PICKS_FILE, normalize, readPicks, resolvePicksPath, writePicks } from './store'
 
-export type { QuelloPick, QuelloPicksFile } from '@quello/core'
+import type { QuelloHtmlMode } from '@quello/core'
+
+export type { QuelloHtmlMode, QuelloPick, QuelloPicksFile, QuelloSettings } from '@quello/core'
 
 const CLIENT_ROUTE = '/__quello/client.js'
 const PICKS_ROUTE = '/__quello/picks'
@@ -22,6 +24,13 @@ export interface QuelloPluginOptions {
   textLimit?: number
   /** Append the quello section to CLAUDE.md on first run. Defaults to `true`. */
   claudeMd?: boolean
+  /**
+   * Initial HTML capture mode. Defaults to `truncated`. Only a starting point:
+   * once a developer picks a mode in the settings panel, their choice wins.
+   */
+  htmlMode?: QuelloHtmlMode
+  /** Initial character budget for `htmlMode: 'truncated'`. Defaults to `1000`. */
+  htmlLimit?: number
 }
 
 const requireFrom = createRequire(import.meta.url)
@@ -68,6 +77,8 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     shortcutKey = 'q',
     textLimit = 120,
     claudeMd = true,
+    htmlMode = 'truncated',
+    htmlLimit = 1000,
   } = options
 
   let picksPath = ''
@@ -144,6 +155,8 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
             'data-quello-endpoint': PICKS_ROUTE,
             'data-quello-shortcut': shortcutKey,
             'data-quello-text-limit': String(textLimit),
+            'data-quello-html-mode': htmlMode,
+            'data-quello-html-limit': String(htmlLimit),
           },
         },
       ]

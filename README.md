@@ -36,7 +36,9 @@ Start the dev server, then:
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to remove that pick; **Clear all** empties the list
-- **Esc** leaves picker mode
+- **⚙** opens the settings panel; **–** collapses the toolbar
+- **Drag the ⠿ grip** to move the toolbar anywhere
+- **Esc** closes the panel if it is open, otherwise leaves picker mode
 
 Picks survive a page reload: on load the runtime re-resolves each stored selector for the current URL.
 
@@ -50,7 +52,9 @@ Picks survive a page reload: on load the runtime re-resolves each stored selecto
   "domPath": "html > body > div#app > main.page > section.card-list > article.card[2] > p",
   "tag": "p",
   "classes": [],
+  "attributes": {},
   "text": "Vue component name and source file.",
+  "html": "<p>Vue component name and source file.</p>",
   "rect": { "x": 861, "y": 222, "width": 198, "height": 32, "...": "..." },
   "style": {
     "display": "block",
@@ -76,6 +80,48 @@ Picks survive a page reload: on load the runtime re-resolves each stored selecto
 }
 ```
 
+### Moving and collapsing the toolbar
+
+The toolbar parks itself in the bottom-right corner and can be dragged anywhere by its **⠿** grip.
+The **–** button collapses it to a single puck showing `Q`, with a badge for the pick count and the
+accent colour when picker mode is on; the puck is itself the drag handle, and a click that did not
+travel expands the toolbar again. Collapsing keeps the dock's right edge in place, so the puck
+appears where the controls just were rather than jumping.
+
+Position and collapsed state are remembered alongside the other settings. A dragged toolbar is
+clamped inside the viewport — on drop, on window resize and on load — and the clamped value is what
+gets stored, so what is persisted is always what you saw. Moving or collapsing the toolbar never
+rewrites `picks.json`.
+
+### Settings panel
+
+The **⚙** button in the toolbar opens a small panel that controls how much of an element's markup
+each pick carries:
+
+| Mode | `html` field |
+| --- | --- |
+| **None** | absent entirely |
+| **Truncated** *(default)* | `outerHTML` cut to a character budget, middle elided |
+| **Full** | the complete `outerHTML`, however long |
+
+Truncation removes the **middle**, not the tail: markup carries its identity at both ends — the
+opening tag with its attributes, the closing tags that show where the element sits — while the bulk
+in between is the least identifying part. A `1000`-character budget on a long section gives you
+`<section class="card-list"><article class="card"> … .json by the dev server.</p></section>`, and
+the result is never longer than the budget. The budget is clamped to 50–100000.
+
+The panel follows the toolbar, flipping below it when there is no room above. Changing an HTML
+setting re-describes the picks you have already made, so the file on disk always matches
+what the panel shows. Choices are per-developer, not per-project: they live in `localStorage`, so a
+teammate cloning the repo is unaffected. The plugin's `htmlMode` / `htmlLimit` options only set the
+starting point for someone who has not touched the panel yet.
+
+`attributes` is every attribute as written in the markup, in document order, with values
+whitespace-collapsed and truncated at 160 characters. Nothing is filtered out — `class` and `id`
+appear there too, even though `classes` already holds the cleaned-up list — because an attribute
+dump that silently omits attributes is worse than a slightly redundant one. A boolean attribute
+reads as an empty string, so a Vue root picks up `{ "id": "app", "data-v-app": "" }`.
+
 `style` is read from `getComputedStyle`, so it is what the element actually renders as rather than
 what a stylesheet asked for — enough to act on "make this bigger" or "why is this grey?" without
 anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
@@ -94,6 +140,8 @@ quello({
   shortcutKey: 'q',                 // combined with Alt
   textLimit: 120,                   // characters of element text kept per pick
   claudeMd: true,                   // append the agent instructions to CLAUDE.md on first run
+  htmlMode: 'truncated',            // initial setting: 'none' | 'truncated' | 'full'
+  htmlLimit: 1000,                  // initial character budget for 'truncated'
 })
 ```
 
@@ -120,7 +168,7 @@ stick. Pass `claudeMd: false` to opt out.
 ```bash
 pnpm install
 pnpm build          # build both packages
-pnpm test           # vitest unit tests (selector generation, computed style)
+pnpm test           # vitest unit tests (selectors, style, attributes, settings, drag)
 pnpm typecheck
 pnpm play:vue       # http://localhost:5175
 pnpm play:react     # http://localhost:5176

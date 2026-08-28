@@ -12,6 +12,8 @@ function readOptions(): QuelloOptions {
   if (data.quelloEndpoint) options.endpoint = data.quelloEndpoint
   if (data.quelloShortcut) options.shortcutKey = data.quelloShortcut
   if (data.quelloTextLimit) options.textLimit = Number(data.quelloTextLimit)
+  if (data.quelloHtmlMode) options.htmlMode = data.quelloHtmlMode as QuelloOptions['htmlMode']
+  if (data.quelloHtmlLimit) options.htmlLimit = Number(data.quelloHtmlLimit)
   return options
 }
 
