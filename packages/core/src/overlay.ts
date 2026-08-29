@@ -634,8 +634,11 @@ export class Overlay {
     this.tip.hidden = true
   }
 
-  /** Re-render badges for the given picks and keep them anchored to their elements. */
-  setPicks(targets: BadgeTarget[]): void {
+  /**
+   * Re-render badges for the picks that are on screen. `total` counts every pick,
+   * including those belonging to other pages, which is what the toolbar reports.
+   */
+  setPicks(targets: BadgeTarget[], total = targets.length): void {
     this.targets = targets
     const seen = new Set(targets.map((t) => t.id))
     for (const [id, node] of this.nodes) {
@@ -660,11 +663,11 @@ export class Overlay {
       this.nodes.set(target.id, { badge, marker })
     }
 
-    this.count.hidden = targets.length === 0
-    this.count.textContent = targets.length === 1 ? '1 pick' : `${targets.length} picks`
-    this.clearButton.hidden = targets.length === 0
-    this.tally.hidden = targets.length === 0
-    this.tally.textContent = String(targets.length)
+    this.count.hidden = total === 0
+    this.count.textContent = total === 1 ? '1 pick' : `${total} picks`
+    this.clearButton.hidden = total === 0
+    this.tally.hidden = total === 0
+    this.tally.textContent = String(total)
 
     this.reposition()
     if (targets.length > 0) this.startTracking()

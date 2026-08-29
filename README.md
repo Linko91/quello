@@ -110,11 +110,27 @@ Badges are re-anchored on every animation frame, so they track their element thr
 through sticky repositioning, and they scroll off the top of the screen with it rather than piling
 up at the edge.
 
-A client-side route change is a different matter. The picks survive it — they are still in the list
-and still in `picks.json`, each remembering the `page` it was made on — but the elements they point
-at are unmounted, so their badges hide. **They do not come back when you return to the route**: the
-picker holds the original DOM node, and the framework mounts a fresh one. A full reload does resolve
-this, because the runtime starts over and re-resolves each stored selector.
+Picks outlive route changes. Each one remembers the `page` it was made on, and the runtime watches
+`location.href` — through `popstate`, `hashchange` and a 250ms poll, since a client-side router
+changes the URL without firing anything you can subscribe to. When the URL changes, picks belonging
+to the page now on screen are re-resolved from their selectors and get their badges back, while the
+rest are detached but kept.
+
+So the list is global and the badges are local:
+
+| | Toolbar count | Badges |
+| --- | --- | --- |
+| Two picks on `/`, then navigate to `/gallery` | `2 picks` | none |
+| Pick something in `/gallery` | `3 picks` | `3` |
+| Back to `/` | `3 picks` | `1`, `2` |
+| Reload, then to `/gallery` | `3 picks` | `3` |
+
+Re-resolving is retried a few times over the 400ms after the URL changes, because routers update the
+URL before they render. A re-attached pick is re-described against the element it found, so its
+`rect`, `style` and `html` describe what is on screen now.
+
+The hash is deliberately not part of a page's identity: jumping to `#section` is not landing on
+another page, so in-page anchors leave badges alone.
 
 ### Settings panel
 
