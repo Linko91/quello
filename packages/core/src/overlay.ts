@@ -1,3 +1,4 @@
+import { logoSvg, markSvg } from './brand'
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 import { PicksList, PICKS_LIST_STYLES } from './picks-list'
 import type { PickRow } from './picks-list'
@@ -206,6 +207,13 @@ button {
   cursor: pointer;
 }
 button:hover { background: #37343f; }
+button.primary {
+  display: inline-flex;
+  align-items: center;
+  /* Asymmetric on purpose: the wordmark's box includes the q's descender, so
+     centring it geometrically leaves the letters sitting high. */
+  padding: 9px 11px 5px;
+}
 button.primary[data-on="true"] { background: #7c5cff; }
 button.primary[data-on="true"]:hover { background: #6b4cf0; }
 button.icon { padding: 7px 10px; font-size: 13px; line-height: 1; }
@@ -234,8 +242,6 @@ button.count[hidden] { display: none; }
   border: 1px solid #2a2833;
   background: #17161d;
   color: #fff;
-  font-size: 14px;
-  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,6 +251,8 @@ button.count[hidden] { display: none; }
   user-select: none;
 }
 .puck:active { cursor: grabbing; }
+/* The descender sits below the optical centre, so the mark is nudged up. */
+.puck .mark { display: flex; margin-top: -1px; }
 .puck[data-on="true"] { background: #7c5cff; border-color: #7c5cff; }
 
 .tally {
@@ -419,7 +427,9 @@ export class Overlay {
     grip.textContent = '⠿'
     grip.title = 'Drag to move'
 
-    this.toggleButton = button('primary', 'quello', 'Toggle element picker (Alt+Q)')
+    this.toggleButton = button('primary', '', 'Start picking (Alt+Q)')
+    this.toggleButton.setAttribute('aria-label', 'Toggle element picker')
+    this.toggleButton.innerHTML = logoSvg(17)
     this.toggleButton.dataset.on = 'false'
     this.toggleButton.addEventListener('click', () => this.handlers.onToggle())
 
@@ -461,7 +471,9 @@ export class Overlay {
     this.puck = el('div', 'puck')
     this.puck.dataset.on = 'false'
     this.puck.title = 'quello — click to expand, drag to move'
-    this.puck.append(document.createTextNode('Q'))
+    const mark = el('span', 'mark')
+    mark.innerHTML = markSvg(21)
+    this.puck.append(mark)
     this.tally = el('span', 'tally')
     this.tally.hidden = true
     this.puck.append(this.tally)
@@ -885,7 +897,7 @@ export class Overlay {
 
   setEnabled(enabled: boolean): void {
     this.toggleButton.dataset.on = String(enabled)
-    this.toggleButton.textContent = enabled ? 'picking…' : 'quello'
+    this.toggleButton.title = enabled ? 'Stop picking (Alt+Q)' : 'Start picking (Alt+Q)'
     this.puck.dataset.on = String(enabled)
     if (!enabled) this.clearHover()
   }

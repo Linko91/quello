@@ -1,3 +1,5 @@
+<img src="assets/quello-mark.svg" alt="" width="52" align="left" hspace="14" vspace="4">
+
 # quello
 
 Point at any element in your browser and tell your AI agent: "quello". Visual element picker for
@@ -44,7 +46,8 @@ export default defineConfig({
 
 Start the dev server, then:
 
-- **Alt+Q** (or the `quello` button, bottom right) toggles picker mode
+- **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; the button
+  turns accent-purple while picking
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to write a note for the agent, or remove that pick from there
@@ -98,8 +101,8 @@ Picks survive a page reload: on load the runtime re-resolves each stored selecto
 ### Moving and collapsing the toolbar
 
 The toolbar parks itself in the bottom-right corner and can be dragged anywhere by its **⠿** grip.
-The **–** button collapses it to a single puck showing `Q`, with a badge for the pick count and the
-accent colour when picker mode is on; the puck is itself the drag handle, and a click that did not
+The **–** button collapses it to a single puck showing the mark, with a badge for the pick count and
+the accent colour when picker mode is on; the puck is itself the drag handle, and a click that did not
 travel expands the toolbar again. Collapsing keeps the dock's right edge in place, so the puck
 appears where the controls just were rather than jumping.
 
@@ -295,6 +298,36 @@ check the URL it prints rather than assuming 5175/5176.
 - **Stable selectors.** Selector generation prefers an id, then a tag plus non-generated classes,
   and only walks up ancestors until the selector is unique. Hashed and framework-generated classes
   (`svelte-1a2b3c`, `css-1x2y3z`, `Button_root_a1b2c3`) are skipped so selectors survive rebuilds.
+
+## Brand
+
+| File | Use |
+| --- | --- |
+| [`assets/quello-logo.svg`](assets/quello-logo.svg) | the wordmark — headers, the docs site, anywhere there is room to read it |
+| [`assets/quello-mark.svg`](assets/quello-mark.svg) | the mark alone — favicons, avatars, the toolbar's collapsed puck |
+
+The toolbar uses both: the wordmark on the toggle button when expanded, the mark alone once
+collapsed.
+
+<img src="assets/quello-logo.svg" alt="quello" width="200">
+
+The mark is a lowercase **q** whose bowl is the picker's target ring, with the picked element as the
+dot at its centre. The descender is load-bearing: without it the bowl and stem read as the lens and
+handle of a magnifier, which would say *search* rather than *this one*.
+
+The wordmark is built on the mark's grid — one stroke weight (2.6 units), one x-height (the bowl's
+diameter), round caps and joins throughout — so "uello" belongs to the same alphabet as the q rather
+than being a typeface set next to it.
+
+- **Colour** — `#7c5cff` on light or dark. Both files ship in that purple; for a single-colour
+  context, recolour every stroke and fill at once.
+- **Minimum size** — the mark holds down to 16px; the wordmark down to 14px tall. Below that use the
+  mark alone.
+- **Clear space** — leave the bowl's radius (a quarter of the height) on every side.
+
+The runtime carries its own copies as `markSvg(height)` and `logoSvg(height)` in
+[`packages/core/src/brand.ts`](packages/core/src/brand.ts), drawn in `currentColor` so they inherit
+whatever they sit on.
 
 ## Ideas, not built yet
 

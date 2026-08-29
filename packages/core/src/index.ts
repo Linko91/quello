@@ -3,6 +3,7 @@ import type { QuelloInstance, QuelloOptions } from './types'
 
 export { pageKey, QuelloPicker, withNote } from './picker'
 export { collectAttributes } from './attributes'
+export { logoSvg, markSvg } from './brand'
 export { copyText, describeCopy, formatPicks } from './clipboard'
 export { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 export { Overlay } from './overlay'
