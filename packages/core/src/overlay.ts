@@ -40,7 +40,8 @@ const STYLES = `${PICKS_LIST_STYLES}
   border: 2px solid #7c5cff;
   background: rgba(124, 92, 255, 0.12);
   border-radius: 3px;
-  transition: all 60ms linear;
+  /* No transition: the outline is re-placed every frame to follow scrolling, and
+     an easing would leave it trailing the element it is supposed to be marking. */
   pointer-events: none;
 }
 
@@ -374,6 +375,8 @@ export class Overlay {
   private readonly picksList: PicksList
   private rows: PickRow[] = []
   private previewFor: number | null = null
+  private hoverElement: Element | null = null
+  private hoverLabel = ''
 
   private readonly panel: HTMLElement
   private readonly modeInputs = new Map<QuelloHtmlMode, HTMLInputElement>()
@@ -888,12 +891,25 @@ export class Overlay {
   }
 
   setHover(element: Element, label: string): void {
+    this.hoverElement = element
+    this.hoverLabel = label
+    this.placeHover()
+    this.updateTracking()
+  }
+
+  private placeHover(): void {
+    const element = this.hoverElement
+    if (!element) return
+    if (!element.isConnected) {
+      this.clearHover()
+      return
+    }
     const rect = element.getBoundingClientRect()
     this.highlight.hidden = false
     place(this.highlight, rect.left, rect.top, rect.width, rect.height)
 
     this.tip.hidden = false
-    this.tip.textContent = label
+    this.tip.textContent = this.hoverLabel
     const above = rect.top > 22
     this.tip.style.left = `${Math.max(2, rect.left)}px`
     this.tip.style.top = `${above ? rect.top - 21 : rect.bottom + 3}px`
@@ -910,8 +926,10 @@ export class Overlay {
   }
 
   clearHover(): void {
+    this.hoverElement = null
     this.highlight.hidden = true
     this.tip.hidden = true
+    this.updateTracking()
   }
 
   /**
@@ -967,8 +985,7 @@ export class Overlay {
     this.tally.textContent = String(total)
 
     this.reposition()
-    if (targets.length > 0) this.startTracking()
-    else this.stopTracking()
+    this.updateTracking()
   }
 
   private reposition(): void {
@@ -986,7 +1003,14 @@ export class Overlay {
       node.badge.style.left = `${rect.left - 8}px`
       node.badge.style.top = `${rect.top - 8}px`
     }
+    this.placeHover()
     this.positionNote()
+  }
+
+  /** The frame loop is only worth running while something needs following. */
+  private updateTracking(): void {
+    if (this.targets.length > 0 || this.hoverElement) this.startTracking()
+    else this.stopTracking()
   }
 
   private startTracking(): void {
