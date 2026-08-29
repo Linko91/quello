@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS: QuelloSettings = {
   // Off by default: the clipboard belongs to the user, not to the tool.
   copyOnPick: false,
   copyScope: 'last',
+  noteOnPick: false,
 }
 
 /**
@@ -77,6 +78,7 @@ export function normalizeSettings(
     copyScope: COPY_SCOPES.includes(raw.copyScope as QuelloCopyScope)
       ? (raw.copyScope as QuelloCopyScope)
       : fallback.copyScope,
+    noteOnPick: Boolean(raw.noteOnPick ?? fallback.noteOnPick),
   }
 }
 

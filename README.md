@@ -46,7 +46,8 @@ Start the dev server, then:
 - **Alt+Q** (or the `quello` button, bottom right) toggles picker mode
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
-- **Click a badge** to remove that pick; **Clear all** empties the list
+- **Click a badge** to write a note for the agent, or remove that pick from there
+- **Clear all** empties the list
 - **⚙** opens the settings panel (HTML capture, clipboard); **–** collapses the toolbar
 - **Drag the ⠿ grip** to move the toolbar anywhere
 - **Esc** closes the panel if it is open, otherwise leaves picker mode
@@ -59,6 +60,7 @@ Picks survive a page reload: on load the runtime re-resolves each stored selecto
 {
   "id": 2,
   "label": "PICK 2",
+  "note": "make this full width on mobile",
   "selector": "article.card:nth-of-type(2) > p",
   "domPath": "html > body > div#app > main.page > section.card-list > article.card[2] > p",
   "tag": "p",
@@ -149,6 +151,24 @@ in between is the least identifying part. A `1000`-character budget on a long se
 `<section class="card-list"><article class="card"> … .json by the dev server.</p></section>`, and
 the result is never longer than the budget. The budget is clamped to 50–100000.
 
+#### Agent notes
+
+A pick can carry a `note`: free text you write for the agent, sitting right after `label` near the
+top of the entry. Click a badge to open the editor — `Enter` saves, `Shift+Enter` adds a line,
+`Esc` closes keeping what you typed. An empty note removes the field entirely, so `note` is only
+ever there when you wrote one. A badge with a note is ringed and dotted in amber.
+
+Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
+It is off by default, so picking stays a single click when you have nothing to say.
+
+This is what makes *"resolve the picks"* work. The section written into `CLAUDE.md` tells the agent
+that when you ask it to resolve the picks, it should read `.quello/picks.json` and carry out each
+entry's `note` against the element that entry points at, in `id` order, treating entries without a
+note as bookmarks. So you can annotate five elements in the browser and then type four words.
+
+Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
+its note intact.
+
 #### Copy to clipboard
 
 **Copy on pick** mirrors each selection to the clipboard as you make it, so you can paste straight
@@ -225,7 +245,7 @@ stick. Pass `claudeMd: false` to opt out.
 ```bash
 pnpm install
 pnpm build          # build both packages
-pnpm test           # vitest unit tests (selectors, style, attributes, settings, drag, clipboard)
+pnpm test           # vitest unit tests (selectors, style, attributes, settings, notes, …)
 pnpm typecheck
 pnpm play:vue       # http://localhost:5175
 pnpm play:react     # http://localhost:5176

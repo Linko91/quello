@@ -71,6 +71,8 @@ export interface QuelloSettings {
   copyOnPick: boolean
   /** What `copyOnPick` copies. */
   copyScope: QuelloCopyScope
+  /** Open the note editor as soon as an element is picked. */
+  noteOnPick: boolean
 }
 
 /** The page a pick was made on. */
@@ -85,6 +87,11 @@ export interface QuelloPick {
   /** Progressive, 1-based. Rendered to the user as `PICK <id>`. */
   id: number
   label: string
+  /**
+   * Free-text instruction the developer attached to this pick, for the agent to
+   * act on. Absent when no note was written.
+   */
+  note?: string
   selector: string
   domPath: string
   tag: string
@@ -131,6 +138,8 @@ export interface QuelloInstance {
   toggle(): void
   readonly enabled: boolean
   getPicks(): QuelloPick[]
+  /** Attach (or, with an empty string, clear) the agent note on a pick. */
+  setNote(id: number, note: string): void
   getSettings(): QuelloSettings
   /** Merge a partial change; picks already made are re-described with the new settings. */
   setSettings(patch: Partial<QuelloSettings>): void

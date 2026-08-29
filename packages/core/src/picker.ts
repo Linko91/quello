@@ -36,6 +36,16 @@ export function pageKey(href: string): string {
   }
 }
 
+/**
+ * Attach or clear a pick's note without disturbing the order of its other keys:
+ * `note` sits right after `label`, near the top where it is easy to read.
+ */
+export function withNote(pick: QuelloPick, note: string): QuelloPick {
+  const trimmed = note.trim()
+  const { note: _previous, id, label, ...rest } = pick
+  return trimmed ? { id, label, note: trimmed, ...rest } : { id, label, ...rest }
+}
+
 /** How long to keep retrying after a URL change, since routers render after they navigate. */
 const REATTACH_DELAYS = [0, 60, 180, 400]
 const URL_POLL_MS = 250
@@ -83,6 +93,7 @@ export class QuelloPicker implements QuelloInstance {
       onToggle: () => this.toggle(),
       onClear: () => this.clear(),
       onRemovePick: (id) => this.remove(id),
+      onNoteChange: (id, note) => this.setNote(id, note),
       onSettingsChange: (patch) => this.setSettings(patch),
     })
 
@@ -126,6 +137,15 @@ export class QuelloPicker implements QuelloInstance {
 
   getPicks(): QuelloPick[] {
     return this.entries.map((entry) => entry.pick)
+  }
+
+  setNote(id: number, note: string): void {
+    const entry = this.entries.find((candidate) => candidate.pick.id === id)
+    if (!entry) return
+    const next = withNote(entry.pick, note)
+    if (next.note === entry.pick.note) return
+    entry.pick = next
+    this.sync()
   }
 
   getSettings(): QuelloSettings {
@@ -231,9 +251,11 @@ export class QuelloPicker implements QuelloInstance {
       this.remove(existing.pick.id)
       return
     }
-    this.entries.push({ element, pick: this.describe(element, this.nextId++) })
+    const pick = this.describe(element, this.nextId++)
+    this.entries.push({ element, pick })
     this.sync()
     void this.copyOnPick()
+    if (this.currentSettings.noteOnPick) this.overlay.openNote(pick.id, '')
   }
 
   private describe(element: Element, id: number): QuelloPick {
@@ -258,7 +280,9 @@ export class QuelloPicker implements QuelloInstance {
 
   /** Re-read an existing pick from its element, keeping only its identity. */
   private redescribe(element: Element, pick: QuelloPick): QuelloPick {
-    return { ...this.describe(element, pick.id), pickedAt: pick.pickedAt }
+    const described = { ...this.describe(element, pick.id), pickedAt: pick.pickedAt }
+    // The note is the developer's, not the element's: re-reading must not drop it.
+    return withNote(described, pick.note ?? '')
   }
 
   /** Mirror the pick to the clipboard, when the developer asked for that. */
@@ -276,7 +300,7 @@ export class QuelloPicker implements QuelloInstance {
   private sync(): void {
     const targets = this.entries
       .filter((entry): entry is Entry & { element: Element } => entry.element !== null)
-      .map((entry) => ({ id: entry.pick.id, element: entry.element }))
+      .map((entry) => ({ id: entry.pick.id, element: entry.element, note: entry.pick.note }))
     // Badges only for what is on screen; the count covers every page.
     this.overlay.setPicks(targets, this.entries.length)
     void this.transport.save(this.getPicks())
@@ -342,7 +366,8 @@ export class QuelloPicker implements QuelloInstance {
       return
     }
     if (event.key !== 'Escape') return
-    if (this.overlay.panelOpen) this.overlay.togglePanel(false)
+    if (this.overlay.noteOpen) this.overlay.closeNote()
+    else if (this.overlay.panelOpen) this.overlay.togglePanel(false)
     else if (this.isEnabled) this.disable()
   }
 }

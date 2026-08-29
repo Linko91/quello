@@ -69,8 +69,67 @@ const STYLES = `
   pointer-events: auto;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
-.badge:hover { background: #ef4444; }
-.badge:hover::after { content: "×"; margin-left: 4px; font-size: 13px; }
+.badge:hover { background: #6b4cf0; }
+.badge:hover::after { content: "✎"; margin-left: 4px; font-size: 11px; }
+
+/* A pick that carries a note is marked, so notes are visible without opening them. */
+.badge[data-note="true"] { border-color: #ffd166; }
+.badge[data-note="true"]::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffd166;
+}
+
+.note-editor {
+  position: fixed;
+  z-index: ${Z_INDEX};
+  width: 264px;
+  padding: 10px;
+  border: 1px solid #2a2833;
+  border-radius: 10px;
+  background: #17161d;
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+.note-editor h3 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.note-editor textarea {
+  width: 100%;
+  min-height: 66px;
+  padding: 7px 9px;
+  border: 1px solid #37343f;
+  border-radius: 7px;
+  background: #0f0e13;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.note-editor textarea:focus { outline: none; border-color: #7c5cff; }
+.note-editor .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+.note-editor .hint { font-size: 10px; opacity: 0.4; line-height: 1.4; }
+.note-editor button { padding: 5px 10px; font-size: 11px; white-space: nowrap; }
+.note-editor button.danger { background: transparent; color: #ef4444; }
+.note-editor button.danger:hover { background: #2a1c1e; }
 
 .marker {
   position: fixed;
@@ -97,7 +156,8 @@ const STYLES = `
   color: #fff;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
-.toolbar[hidden], .puck[hidden], .panel[hidden], .tally[hidden], .toast[hidden] { display: none; }
+.toolbar[hidden], .puck[hidden], .panel[hidden], .tally[hidden], .toast[hidden],
+.note-editor[hidden] { display: none; }
 
 .grip {
   padding: 0 4px 0 6px;
@@ -214,7 +274,7 @@ button.icon[data-on="true"] { background: #37343f; }
   opacity: 0.5;
 }
 
-.limit + h2 { margin-top: 14px; }
+.limit + h2, .scopes + h2 { margin-top: 14px; }
 
 .field { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; }
 .field input { accent-color: #7c5cff; margin: 0; cursor: pointer; }
@@ -248,12 +308,14 @@ export interface OverlayHandlers {
   onToggle(): void
   onClear(): void
   onRemovePick(id: number): void
+  onNoteChange(id: number, note: string): void
   onSettingsChange(patch: Partial<QuelloSettings>): void
 }
 
 export interface BadgeTarget {
   id: number
   element: Element
+  note?: string
 }
 
 interface BadgeNodes {
@@ -285,7 +347,12 @@ export class Overlay {
   private readonly copyToggle: HTMLInputElement
   private readonly scopeRow: HTMLElement
   private readonly scopeInputs = new Map<QuelloCopyScope, HTMLInputElement>()
+  private readonly noteToggle: HTMLInputElement
   private toastTimer: number | null = null
+
+  private readonly noteEditor: HTMLElement
+  private readonly noteInput: HTMLTextAreaElement
+  private noteFor: number | null = null
 
   private readonly nodes = new Map<number, BadgeNodes>()
   private readonly teardown: Array<() => void> = []
@@ -363,8 +430,13 @@ export class Overlay {
     this.limitInput = panel.limitInput
     this.copyToggle = panel.copyToggle
     this.scopeRow = panel.scopeRow
+    this.noteToggle = panel.noteToggle
 
-    this.root.append(style, this.layer, this.panel, this.dock)
+    const note = this.buildNoteEditor()
+    this.noteEditor = note.root
+    this.noteInput = note.input
+
+    this.root.append(style, this.layer, this.panel, this.noteEditor, this.dock)
 
     this.teardown.push(
       draggable(grip, this.dragOptions()),
@@ -474,6 +546,7 @@ export class Overlay {
     limitInput: HTMLInputElement
     copyToggle: HTMLInputElement
     scopeRow: HTMLElement
+    noteToggle: HTMLInputElement
   } {
     const root = el('div', 'panel')
     root.hidden = true
@@ -568,7 +641,26 @@ export class Overlay {
     }
     root.append(scopeRow)
 
-    return { root, limitRow, limitInput, copyToggle, scopeRow }
+    const noteHeading = document.createElement('h2')
+    noteHeading.textContent = 'Agent notes'
+    root.append(noteHeading)
+
+    const noteField = document.createElement('label')
+    noteField.className = 'field'
+    const noteToggle = document.createElement('input')
+    noteToggle.type = 'checkbox'
+    noteToggle.addEventListener('change', () => {
+      this.handlers.onSettingsChange({ noteOnPick: noteToggle.checked })
+    })
+    const noteText = document.createElement('span')
+    noteText.textContent = 'Ask on every pick'
+    const noteNote = el('span', 'note')
+    noteNote.textContent = 'Otherwise click a badge to write one'
+    noteText.append(noteNote)
+    noteField.append(noteToggle, noteText)
+    root.append(noteField)
+
+    return { root, limitRow, limitInput, copyToggle, scopeRow, noteToggle }
   }
 
   /** Briefly confirm an action next to the toolbar. */
@@ -581,6 +673,80 @@ export class Overlay {
       this.toast.hidden = true
       this.toastTimer = null
     }, 1400)
+  }
+
+  private buildNoteEditor(): { root: HTMLElement; input: HTMLTextAreaElement } {
+    const root = el('div', 'note-editor')
+    root.hidden = true
+
+    const heading = document.createElement('h3')
+    root.append(heading)
+
+    const input = document.createElement('textarea')
+    input.placeholder = 'What should the agent do with this element?'
+    input.setAttribute('aria-label', 'Note for the agent')
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        this.closeNote()
+      }
+    })
+    root.append(input)
+
+    const row = el('div', 'row')
+    const hint = el('span', 'hint')
+    hint.textContent = 'Enter saves · Shift+Enter for a line break'
+    const remove = button('danger', 'Remove pick', 'Remove this pick')
+    remove.addEventListener('click', () => {
+      const id = this.noteFor
+      this.noteFor = null // drop the note: the pick is going away
+      this.noteEditor.hidden = true
+      if (id !== null) this.handlers.onRemovePick(id)
+    })
+    row.append(hint, remove)
+    root.append(row)
+
+    return { root, input }
+  }
+
+  get noteOpen(): boolean {
+    return this.noteFor !== null
+  }
+
+  /** Open the note editor for a pick, anchored to its badge. */
+  openNote(id: number, note: string): void {
+    if (this.noteFor !== null && this.noteFor !== id) this.closeNote()
+    this.noteFor = id
+    const heading = this.noteEditor.querySelector('h3')
+    if (heading) heading.textContent = `Note for PICK ${id}`
+    this.noteInput.value = note
+    this.noteEditor.hidden = false
+    this.positionNote()
+    this.noteInput.focus()
+    this.noteInput.setSelectionRange(note.length, note.length)
+  }
+
+  /** Every way out of the editor keeps what was typed; an empty note clears it. */
+  closeNote(): void {
+    const id = this.noteFor
+    if (id === null) return
+    this.noteFor = null
+    this.noteEditor.hidden = true
+    this.handlers.onNoteChange(id, this.noteInput.value)
+  }
+
+  private positionNote(): void {
+    if (this.noteFor === null) return
+    const node = this.nodes.get(this.noteFor)
+    if (!node) return
+    const badge = node.badge.getBoundingClientRect()
+    const editor = this.noteEditor.getBoundingClientRect()
+    const point = clampToViewport(
+      { x: badge.left, y: badge.bottom + 8 },
+      { width: editor.width, height: editor.height },
+    )
+    this.noteEditor.style.left = `${point.x}px`
+    this.noteEditor.style.top = `${point.y}px`
   }
 
   get panelOpen(): boolean {
@@ -602,6 +768,7 @@ export class Overlay {
     this.copyToggle.checked = settings.copyOnPick
     for (const [scope, input] of this.scopeInputs) input.checked = scope === settings.copyScope
     this.scopeRow.dataset.disabled = String(!settings.copyOnPick)
+    this.noteToggle.checked = settings.noteOnPick
 
     this.position = settings.toolbarPosition
     this.compact = settings.toolbarCompact
@@ -652,16 +819,24 @@ export class Overlay {
       if (this.nodes.has(target.id)) continue
       const badge = el('div', 'badge')
       badge.textContent = String(target.id)
-      badge.title = `PICK ${target.id} — click to remove`
+      badge.title = `PICK ${target.id} — click to add a note`
       badge.addEventListener('click', (event) => {
         event.preventDefault()
         event.stopPropagation()
-        this.handlers.onRemovePick(target.id)
+        const current = this.targets.find((t) => t.id === target.id)
+        this.openNote(target.id, current?.note ?? '')
       })
       const marker = el('div', 'marker')
       this.layer.append(marker, badge)
       this.nodes.set(target.id, { badge, marker })
     }
+
+    for (const target of targets) {
+      const node = this.nodes.get(target.id)
+      if (node) node.badge.dataset.note = String(Boolean(target.note))
+    }
+    // A pick can vanish while its note is open — on a route change, say.
+    if (this.noteFor !== null && !seen.has(this.noteFor)) this.closeNote()
 
     this.count.hidden = total === 0
     this.count.textContent = total === 1 ? '1 pick' : `${total} picks`
@@ -689,6 +864,7 @@ export class Overlay {
       node.badge.style.left = `${rect.left - 8}px`
       node.badge.style.top = `${rect.top - 8}px`
     }
+    this.positionNote()
   }
 
   private startTracking(): void {
