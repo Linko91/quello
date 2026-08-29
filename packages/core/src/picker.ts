@@ -50,6 +50,9 @@ export function withNote(pick: QuelloPick, note: string): QuelloPick {
 const REATTACH_DELAYS = [0, 60, 180, 400]
 const URL_POLL_MS = 250
 
+/** Survives the reload that a cross-page "scroll to element" needs. */
+const PENDING_SCROLL_KEY = 'quello.scrollTo'
+
 function toRect(rect: DOMRect): QuelloRect {
   const round = Math.round
   return {
@@ -94,6 +97,8 @@ export class QuelloPicker implements QuelloInstance {
       onClear: () => this.clear(),
       onRemovePick: (id) => this.remove(id),
       onNoteChange: (id, note) => this.setNote(id, note),
+      onScrollToPick: (id) => this.scrollToPick(id),
+      onCopyPick: (id) => void this.copyPick(id),
       onSettingsChange: (patch) => this.setSettings(patch),
     })
 
@@ -146,6 +151,71 @@ export class QuelloPicker implements QuelloInstance {
     if (next.note === entry.pick.note) return
     entry.pick = next
     this.sync()
+  }
+
+  /**
+   * Bring a pick's element into view. When the pick belongs to another page there
+   * is no framework-agnostic way to route there, so the page is loaded outright and
+   * the scroll is resumed once the runtime comes back up.
+   */
+  scrollToPick(id: number): void {
+    const entry = this.entries.find((candidate) => candidate.pick.id === id)
+    if (!entry) return
+
+    if (entry.element?.isConnected) {
+      // Put the element's top-left corner in the middle of the viewport, rather
+      // than centring the element itself: a tall element would otherwise scroll
+      // its own top out of sight.
+      const rect = entry.element.getBoundingClientRect()
+      this.scrollWindowTo(
+        rect.left + window.scrollX - window.innerWidth / 2,
+        rect.top + window.scrollY - window.innerHeight / 2,
+      )
+      this.overlay.spotlight(entry.element, `PICK ${id}`)
+      return
+    }
+    try {
+      sessionStorage.setItem(PENDING_SCROLL_KEY, String(id))
+    } catch {
+      // Without session storage the page still loads, it just lands at the top.
+    }
+    location.assign(entry.pick.page.url)
+  }
+
+  /**
+   * Smooth scrolling is silently ignored in some environments — automation, and
+   * anywhere the animation is suppressed. If nothing has moved shortly after the
+   * request, jump instead: landing without the animation beats not landing.
+   */
+  private scrollWindowTo(left: number, top: number): void {
+    const from = { x: window.scrollX, y: window.scrollY }
+    window.scrollTo({ left, top, behavior: 'smooth' })
+    window.setTimeout(() => {
+      if (window.scrollX === from.x && window.scrollY === from.y) {
+        window.scrollTo({ left, top, behavior: 'auto' })
+      }
+    }, 250)
+  }
+
+  private consumePendingScroll(): void {
+    let pending: string | null = null
+    try {
+      pending = sessionStorage.getItem(PENDING_SCROLL_KEY)
+      if (pending) sessionStorage.removeItem(PENDING_SCROLL_KEY)
+    } catch {
+      return
+    }
+    if (!pending) return
+    const id = Number(pending)
+    // The page has only just been parsed; give layout a moment to settle.
+    window.setTimeout(() => this.scrollToPick(id), 120)
+  }
+
+  private async copyPick(id: number): Promise<void> {
+    const entry = this.entries.find((candidate) => candidate.pick.id === id)
+    if (!entry) return
+    const copied = await copyText(JSON.stringify(entry.pick, null, 2))
+    this.overlay.flash(copied ? `Copied PICK ${id}` : 'Copy failed', !copied)
   }
 
   getSettings(): QuelloSettings {
@@ -301,8 +371,8 @@ export class QuelloPicker implements QuelloInstance {
     const targets = this.entries
       .filter((entry): entry is Entry & { element: Element } => entry.element !== null)
       .map((entry) => ({ id: entry.pick.id, element: entry.element, note: entry.pick.note }))
-    // Badges only for what is on screen; the count covers every page.
-    this.overlay.setPicks(targets, this.entries.length)
+    // Badges only for what is on screen; the list and count cover every page.
+    this.overlay.setPicks(targets, this.getPicks())
     void this.transport.save(this.getPicks())
   }
 
@@ -322,6 +392,7 @@ export class QuelloPicker implements QuelloInstance {
       this.nextId = Math.max(this.nextId, pick.id + 1)
     }
     this.sync()
+    this.consumePendingScroll()
   }
 
   private isOwnUi(event: Event): boolean {
@@ -367,6 +438,7 @@ export class QuelloPicker implements QuelloInstance {
     }
     if (event.key !== 'Escape') return
     if (this.overlay.noteOpen) this.overlay.closeNote()
+    else if (this.overlay.picksListOpen) this.overlay.togglePicksList(false)
     else if (this.overlay.panelOpen) this.overlay.togglePanel(false)
     else if (this.isEnabled) this.disable()
   }

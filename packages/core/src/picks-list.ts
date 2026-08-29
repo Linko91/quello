@@ -1,0 +1,234 @@
+import { collapseText } from './selector'
+import type { QuelloPick } from './types'
+
+export const PICKS_LIST_STYLES = `
+.picks-list {
+  position: fixed;
+  z-index: 2147483647;
+  width: 320px;
+  max-height: min(60vh, 460px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3745 transparent;
+  padding: 6px;
+  border: 1px solid #2a2833;
+  border-radius: 10px;
+  background: #17161d;
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+.picks-list[hidden] { display: none; }
+
+/* WebKit ignores scrollbar-color, so the thumb is drawn by hand there too. */
+.picks-list::-webkit-scrollbar { width: 9px; }
+.picks-list::-webkit-scrollbar-track { background: transparent; }
+.picks-list::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #3a3745;
+  background-clip: padding-box;
+}
+.picks-list::-webkit-scrollbar-thumb:hover {
+  background: #524e63;
+  background-clip: padding-box;
+}
+.picks-list .empty { padding: 14px 10px; font-size: 12px; opacity: 0.5; text-align: center; }
+
+.row {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+}
+.row + .row { border-top: 1px solid #221f2b; }
+/* Without this the ellipsis never kicks in and the row widens the whole list. */
+.row > div { min-width: 0; }
+.row:hover { background: #1e1c26; }
+.row[data-elsewhere="true"] .where { color: #ffd166; }
+
+.row .n {
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: #7c5cff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.row[data-note="true"] .n { box-shadow: 0 0 0 2px #ffd166; }
+
+.row .who { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.row .what {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #9b98a8;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row .where { margin-top: 3px; font-size: 10px; color: #6f6c7d; }
+.row .memo {
+  margin-top: 5px;
+  padding: 4px 7px;
+  border-left: 2px solid #ffd166;
+  border-radius: 0 5px 5px 0;
+  background: #201d29;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #e6e3f0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.row .acts { display: flex; gap: 2px; margin-top: 6px; }
+.row .acts button {
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #9b98a8;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.row .acts button:hover { background: #2f2c3a; color: #fff; }
+.row .acts button.danger:hover { background: #3a1f24; color: #ef4444; }
+`
+
+export interface PicksListHandlers {
+  onScrollTo(id: number): void
+  onEditNote(id: number): void
+  onCopy(id: number): void
+  onRemove(id: number): void
+  /** Highlight the element a row refers to, or clear it with `null`. */
+  onPreview(id: number | null): void
+}
+
+/** What a row needs beyond the pick itself. */
+export interface PickRow {
+  pick: QuelloPick
+  /** Whether the pick's element is on the page currently shown. */
+  here: boolean
+}
+
+/**
+ * The dropdown behind the toolbar's pick counter: every pick across every page,
+ * with the actions that apply to one.
+ */
+export class PicksList {
+  readonly root: HTMLElement
+
+  constructor(private readonly handlers: PicksListHandlers) {
+    this.root = document.createElement('div')
+    this.root.className = 'picks-list'
+    this.root.hidden = true
+  }
+
+  get open(): boolean {
+    return !this.root.hidden
+  }
+
+  toggle(open = this.root.hidden): void {
+    this.root.hidden = !open
+    if (!open) this.handlers.onPreview(null)
+  }
+
+  render(rows: PickRow[]): void {
+    this.root.replaceChildren()
+    if (rows.length === 0) {
+      const empty = document.createElement('div')
+      empty.className = 'empty'
+      empty.textContent = 'No picks yet'
+      this.root.append(empty)
+      return
+    }
+    for (const row of rows) this.root.append(this.buildRow(row))
+  }
+
+  private buildRow({ pick, here }: PickRow): HTMLElement {
+    const row = document.createElement('div')
+    row.className = 'row'
+    row.dataset.note = String(Boolean(pick.note))
+    row.dataset.elsewhere = String(!here)
+
+    const n = document.createElement('span')
+    n.className = 'n'
+    n.textContent = String(pick.id)
+
+    const body = document.createElement('div')
+
+    const who = document.createElement('div')
+    who.className = 'who'
+    who.textContent = pick.framework?.component ?? `<${pick.tag}>`
+
+    const what = document.createElement('div')
+    what.className = 'what'
+    // The component name alone rarely identifies which instance was picked.
+    what.textContent = pick.text ? `${pick.selector} · ${collapseText(pick.text, 40)}` : pick.selector
+    what.title = pick.selector
+
+    const where = document.createElement('div')
+    where.className = 'where'
+    where.textContent = pathOf(pick.page.url) + (here ? '' : ' · another page')
+
+    body.append(who, what, where)
+
+    if (pick.note) {
+      const memo = document.createElement('div')
+      memo.className = 'memo'
+      memo.textContent = pick.note
+      body.append(memo)
+    }
+
+    const acts = document.createElement('div')
+    acts.className = 'acts'
+    acts.append(
+      action(here ? '⤓' : '↗', here ? 'Scroll to element' : 'Open that page and scroll to it', () =>
+        this.handlers.onScrollTo(pick.id),
+      ),
+      action(pick.note ? '✎' : '✚', pick.note ? 'Edit note' : 'Add a note', () =>
+        this.handlers.onEditNote(pick.id),
+      ),
+      action('⧉', 'Copy this pick as JSON', () => this.handlers.onCopy(pick.id)),
+      action('×', 'Remove this pick', () => this.handlers.onRemove(pick.id), 'danger'),
+    )
+    body.append(acts)
+
+    row.append(n, body)
+    if (here) {
+      row.addEventListener('mouseenter', () => this.handlers.onPreview(pick.id))
+      row.addEventListener('mouseleave', () => this.handlers.onPreview(null))
+    }
+    return row
+  }
+}
+
+function action(label: string, title: string, run: () => void, className = ''): HTMLButtonElement {
+  const button = document.createElement('button')
+  if (className) button.className = className
+  button.textContent = label
+  button.title = title
+  button.setAttribute('aria-label', title)
+  button.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    run()
+  })
+  return button
+}
+
+function pathOf(href: string): string {
+  try {
+    const url = new URL(href)
+    return `${url.pathname}${url.search}` || '/'
+  } catch {
+    return href
+  }
+}

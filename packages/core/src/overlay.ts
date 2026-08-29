@@ -1,6 +1,14 @@
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
+import { PicksList, PICKS_LIST_STYLES } from './picks-list'
+import type { PickRow } from './picks-list'
 import { MAX_HTML_LIMIT, MIN_HTML_LIMIT } from './settings'
-import type { QuelloCopyScope, QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
+import type {
+  QuelloCopyScope,
+  QuelloHtmlMode,
+  QuelloPick,
+  QuelloPoint,
+  QuelloSettings,
+} from './types'
 
 /**
  * All quello UI lives inside a single shadow root so that the host page's
@@ -15,7 +23,8 @@ const PARKED_INSET = 16
 
 const PANEL_GAP = 8
 
-const STYLES = `
+const STYLES = `${PICKS_LIST_STYLES}
+
 :host { all: initial; }
 * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
 
@@ -107,7 +116,13 @@ const STYLES = `
 }
 .note-editor textarea {
   width: 100%;
+  /* Grows with what is typed, where the browser supports it; the min-height keeps
+     the box usable everywhere else. */
+  field-sizing: content;
   min-height: 66px;
+  max-height: 40vh;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3745 transparent;
   padding: 7px 9px;
   border: 1px solid #37343f;
   border-radius: 7px;
@@ -119,6 +134,14 @@ const STYLES = `
   resize: vertical;
 }
 .note-editor textarea:focus { outline: none; border-color: #7c5cff; }
+.note-editor textarea::-webkit-scrollbar { width: 9px; }
+.note-editor textarea::-webkit-scrollbar-track { background: transparent; }
+.note-editor textarea::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #3a3745;
+  background-clip: padding-box;
+}
 .note-editor .row {
   display: flex;
   align-items: center;
@@ -187,12 +210,19 @@ button.primary[data-on="true"]:hover { background: #6b4cf0; }
 button.icon { padding: 7px 10px; font-size: 13px; line-height: 1; }
 button.icon[data-on="true"] { background: #37343f; }
 
-.count {
-  padding: 0 8px 0 4px;
+button.count {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: transparent;
   font-size: 11px;
+  font-weight: 600;
+  color: #fff;
   opacity: 0.65;
   white-space: nowrap;
 }
+button.count:hover { background: #2a2833; opacity: 1; }
+button.count[data-on="true"] { background: #2a2833; opacity: 1; }
+button.count[hidden] { display: none; }
 
 /* Compact form: one puck that is both the drag handle and the expand button. */
 .puck {
@@ -309,6 +339,8 @@ export interface OverlayHandlers {
   onClear(): void
   onRemovePick(id: number): void
   onNoteChange(id: number, note: string): void
+  onScrollToPick(id: number): void
+  onCopyPick(id: number): void
   onSettingsChange(patch: Partial<QuelloSettings>): void
 }
 
@@ -338,7 +370,10 @@ export class Overlay {
   private readonly toggleButton: HTMLButtonElement
   private readonly clearButton: HTMLButtonElement
   private readonly settingsButton: HTMLButtonElement
-  private readonly count: HTMLElement
+  private readonly count: HTMLButtonElement
+  private readonly picksList: PicksList
+  private rows: PickRow[] = []
+  private previewFor: number | null = null
 
   private readonly panel: HTMLElement
   private readonly modeInputs = new Map<QuelloHtmlMode, HTMLInputElement>()
@@ -349,6 +384,7 @@ export class Overlay {
   private readonly scopeInputs = new Map<QuelloCopyScope, HTMLInputElement>()
   private readonly noteToggle: HTMLInputElement
   private toastTimer: number | null = null
+  private spotlightTimer: number | null = null
 
   private readonly noteEditor: HTMLElement
   private readonly noteInput: HTMLTextAreaElement
@@ -388,8 +424,18 @@ export class Overlay {
     this.clearButton.hidden = true
     this.clearButton.addEventListener('click', () => this.handlers.onClear())
 
-    this.count = el('span', 'count')
+    this.count = button('count', '', 'Show every pick')
     this.count.hidden = true
+    this.count.dataset.on = 'false'
+    this.count.addEventListener('click', () => this.togglePicksList())
+
+    this.picksList = new PicksList({
+      onScrollTo: (id) => this.handlers.onScrollToPick(id),
+      onEditNote: (id) => this.openNote(id, this.pickById(id)?.note ?? ''),
+      onCopy: (id) => this.handlers.onCopyPick(id),
+      onRemove: (id) => this.handlers.onRemovePick(id),
+      onPreview: (id) => this.preview(id),
+    })
 
     this.settingsButton = button('icon', '⚙', 'Settings')
     this.settingsButton.setAttribute('aria-label', 'Settings')
@@ -436,7 +482,7 @@ export class Overlay {
     this.noteEditor = note.root
     this.noteInput = note.input
 
-    this.root.append(style, this.layer, this.panel, this.noteEditor, this.dock)
+    this.root.append(style, this.layer, this.panel, this.picksList.root, this.noteEditor, this.dock)
 
     this.teardown.push(
       draggable(grip, this.dragOptions()),
@@ -517,21 +563,55 @@ export class Overlay {
     }
     this.dock.dataset.flip = String(this.dock.getBoundingClientRect().top < window.innerHeight / 3)
     if (this.panelOpen) this.positionPanel()
+    if (this.picksList.open) this.anchorToDock(this.picksList.root)
   }
 
-  /** Park the panel against the toolbar, flipping below it when there is no room above. */
-  private positionPanel(): void {
+  /** Park a popover against the toolbar, flipping below it when there is no room above. */
+  private anchorToDock(popover: HTMLElement): void {
     const dock = this.dock.getBoundingClientRect()
-    const panel = this.panel.getBoundingClientRect()
+    const box = popover.getBoundingClientRect()
 
-    const above = dock.top - panel.height - PANEL_GAP
+    const above = dock.top - box.height - PANEL_GAP
     const top = above >= EDGE_MARGIN ? above : dock.bottom + PANEL_GAP
     const left = Math.min(
-      Math.max(EDGE_MARGIN, dock.right - panel.width),
-      Math.max(EDGE_MARGIN, window.innerWidth - panel.width - EDGE_MARGIN),
+      Math.max(EDGE_MARGIN, dock.right - box.width),
+      Math.max(EDGE_MARGIN, window.innerWidth - box.width - EDGE_MARGIN),
     )
-    this.panel.style.left = `${left}px`
-    this.panel.style.top = `${top}px`
+    popover.style.left = `${left}px`
+    popover.style.top = `${top}px`
+  }
+
+  private positionPanel(): void {
+    this.anchorToDock(this.panel)
+  }
+
+  get picksListOpen(): boolean {
+    return this.picksList.open
+  }
+
+  togglePicksList(open = !this.picksList.open): void {
+    this.picksList.toggle(open)
+    this.count.dataset.on = String(open)
+    if (open) {
+      this.togglePanel(false)
+      this.anchorToDock(this.picksList.root)
+    }
+  }
+
+  private pickById(id: number): QuelloPick | undefined {
+    return this.rows.find((row) => row.pick.id === id)?.pick
+  }
+
+  /** Outline the element a list row refers to, without entering picker mode. */
+  private preview(id: number | null): void {
+    this.previewFor = id
+    if (id === null) {
+      this.clearHover()
+      return
+    }
+    const target = this.targets.find((candidate) => candidate.id === id)
+    if (target) this.setHover(target.element, `PICK ${id}`)
+    else this.clearHover()
   }
 
   private readonly onResize = (): void => {
@@ -721,6 +801,7 @@ export class Overlay {
     if (heading) heading.textContent = `Note for PICK ${id}`
     this.noteInput.value = note
     this.noteEditor.hidden = false
+    // Measure after the value is in, so an auto-grown textarea is already its final size.
     this.positionNote()
     this.noteInput.focus()
     this.noteInput.setSelectionRange(note.length, note.length)
@@ -735,18 +816,37 @@ export class Overlay {
     this.handlers.onNoteChange(id, this.noteInput.value)
   }
 
+  /**
+   * Anchor the note editor to the pick's badge. A pick made on another page has no
+   * badge on screen, so the editor sits beside the toolbar instead — on whichever
+   * side has room for it.
+   */
   private positionNote(): void {
     if (this.noteFor === null) return
-    const node = this.nodes.get(this.noteFor)
-    if (!node) return
-    const badge = node.badge.getBoundingClientRect()
     const editor = this.noteEditor.getBoundingClientRect()
-    const point = clampToViewport(
-      { x: badge.left, y: badge.bottom + 8 },
-      { width: editor.width, height: editor.height },
-    )
+    const size = { width: editor.width, height: editor.height }
+    const node = this.nodes.get(this.noteFor)
+
+    const point = node
+      ? clampToViewport(
+          { x: node.badge.getBoundingClientRect().left, y: node.badge.getBoundingClientRect().bottom + 8 },
+          size,
+        )
+      : this.besideDock(size)
+
     this.noteEditor.style.left = `${point.x}px`
     this.noteEditor.style.top = `${point.y}px`
+  }
+
+  /** A spot next to the toolbar: left of it when that fits, otherwise right. */
+  private besideDock(size: { width: number; height: number }): QuelloPoint {
+    const dock = this.dock.getBoundingClientRect()
+    const roomLeft = dock.left - EDGE_MARGIN
+    const roomRight = window.innerWidth - dock.right - EDGE_MARGIN
+    const onLeft = roomLeft >= size.width || roomLeft > roomRight
+    const x = onLeft ? dock.left - size.width - PANEL_GAP : dock.right + PANEL_GAP
+    // Bottom-aligned with the toolbar, which reads as belonging to it.
+    return clampToViewport({ x, y: dock.bottom - size.height }, size)
   }
 
   get panelOpen(): boolean {
@@ -756,7 +856,10 @@ export class Overlay {
   togglePanel(open = this.panel.hidden): void {
     this.panel.hidden = !open
     this.settingsButton.dataset.on = String(open)
-    if (open) this.positionPanel()
+    if (open) {
+      this.togglePicksList(false)
+      this.positionPanel()
+    }
   }
 
   /** Render the toolbar and panel from the settings the picker actually holds. */
@@ -796,6 +899,16 @@ export class Overlay {
     this.tip.style.top = `${above ? rect.top - 21 : rect.bottom + 3}px`
   }
 
+  /** Outline an element briefly, to show where a scroll landed. */
+  spotlight(element: Element, label: string): void {
+    this.setHover(element, label)
+    if (this.spotlightTimer !== null) clearTimeout(this.spotlightTimer)
+    this.spotlightTimer = window.setTimeout(() => {
+      this.clearHover()
+      this.spotlightTimer = null
+    }, 1600)
+  }
+
   clearHover(): void {
     this.highlight.hidden = true
     this.tip.hidden = true
@@ -805,7 +918,8 @@ export class Overlay {
    * Re-render badges for the picks that are on screen. `total` counts every pick,
    * including those belonging to other pages, which is what the toolbar reports.
    */
-  setPicks(targets: BadgeTarget[], total = targets.length): void {
+  setPicks(targets: BadgeTarget[], all: QuelloPick[] = targets.map((t) => pickStub(t.id))): void {
+    const total = all.length
     this.targets = targets
     const seen = new Set(targets.map((t) => t.id))
     for (const [id, node] of this.nodes) {
@@ -837,9 +951,17 @@ export class Overlay {
     }
     // A pick can vanish while its note is open — on a route change, say.
     if (this.noteFor !== null && !seen.has(this.noteFor)) this.closeNote()
+    // Its row is gone too, so `mouseleave` will never come to clear the outline.
+    if (this.previewFor !== null && !seen.has(this.previewFor)) this.preview(null)
 
     this.count.hidden = total === 0
     this.count.textContent = total === 1 ? '1 pick' : `${total} picks`
+    if (total === 0) this.togglePicksList(false)
+
+    const here = new Set(targets.map((target) => target.id))
+    this.rows = all.map((pick) => ({ pick, here: here.has(pick.id) }))
+    this.picksList.render(this.rows)
+    if (this.picksList.open) this.anchorToDock(this.picksList.root)
     this.clearButton.hidden = total === 0
     this.tally.hidden = total === 0
     this.tally.textContent = String(total)
@@ -885,9 +1007,15 @@ export class Overlay {
   destroy(): void {
     this.stopTracking()
     if (this.toastTimer !== null) clearTimeout(this.toastTimer)
+    if (this.spotlightTimer !== null) clearTimeout(this.spotlightTimer)
     for (const off of this.teardown) off()
     this.host.remove()
   }
+}
+
+/** Minimal stand-in so `setPicks` stays callable with badges alone (tests, direct use). */
+function pickStub(id: number): QuelloPick {
+  return { id, label: `PICK ${id}` } as QuelloPick
 }
 
 function el(tag: string, className: string): HTMLElement {

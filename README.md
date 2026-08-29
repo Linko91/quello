@@ -7,6 +7,7 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 `PICK 2`, … Then you say *"make PICK 2 sticky"* and the agent knows exactly which component you mean.
 
 > **MVP status** — Vite only, dev mode only. No MCP server and no Next.js adapter yet (both v2).
+> See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
 ## Packages
 
@@ -47,6 +48,7 @@ Start the dev server, then:
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to write a note for the agent, or remove that pick from there
+- **Click the pick counter** to open the list of every pick, across every page
 - **Clear all** empties the list
 - **⚙** opens the settings panel (HTML capture, clipboard); **–** collapses the toolbar
 - **Drag the ⠿ grip** to move the toolbar anywhere
@@ -151,12 +153,42 @@ in between is the least identifying part. A `1000`-character budget on a long se
 `<section class="card-list"><article class="card"> … .json by the dev server.</p></section>`, and
 the result is never longer than the budget. The budget is clamped to 50–100000.
 
+#### The pick list
+
+The counter in the toolbar (`3 picks`) is a button: it opens a dropdown holding every pick you have
+made, on every page. Each row shows the number, the component (or the tag, when no framework owns
+the element), the selector and a snippet of text to tell one instance from another, the page it
+belongs to, and its note if it has one. A pick on a page you are not looking at is flagged in amber.
+
+Four actions per row:
+
+| | |
+| --- | --- |
+| **⤓ / ↗** | scroll until the element's top-left corner is in the middle of the viewport; on another page, go there first and scroll on arrival |
+| **✎ / ✚** | open the note editor |
+| **⧉** | copy that one pick as JSON |
+| **×** | remove it |
+
+Hovering a row outlines its element on the page, which is usually faster than scrolling to it. The
+outline is dropped if the pick it belongs to disappears while you are pointing at it.
+
+Cross-page scrolling loads the target page outright rather than pushing to the router: the runtime
+is framework-agnostic and has no way to ask *your* router to navigate. The pending scroll is handed
+across the reload in `sessionStorage` and resumed once picks are restored.
+
+Opening the list closes the settings panel and vice versa; `Esc` closes whichever is open.
+
 #### Agent notes
 
 A pick can carry a `note`: free text you write for the agent, sitting right after `label` near the
 top of the entry. Click a badge to open the editor — `Enter` saves, `Shift+Enter` adds a line,
-`Esc` closes keeping what you typed. An empty note removes the field entirely, so `note` is only
-ever there when you wrote one. A badge with a note is ringed and dotted in amber.
+`Esc` closes keeping what you typed. The box grows as you type, up to 40% of the viewport.
+
+The editor anchors to the pick's badge. A pick made on another page has no badge to anchor to, so it
+opens beside the toolbar instead, on whichever side has room.
+
+An empty note removes the field entirely, so `note` is only ever there when you wrote one. A badge
+with a note is ringed and dotted in amber.
 
 Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
 It is off by default, so picking stays a single click when you have nothing to say.
@@ -263,6 +295,41 @@ check the URL it prints rather than assuming 5175/5176.
 - **Stable selectors.** Selector generation prefers an id, then a tag plus non-generated classes,
   and only walks up ancestors until the selector is unique. Hashed and framework-generated classes
   (`svelte-1a2b3c`, `css-1x2y3z`, `Button_root_a1b2c3`) are skipped so selectors survive rebuilds.
+
+## Ideas, not built yet
+
+Parked deliberately, with the reasoning, so picking one up later does not start from scratch.
+
+**Already scoped as v2**
+
+- **MCP server.** Let the agent read picks over MCP instead of from a file, so it works outside
+  editors that read `CLAUDE.md`.
+- **Next.js adapter.** The runtime is framework-agnostic already; what is missing is the equivalent
+  of the Vite plugin for the Next dev server.
+
+**Pick list**
+
+These only start paying off past roughly ten picks, which is why none of them are in yet:
+
+- **Filter or group by page.** The list already flags picks from other pages, but with picks spread
+  over four routes you want to collapse it to the one you are working on.
+- **Drag to reorder.** The agent works through notes in `id` order, which is the order you picked
+  them in — not necessarily the order you want them done. Reordering would make the sequence
+  explicit. It needs a `position` separate from `id`, since `id` is the label the user says out loud
+  and must not shift.
+- **Copy all notes as a task list.** `⧉` copies one pick as JSON; a plain-text list of the notes,
+  each with its component and file, is what you would paste into a chat that has no repo access.
+- **Renumber after deletions.** Ids intentionally never shift, so heavy editing leaves gaps
+  (`1, 4, 7`). A deliberate "renumber" action would tidy that up — as an explicit choice, never
+  automatically, because it invalidates any `PICK n` the user has already said.
+
+**Smaller things**
+
+- **`opacity` in `style`.** The computed `color` of an element inside a faded parent looks opaque,
+  because the transparency lives on the ancestor. Worth adding if "why is this grey?" comes up.
+- **Route-aware navigation.** Cross-page scrolling reloads the page because the runtime cannot ask
+  your router to navigate. An optional hook — `quello({ navigate: (url) => router.push(url) })` —
+  would make it instant for projects willing to wire it up.
 
 ## License
 
