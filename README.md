@@ -46,8 +46,9 @@ export default defineConfig({
 
 Start the dev server, then:
 
-- **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; the button
-  turns accent-purple while picking
+- **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; while picking
+  the button turns accent-purple and reads `picking…`. The combination is configurable — see
+  [plugin options](#plugin-options)
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to write a note for the agent, or remove that pick from there
@@ -243,13 +244,35 @@ Component metadata is best effort and dev-build only: Vue via `__vueParentCompon
 `data-v-inspector` attribute), React by walking the fiber tree to the nearest named component and
 reading `_debugSource` for file and line.
 
+### The shortcut
+
+`shortcut` is a whole combination, not a key with `Alt` assumed around it, so anything works:
+
+```ts
+quello({ shortcut: 'alt+q' })          // the default
+quello({ shortcut: 'ctrl+shift+p' })   // no Alt in sight
+quello({ shortcut: 'cmd+k' })          // cmd, command, meta, super and win all mean Meta
+quello({ shortcut: 'f2' })             // no modifier at all
+```
+
+Parsing is case-insensitive and forgiving of spaces; `opt`/`option` mean Alt, `control` means Ctrl,
+`esc` means Escape. A string naming no key at all falls back to `alt+q`.
+
+Matching uses the physical key code as well as the character, because holding Alt rewrites the
+character on macOS — `Alt+Q` arrives as `œ` — and a shortcut that only compared characters would
+never fire there.
+
+A combination with **no** Alt, Ctrl or Cmd is ignored while the focus is in an input, textarea,
+select or contenteditable, so a bare `q` cannot toggle picker mode mid-sentence. Combinations that
+hold a modifier are not filtered, since they do not collide with typing.
+
 ### Plugin options
 
 ```ts
 quello({
   enabled: true,                    // turn off without removing the plugin
   picksFile: '.quello/picks.json',  // relative to the Vite root
-  shortcutKey: 'q',                 // combined with Alt
+  shortcut: 'alt+q',                // full combination, nothing implied
   textLimit: 120,                   // characters of element text kept per pick
   claudeMd: true,                   // append the agent instructions to CLAUDE.md on first run
   htmlMode: 'truncated',            // initial setting: 'none' | 'truncated' | 'full'
@@ -306,8 +329,8 @@ check the URL it prints rather than assuming 5175/5176.
 | [`assets/quello-logo.svg`](assets/quello-logo.svg) | the wordmark — headers, the docs site, anywhere there is room to read it |
 | [`assets/quello-mark.svg`](assets/quello-mark.svg) | the mark alone — favicons, avatars, the toolbar's collapsed puck |
 
-The toolbar uses both: the wordmark on the toggle button when expanded, the mark alone once
-collapsed.
+The toolbar uses both: the wordmark on the toggle button when expanded — swapped for `picking…`
+while picker mode is on — and the mark alone once collapsed.
 
 <img src="assets/quello-logo.svg" alt="quello" width="200">
 

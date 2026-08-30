@@ -3,6 +3,14 @@ import type { QuelloInstance, QuelloOptions } from './types'
 
 export { pageKey, QuelloPicker, withNote } from './picker'
 export { collectAttributes } from './attributes'
+export {
+  DEFAULT_SHORTCUT,
+  formatShortcut,
+  matchesShortcut,
+  needsTypingGuard,
+  parseShortcut,
+} from './shortcut'
+export type { Shortcut } from './shortcut'
 export { logoSvg, markSvg } from './brand'
 export { copyText, describeCopy, formatPicks } from './clipboard'
 export { clampToViewport, draggable, EDGE_MARGIN } from './drag'

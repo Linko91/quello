@@ -4,6 +4,14 @@ import { detectFramework } from './framework'
 import { Overlay } from './overlay'
 import { collapseText, domPath, stableClasses, uniqueSelector } from './selector'
 import { collectHtml, DEFAULT_SETTINGS, loadSettings, normalizeSettings, saveSettings } from './settings'
+import {
+  DEFAULT_SHORTCUT,
+  formatShortcut,
+  matchesShortcut,
+  needsTypingGuard,
+  parseShortcut,
+} from './shortcut'
+import type { Shortcut } from './shortcut'
 import { collectStyle } from './style'
 import { PicksTransport } from './transport'
 import type {
@@ -71,7 +79,7 @@ export class QuelloPicker implements QuelloInstance {
   private readonly overlay: Overlay
   private readonly transport: PicksTransport
   private readonly textLimit: number
-  private readonly shortcutKey: string
+  private readonly shortcut: Shortcut
   private readonly entries: Entry[] = []
   private isEnabled = false
   private currentSettings: QuelloSettings
@@ -82,7 +90,7 @@ export class QuelloPicker implements QuelloInstance {
 
   constructor(options: QuelloOptions = {}) {
     this.textLimit = options.textLimit ?? DEFAULT_TEXT_LIMIT
-    this.shortcutKey = (options.shortcutKey ?? 'q').toLowerCase()
+    this.shortcut = parseShortcut(options.shortcut ?? DEFAULT_SHORTCUT)
     this.transport = new PicksTransport(
       options.endpoint === undefined ? DEFAULT_ENDPOINT : options.endpoint,
     )
@@ -92,15 +100,18 @@ export class QuelloPicker implements QuelloInstance {
         DEFAULT_SETTINGS,
       ),
     )
-    this.overlay = new Overlay({
-      onToggle: () => this.toggle(),
-      onClear: () => this.clear(),
-      onRemovePick: (id) => this.remove(id),
-      onNoteChange: (id, note) => this.setNote(id, note),
-      onScrollToPick: (id) => this.scrollToPick(id),
-      onCopyPick: (id) => void this.copyPick(id),
-      onSettingsChange: (patch) => this.setSettings(patch),
-    })
+    this.overlay = new Overlay(
+      {
+        onToggle: () => this.toggle(),
+        onClear: () => this.clear(),
+        onRemovePick: (id) => this.remove(id),
+        onNoteChange: (id, note) => this.setNote(id, note),
+        onScrollToPick: (id) => this.scrollToPick(id),
+        onCopyPick: (id) => void this.copyPick(id),
+        onSettingsChange: (patch) => this.setSettings(patch),
+      },
+      formatShortcut(this.shortcut),
+    )
 
     this.overlay.mount()
     this.overlay.setSettings(this.currentSettings)
@@ -395,6 +406,23 @@ export class QuelloPicker implements QuelloInstance {
     this.consumePendingScroll()
   }
 
+  /**
+   * A shortcut with no modifier — `q`, `f2` — would otherwise fire mid-sentence.
+   * Combinations that hold Alt, Ctrl or Cmd are left alone, since those do not
+   * collide with typing.
+   */
+  private isTypingTarget(event: KeyboardEvent): boolean {
+    if (!needsTypingGuard(this.shortcut)) return false
+    const target = event.composedPath()[0]
+    if (!(target instanceof HTMLElement)) return false
+    return (
+      target.isContentEditable ||
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement
+    )
+  }
+
   private isOwnUi(event: Event): boolean {
     return event.composedPath().includes(this.overlay.host)
   }
@@ -431,7 +459,7 @@ export class QuelloPicker implements QuelloInstance {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    if (event.altKey && event.key.toLowerCase() === this.shortcutKey) {
+    if (matchesShortcut(event, this.shortcut) && !this.isTypingTarget(event)) {
       event.preventDefault()
       this.toggle()
       return

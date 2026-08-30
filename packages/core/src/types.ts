@@ -120,8 +120,11 @@ export interface QuelloPicksFile {
 export interface QuelloOptions {
   /** Dev-server endpoint that persists picks. Set to `null` to disable persistence. */
   endpoint?: string | null
-  /** Keyboard shortcut key (combined with Alt). Defaults to `q`. */
-  shortcutKey?: string
+  /**
+   * Keyboard shortcut that toggles picker mode, declared in full: `alt+q`,
+   * `ctrl+shift+p`, `f2`. Defaults to `alt+q`.
+   */
+  shortcut?: string
   /** Maximum number of characters kept from an element's text. */
   textLimit?: number
   /** Start with picker mode already enabled. */

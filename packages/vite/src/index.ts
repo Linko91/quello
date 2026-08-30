@@ -18,8 +18,12 @@ export interface QuelloPluginOptions {
   enabled?: boolean
   /** Where picks are persisted, relative to the Vite root. Defaults to `.quello/picks.json`. */
   picksFile?: string
-  /** Picker shortcut key, combined with Alt. Defaults to `q`. */
-  shortcutKey?: string
+  /**
+   * Keyboard shortcut that toggles picker mode, declared in full — `alt+q`,
+   * `ctrl+shift+p`, `f2`. Nothing is implied, so a combination without Alt works
+   * just as well. Defaults to `alt+q`.
+   */
+  shortcut?: string
   /** Characters of element text kept per pick. Defaults to `120`. */
   textLimit?: number
   /** Append the quello section to CLAUDE.md on first run. Defaults to `true`. */
@@ -74,7 +78,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
   const {
     enabled = true,
     picksFile = DEFAULT_PICKS_FILE,
-    shortcutKey = 'q',
+    shortcut = 'alt+q',
     textLimit = 120,
     claudeMd = true,
     htmlMode = 'truncated',
@@ -153,7 +157,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
             src: CLIENT_ROUTE,
             defer: true,
             'data-quello-endpoint': PICKS_ROUTE,
-            'data-quello-shortcut': shortcutKey,
+            'data-quello-shortcut': shortcut,
             'data-quello-text-limit': String(textLimit),
             'data-quello-html-mode': htmlMode,
             'data-quello-html-limit': String(htmlLimit),

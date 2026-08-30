@@ -210,10 +210,16 @@ button:hover { background: #37343f; }
 button.primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  /* Wide enough for the wordmark, so swapping in "picking…" does not shuffle
+     everything to its right. */
+  min-width: 83px;
   /* Asymmetric on purpose: the wordmark's box includes the q's descender, so
      centring it geometrically leaves the letters sitting high. */
   padding: 9px 11px 5px;
 }
+/* The text has no descender to allow for, so it centres normally. */
+button.primary[data-on="true"] { padding: 7px 12px; }
 button.primary[data-on="true"] { background: #7c5cff; }
 button.primary[data-on="true"]:hover { background: #6b4cf0; }
 button.icon { padding: 7px 10px; font-size: 13px; line-height: 1; }
@@ -408,7 +414,11 @@ export class Overlay {
   private position: QuelloPoint | null = null
   private compact = false
 
-  constructor(private readonly handlers: OverlayHandlers) {
+  constructor(
+    private readonly handlers: OverlayHandlers,
+    /** Rendered into the tooltips, so they name whatever combination is configured. */
+    private readonly shortcutLabel = 'Alt+Q',
+  ) {
     this.host = document.createElement(HOST_TAG)
     this.host.setAttribute('data-quello', 'root')
     this.root = this.host.attachShadow({ mode: 'open' })
@@ -427,7 +437,7 @@ export class Overlay {
     grip.textContent = '⠿'
     grip.title = 'Drag to move'
 
-    this.toggleButton = button('primary', '', 'Start picking (Alt+Q)')
+    this.toggleButton = button('primary', '', `Start picking (${shortcutLabel})`)
     this.toggleButton.setAttribute('aria-label', 'Toggle element picker')
     this.toggleButton.innerHTML = logoSvg(17)
     this.toggleButton.dataset.on = 'false'
@@ -897,7 +907,12 @@ export class Overlay {
 
   setEnabled(enabled: boolean): void {
     this.toggleButton.dataset.on = String(enabled)
-    this.toggleButton.title = enabled ? 'Stop picking (Alt+Q)' : 'Start picking (Alt+Q)'
+    this.toggleButton.title = enabled
+      ? `Stop picking (${this.shortcutLabel})`
+      : `Start picking (${this.shortcutLabel})`
+    // The wordmark says what this is; while picking, the button says what it is doing.
+    if (enabled) this.toggleButton.textContent = 'picking…'
+    else this.toggleButton.innerHTML = logoSvg(17)
     this.puck.dataset.on = String(enabled)
     if (!enabled) this.clearHover()
   }
