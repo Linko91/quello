@@ -1,0 +1,8 @@
+{
+  // Nuxt generates its own config with the auto-imported globals; `nuxt typecheck`
+  // is what validates the app. This keeps the workspace-wide `tsc` pass honest by
+  // limiting it to the plain TypeScript here.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "types": [], "allowJs": true },
+  "include": ["content.ts"]
+}

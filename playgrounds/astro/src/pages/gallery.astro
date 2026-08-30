@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import TokenTile from '../components/TokenTile.astro'
+import { tiles } from '../content'
+---
+
+<BaseLayout title="Gallery">
+  <main class="page">
+    <header class="hero">
+      <h1>Gallery</h1>
+      <p class="lead">
+        {tiles.length} near-identical tiles. They share a tag and a class, so a selector has to fall
+        back on position to tell one from another.
+      </p>
+    </header>
+
+    <section class="grid">
+      {tiles.map((tile) => <TokenTile name={tile.name} group={tile.group} hue={tile.hue} />)}
+    </section>
+
+    <h2>Why this page exists</h2>
+    <p>
+      Astro ships no framework runtime here, so a pick carries no component name — only the selector,
+      the DOM path and the text. That is the fallback path worth exercising.
+    </p>
+  </main>
+</BaseLayout>

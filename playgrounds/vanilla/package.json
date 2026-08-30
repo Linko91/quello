@@ -1,0 +1,12 @@
+{
+  "name": "playground-vanilla",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "quello . --serve --port 5181"
+  },
+  "devDependencies": {
+    "@quello/cli": "workspace:^"
+  }
+}

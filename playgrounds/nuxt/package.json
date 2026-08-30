@@ -1,0 +1,15 @@
+{
+  "name": "playground-nuxt",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 5178",
+    "build": "nuxt build"
+  },
+  "devDependencies": {
+    "nuxt": "^3.15.0",
+    "vue": "^3.5.13",
+    "vite-plugin-quello": "workspace:^"
+  }
+}

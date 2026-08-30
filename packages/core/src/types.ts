@@ -12,7 +12,7 @@ export interface QuelloRect {
 
 /** Component-level information recovered from a framework's internals. */
 export interface FrameworkInfo {
-  framework: 'vue' | 'react'
+  framework: 'vue' | 'react' | 'svelte' | 'angular'
   /** Component display name, when the framework exposes one. */
   component?: string
   /** Source file the component (or element) was declared in. */

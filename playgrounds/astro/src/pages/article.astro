@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { changelog, sections } from '../content'
+---
+
+<BaseLayout title="Article">
+  <main class="page">
+    <header class="hero">
+      <h1>A long page, on purpose</h1>
+      <p class="lead">
+        Everything below is here so there is something to scroll past. Pick an element near the top,
+        scroll to the bottom, and check that the badge is still where you left it.
+      </p>
+    </header>
+
+    {sections.map((section) => (
+      <section id={`a-${section.id}`}>
+        <h2>{section.title}</h2>
+        {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </section>
+    ))}
+
+    <h2>Changelog</h2>
+    <table>
+      <thead><tr><th>Version</th><th>Date</th><th>Note</th></tr></thead>
+      <tbody>
+        {changelog.map((entry) => (
+          <tr><td>{entry.version}</td><td>{entry.date}</td><td>{entry.note}</td></tr>
+        ))}
+      </tbody>
+    </table>
+
+    <h2>Report something</h2>
+    <form class="form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="topic">Topic</label>
+        <select id="topic"><option>Bug</option><option>Idea</option></select>
+      </div>
+      <div class="actions" style="margin-top: 0">
+        <button class="cta" type="button">Send</button>
+      </div>
+    </form>
+  </main>
+</BaseLayout>

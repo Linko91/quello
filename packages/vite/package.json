@@ -15,15 +15,23 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
-  "keywords": ["vite-plugin", "quello", "ai", "devtools"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "vite-plugin",
+    "quello",
+    "ai",
+    "devtools"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@quello/core": "workspace:^"
+    "@quello/core": "workspace:^",
+    "@quello/server": "workspace:^"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"

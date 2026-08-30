@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Overview · quello Vanilla playground</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <nav class="site-nav">
+      <span class="brand">quello</span>
+      <a href="/index.html">Overview</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/article.html">Article</a>
+      <span class="spacer"></span>
+      <span class="hint">Alt+Q to pick</span>
+    </nav>
+    <main class="page">
+      <header class="hero">
+        <h1>Point at it, then say "quello"</h1>
+        <p class="lead">
+          No framework, no bundler, no build step. quello runs beside this page from the CLI, and
+          picks still land in <code>.quello/picks.json</code>.
+        </p>
+        <div class="badge-row">
+          <span class="pill">plain HTML</span>
+          <span class="pill">no build</span>
+          <span class="pill">quello CLI</span>
+          <span class="pill">3 pages</span>
+        </div>
+        <div class="actions">
+          <button class="cta" id="counter">Clicked 0 times</button>
+          <button class="ghost">Secondary action</button>
+        </div>
+      </header>
+
+      <h2>What a pick carries</h2>
+      <section class="grid" id="features"></section>
+
+      <div class="split" style="margin-top: 48px">
+        <aside class="rail" id="rail"></aside>
+        <div id="sections"></div>
+      </div>
+    </main>
+    <footer class="site-footer">
+      quello · Vanilla playground — three pages, all of them longer than the viewport.
+    </footer>
+    <script defer src="http://127.0.0.1:5181/__quello/client.js" data-quello-endpoint="http://127.0.0.1:5181/__quello/picks"></script>
+    <script type="module">
+      import { features, sections } from '/js/content.js'
+      import { markCurrentLink } from '/js/nav.js'
+
+      markCurrentLink()
+
+      document.getElementById('features').innerHTML = features
+        .map((f) => `<article class="card"><h3>${f.title}</h3><p>${f.body}</p><span class="tag">${f.tag}</span></article>`)
+        .join('')
+
+      document.getElementById('rail').innerHTML = sections
+        .map((s) => `<a href="#${s.id}">${s.title}</a>`)
+        .join('')
+
+      document.getElementById('sections').innerHTML = sections
+        .map((s) => `<section id="${s.id}"><h2 style="margin-top:0">${s.title}</h2>${s.paragraphs.map((p) => `<p>${p}</p>`).join('')}</section>`)
+        .join('')
+
+      const button = document.getElementById('counter')
+      let clicks = 0
+      button.addEventListener('click', () => {
+        clicks++
+        button.textContent = `Clicked ${clicks} times`
+      })
+    </script>
+  </body>
+</html>

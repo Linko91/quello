@@ -1,0 +1,19 @@
+{
+  "name": "playground-next",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev --port 5180",
+    "build": "next build"
+  },
+  "dependencies": {
+    "next": "^15.1.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@quello/core": "workspace:^",
+    "@types/react": "^18.3.18",
+    "@types/node": "^22.10.2"
+  }
+}

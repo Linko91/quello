@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Article · quello Vanilla playground</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <nav class="site-nav">
+      <span class="brand">quello</span>
+      <a href="/index.html">Overview</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/article.html">Article</a>
+      <span class="spacer"></span>
+      <span class="hint">Alt+Q to pick</span>
+    </nav>
+    <main class="page">
+      <header class="hero">
+        <h1>A long page, on purpose</h1>
+        <p class="lead">
+          Everything below is here so there is something to scroll past. Pick an element near the
+          top, scroll to the bottom, and check that the badge is still where you left it.
+        </p>
+      </header>
+      <div id="sections"></div>
+      <h2>Changelog</h2>
+      <table>
+        <thead><tr><th>Version</th><th>Date</th><th>Note</th></tr></thead>
+        <tbody id="changelog"></tbody>
+      </table>
+      <h2>Report something</h2>
+      <form class="form" onsubmit="return false">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label for="topic">Topic</label>
+          <select id="topic"><option>Bug</option><option>Idea</option></select>
+        </div>
+        <div class="field">
+          <label for="details">Details</label>
+          <textarea id="details" placeholder="What happened?"></textarea>
+        </div>
+        <div class="actions" style="margin-top: 0">
+          <button class="cta" type="button">Send</button>
+          <button class="ghost" type="reset">Reset</button>
+        </div>
+      </form>
+    </main>
+    <footer class="site-footer">quello · Vanilla playground</footer>
+    <script defer src="http://127.0.0.1:5181/__quello/client.js" data-quello-endpoint="http://127.0.0.1:5181/__quello/picks"></script>
+    <script type="module">
+      import { changelog, sections } from '/js/content.js'
+      import { markCurrentLink } from '/js/nav.js'
+
+      markCurrentLink()
+
+      document.getElementById('sections').innerHTML = sections
+        .map((s) => `<section id="a-${s.id}"><h2>${s.title}</h2>${s.paragraphs.map((p) => `<p>${p}</p>`).join('')}</section>`)
+        .join('')
+
+      document.getElementById('changelog').innerHTML = changelog
+        .map((e) => `<tr><td>${e.version}</td><td>${e.date}</td><td>${e.note}</td></tr>`)
+        .join('')
+    </script>
+  </body>
+</html>

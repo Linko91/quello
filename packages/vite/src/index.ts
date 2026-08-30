@@ -1,10 +1,15 @@
-import { createRequire } from 'node:module'
-import { readFile } from 'node:fs/promises'
-import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin } from 'vite'
-import { ensureClaudeMd } from './claude-md'
-import { DEFAULT_PICKS_FILE, normalize, readPicks, resolvePicksPath, writePicks } from './store'
-
+import {
+  CLIENT_ROUTE,
+  coreEsmPath,
+  DEFAULT_PICKS_FILE,
+  ensureClaudeMd,
+  PICKS_ROUTE,
+  resolvePicksPath,
+  runtimeAttrs,
+  serveClient,
+  servePicks,
+} from '@quello/server'
 import type { QuelloHtmlMode, QuelloTheme } from '@quello/core'
 
 export type {
@@ -15,9 +20,13 @@ export type {
   QuelloTheme,
 } from '@quello/core'
 
-const CLIENT_ROUTE = '/__quello/client.js'
-const PICKS_ROUTE = '/__quello/picks'
-const MAX_BODY_BYTES = 2_000_000
+/**
+ * Import target for frameworks that render their own HTML — Nuxt, Astro, SvelteKit,
+ * Qwik — where `transformIndexHtml` is never called. Importing it from a client-only
+ * file starts quello with the same options the plugin was given.
+ */
+const VIRTUAL_ID = 'virtual:quello'
+const RESOLVED_VIRTUAL_ID = '\0virtual:quello'
 
 export interface QuelloPluginOptions {
   /** Turn the plugin off without removing it from the config. Defaults to `true`. */
@@ -48,57 +57,6 @@ export interface QuelloPluginOptions {
   theme?: QuelloTheme
 }
 
-const requireFrom = createRequire(import.meta.url)
-
-/** Absolute path of the prebuilt, self-executing core runtime. */
-function clientBundlePath(): string {
-  return requireFrom.resolve('@quello/core/client')
-}
-
-/** Only the keys that were actually set are injected, so the runtime keeps its defaults. */
-function themeAttrs(theme: QuelloTheme): Record<string, string> {
-  const names: Record<keyof QuelloTheme, string> = {
-    hoverColor: 'data-quello-hover-color',
-    hoverBorderWidth: 'data-quello-hover-border-width',
-    pickedFill: 'data-quello-picked-fill',
-    pickedBorderColor: 'data-quello-picked-border-color',
-    pickedBorderStyle: 'data-quello-picked-border-style',
-    pickedBorderWidth: 'data-quello-picked-border-width',
-  }
-  const attrs: Record<string, string> = {}
-  for (const [key, name] of Object.entries(names) as Array<[keyof QuelloTheme, string]>) {
-    const value = theme[key]
-    if (value !== undefined && value !== null && value !== '') attrs[name] = String(value)
-  }
-  return attrs
-}
-
-function send(res: ServerResponse, status: number, body: unknown): void {
-  const payload = JSON.stringify(body)
-  res.statusCode = status
-  res.setHeader('content-type', 'application/json; charset=utf-8')
-  res.setHeader('cache-control', 'no-store')
-  res.end(payload)
-}
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolvePromise, reject) => {
-    let size = 0
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => {
-      size += chunk.length
-      if (size > MAX_BODY_BYTES) {
-        reject(new Error('payload too large'))
-        req.destroy()
-        return
-      }
-      chunks.push(chunk)
-    })
-    req.on('end', () => resolvePromise(Buffer.concat(chunks).toString('utf8')))
-    req.on('error', reject)
-  })
-}
-
 /**
  * Dev-only Vite plugin: injects the quello runtime and persists picks to disk
  * so a coding agent can resolve `PICK <n>` back to source.
@@ -118,10 +76,26 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
   let picksPath = ''
   let root = process.cwd()
 
+  const runtime = { endpoint: PICKS_ROUTE, shortcut, textLimit, htmlMode, htmlLimit, theme }
+
   return {
     name: 'vite-plugin-quello',
     apply: 'serve',
     enforce: 'post',
+
+    resolveId(id) {
+      return id === VIRTUAL_ID ? RESOLVED_VIRTUAL_ID : null
+    },
+
+    load(id) {
+      if (id !== RESOLVED_VIRTUAL_ID) return null
+      if (!enabled) return 'export {}'
+      return [
+        `import { createQuello } from ${JSON.stringify(coreEsmPath())}`,
+        `createQuello(${JSON.stringify(runtime)})`,
+        'export {}',
+      ].join('\n')
+    },
 
     configResolved(config) {
       root = config.root
@@ -139,42 +113,8 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
 
     configureServer(server) {
       if (!enabled) return
-
-      server.middlewares.use(CLIENT_ROUTE, async (_req, res) => {
-        try {
-          const code = await readFile(clientBundlePath(), 'utf8')
-          res.statusCode = 200
-          res.setHeader('content-type', 'application/javascript; charset=utf-8')
-          res.setHeader('cache-control', 'no-cache')
-          res.end(code)
-        } catch (error) {
-          res.statusCode = 500
-          res.end(`console.error(${JSON.stringify(`[quello] runtime not built: ${(error as Error).message}`)})`)
-        }
-      })
-
-      server.middlewares.use(PICKS_ROUTE, async (req, res) => {
-        try {
-          if (req.method === 'GET' || req.method === 'HEAD') {
-            send(res, 200, await readPicks(picksPath))
-            return
-          }
-          if (req.method === 'POST' || req.method === 'PUT') {
-            const body = await readBody(req)
-            const written = await writePicks(picksPath, normalize(JSON.parse(body || '{}')))
-            send(res, 200, { ok: true, count: written.picks.length, file: picksPath })
-            return
-          }
-          if (req.method === 'DELETE') {
-            await writePicks(picksPath, { version: 1, updatedAt: '', picks: [] })
-            send(res, 200, { ok: true, count: 0 })
-            return
-          }
-          send(res, 405, { ok: false, error: 'method not allowed' })
-        } catch (error) {
-          send(res, 400, { ok: false, error: (error as Error).message })
-        }
-      })
+      server.middlewares.use(CLIENT_ROUTE, (_req, res) => void serveClient(res))
+      server.middlewares.use(PICKS_ROUTE, (req, res) => void servePicks(req, res, { picksPath }))
     },
 
     transformIndexHtml(_html, ctx) {
@@ -183,16 +123,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
         {
           tag: 'script',
           injectTo: 'body',
-          attrs: {
-            src: CLIENT_ROUTE,
-            defer: true,
-            'data-quello-endpoint': PICKS_ROUTE,
-            'data-quello-shortcut': shortcut,
-            'data-quello-text-limit': String(textLimit),
-            'data-quello-html-mode': htmlMode,
-            'data-quello-html-limit': String(htmlLimit),
-            ...themeAttrs(theme),
-          },
+          attrs: { src: CLIENT_ROUTE, defer: true, ...runtimeAttrs(runtime) },
         },
       ]
     },

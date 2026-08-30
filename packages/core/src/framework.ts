@@ -40,7 +40,7 @@ function basename(file: string): string {
 
 function nameFromFile(file: string | undefined): string | undefined {
   if (!file) return undefined
-  return basename(file).replace(/\.[jt]sx?$|\.vue$/, '') || undefined
+  return basename(file).replace(/\.(?:[jt]sx?|vue|svelte|astro)$/, '') || undefined
 }
 
 /** `data-v-inspector="src/App.vue:12:3"`, emitted by vite-plugin-vue-inspector. */
@@ -147,10 +147,65 @@ export function detectReact(el: Element): FrameworkInfo | null {
   return null
 }
 
+interface SvelteMeta {
+  loc?: { file?: string; line?: number; column?: number }
+}
+
+/**
+ * Svelte leaves no component instance on the DOM, but its dev build tags every
+ * element it creates with `__svelte_meta`, which carries the file and line — the
+ * part that matters most.
+ */
+export function detectSvelte(el: Element): FrameworkInfo | null {
+  let node: Element | null = el
+  for (let i = 0; node && i < MAX_WALK; i++, node = node.parentElement) {
+    const meta = (node as Element & { __svelte_meta?: SvelteMeta }).__svelte_meta
+    const loc = meta?.loc
+    if (!loc?.file) continue
+    return {
+      framework: 'svelte',
+      ...(nameFromFile(loc.file) ? { component: nameFromFile(loc.file) } : {}),
+      file: loc.file,
+      ...(loc.line ? { line: loc.line } : {}),
+      ...(loc.column ? { column: loc.column } : {}),
+    }
+  }
+  return null
+}
+
+/**
+ * Angular's debug API, present on `window.ng` in a development build since Ivy.
+ * `getComponent` only answers for a component's own host element, so the walk up
+ * to the component that rendered a plain node is `getOwningComponent`'s job.
+ */
+interface AngularDebugApi {
+  getComponent?(el: Element): object | null
+  getOwningComponent?(el: Element): object | null
+}
+
+export function detectAngular(el: Element): FrameworkInfo | null {
+  const ng = (globalThis as { ng?: AngularDebugApi }).ng
+  if (!ng?.getComponent && !ng?.getOwningComponent) return null
+
+  let instance: object | null = null
+  try {
+    instance = ng.getComponent?.(el) ?? ng.getOwningComponent?.(el) ?? null
+  } catch {
+    // Asked about a node Angular does not own; not an Angular element.
+    return null
+  }
+  if (!instance) return null
+
+  // Angular reports no source location, and the compiler prefixes class names
+  // with an underscore, so `_AppComponent` is really `AppComponent`.
+  const name = instance.constructor?.name?.replace(/^_+/, '')
+  return name ? { framework: 'angular', component: name } : { framework: 'angular' }
+}
+
 /** Returns metadata for whichever framework owns the element, or `null`. */
 export function detectFramework(el: Element): FrameworkInfo | null {
   try {
-    return detectVue(el) ?? detectReact(el)
+    return detectVue(el) ?? detectReact(el) ?? detectSvelte(el) ?? detectAngular(el)
   } catch {
     return null
   }

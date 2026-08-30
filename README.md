@@ -8,7 +8,9 @@ Claude Code, Cursor, Codex, Windsurf & Copilot.
 You pick elements in the running app; quello writes them to `.quello/picks.json` as `PICK 1`,
 `PICK 2`, … Then you say *"make PICK 2 sticky"* and the agent knows exactly which component you mean.
 
-> **MVP status** — Vite only, dev mode only. No MCP server and no Next.js adapter yet (both v2).
+> **MVP status** — dev mode only. Vite, webpack, or no bundler at all: eleven playgrounds cover the
+> ground. Next still needs ~40 lines of its own (see [`playgrounds/next`](playgrounds/next)), and
+> there is no MCP server yet.
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
 ## Packages
@@ -16,11 +18,14 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | Package | Description |
 | --- | --- |
 | [`@quello/core`](packages/core) | Framework-agnostic browser runtime. Zero dependencies. |
+| [`@quello/server`](packages/server) | Picks endpoint, storage and CLAUDE.md, shared by the rest. |
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
+| [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
+| [`@quello/cli`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
 
-Plus two manual test apps: [`playgrounds/vue`](playgrounds/vue) and
-[`playgrounds/react`](playgrounds/react). They mirror each other — same three routes, same content,
-one built on vue-router and the other on react-router:
+Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
+same three routes, same content, so a difference you see belongs to the framework and not to the
+page.
 
 | Route | What it is for |
 | --- | --- |
@@ -31,6 +36,83 @@ one built on vue-router and the other on react-router:
 Every page is taller than the viewport, the nav is sticky, and navigation is client-side, so the
 three things worth exercising by hand — scrolling, sticky positioning and route changes — are all
 reachable in a few clicks.
+
+Each one is a row of the [compatibility matrix](#compatibility), running:
+
+| Playground | Port | | Playground | Port |
+| --- | --- | --- | --- | --- |
+| [`vue`](playgrounds/vue) | 5175 | | [`vanilla`](playgrounds/vanilla) | 5181 |
+| [`react`](playgrounds/react) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
+| [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
+| [`nuxt`](playgrounds/nuxt) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
+| [`astro`](playgrounds/astro) | 5179 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
+| [`next`](playgrounds/next) | 5180 | | | |
+
+```bash
+pnpm play:vue     pnpm play:react   pnpm play:svelte   pnpm play:solid
+pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro  pnpm play:next
+pnpm play:webpack pnpm play:angular pnpm play:vanilla
+```
+
+Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
+looks like in practice.
+
+## Compatibility
+
+Two questions decide whether quello works on a project, and they are independent:
+
+- **The builder** decides *how quello gets in* — a plugin, a virtual module, or the CLI beside it.
+- **The framework** decides *what a pick can know* — whether the runtime leaves anything on the DOM
+  to identify the component that rendered an element.
+
+So Vue on webpack gets in the webpack way and still reports Vue components, while Solid on Vite gets
+in the easy way and reports none. Neither axis constrains the other.
+
+| Framework | Vite | webpack | Its own toolchain | No bundler | What a pick knows |
+| --- | --- | --- | --- | --- | --- |
+| **Vue** | ✅ plugin | ○ plugin | — | ○ CLI | component, file |
+| **React** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line¹ |
+| **Svelte** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line, column |
+| **Solid** | ✅ plugin | ○ plugin | — | ○ CLI | selector, path, text |
+| **Nuxt** | ✅ `virtual:quello` | — | — | — | component, file |
+| **SvelteKit** | ✅ `virtual:quello` | — | — | — | component, file, line |
+| **Astro** | ✅ `virtual:quello` | — | — | — | selector, path, text |
+| **Next** | — | ⚠️ ~40 lines | ⚠️ ~40 lines | — | component¹ |
+| **Angular** | — | — | ✅ CLI | — | component |
+| **None** (html/js/css) | ○ plugin | ✅ plugin | — | ✅ CLI | selector, path, text |
+
+✅ verified in a playground · ○ supported, not exercised here
+⚠️ needs code of your own · — not a combination that exists · ¹ see the note below
+
+Reading the table:
+
+- **Vite** is the easy column. An SPA gets the script tag injected; a framework that renders its own
+  HTML imports [`virtual:quello`](#frameworks-that-render-their-own-html) from one client-only file.
+- **webpack** needs [`webpack-plugin-quello`](#webpack), which adds the tag through
+  `html-webpack-plugin` and the endpoint through `webpack-dev-server`.
+- **Its own toolchain** means a dev server quello cannot configure. Angular's is the case in the
+  playgrounds: [`npx quello`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
+  own port and the page carries a script tag pointing at it. The same answer works for Rails, Laravel
+  or anything else that serves HTML its own way.
+- **Next** is the one gap, and not because it is React. It builds on webpack or turbopack, but runs
+  its own dev server rather than `webpack-dev-server`, so there is no `setupMiddlewares` to add the
+  endpoint to; and it renders HTML with its own renderer rather than `html-webpack-plugin`, so there
+  is no generated document to add the tag to. Both halves of the integration have to go the Next
+  way: a client component importing `@quello/core`, and a route handler for `.quello/picks.json`.
+  It works — see [`playgrounds/next`](playgrounds/next) — but you write those lines. Packaging them
+  is on the [roadmap](#ideas-not-built-yet).
+
+The last column is whatever the runtime leaves on the DOM in a development build. It follows the
+framework rather than the integration route — with one exception worth knowing about:
+
+> **React's source location follows the JSX compiler, not React.** Vite compiles JSX with Babel's
+> development transform, which annotates every element with its file and line; Next compiles with
+> SWC, which does not. Both playgrounds run React 18.3.1, and only the Vite one reports a line —
+> verified by reading `_debugSource` off the fibers in each. The component name is there either way,
+> so `OverviewPage` still points at the file, just without the line number.
+
+`selector, path, text` is the floor, and it is enough for an agent to find the code — see
+[what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
 
 ## Usage
 
@@ -144,7 +226,8 @@ another page, so in-page anchors leave badges alone.
 
 The **⚙** button in the toolbar opens a small panel, split into four tabs — **HTML**, **Clipboard**,
 **Notes**, **Theme**. The tabs share one grid cell, so the panel is always as tall as its tallest tab
-and switching never resizes it. Everything in it is a working preference, kept per-developer in `localStorage`;
+and switching never resizes it. Everything in it is a working preference, kept per-developer
+in `localStorage`;
 anything that belongs to the project rather than the person is a [plugin option](#plugin-options)
 instead.
 
@@ -200,9 +283,34 @@ what a stylesheet asked for — enough to act on "make this bigger" or "why is t
 anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
 always describes the element as it is now.
 
-Component metadata is best effort and dev-build only: Vue via `__vueParentComponent` (or a
-`data-v-inspector` attribute), React by walking the fiber tree to the nearest named component and
-reading `_debugSource` for file and line.
+### What a pick can know
+
+Component metadata is best effort and dev-build only. Each framework is asked in turn, and the first
+one that recognises the element answers:
+
+| Framework | Read from | Yields |
+| --- | --- | --- |
+| **Vue** | `__vueParentComponent`, or a `data-v-inspector` attribute | name, source file |
+| **React** | the `__reactFiber$…` key, walked up to the nearest named component | name, file and line *when the JSX compiler annotates them* |
+| **Svelte** | `__svelte_meta.loc`, left on every element the dev build creates | name, file, line, column |
+| **Angular** | `window.ng.getComponent` / `getOwningComponent`, Ivy's debug API | name |
+
+Angular reports no source location — its debug API does not carry one — but the component name is
+enough to find the file in one step. The compiler prefixes class names with an underscore, so
+`_AppComponent` is reported as `AppComponent`.
+
+Two frameworks deliberately have no detector:
+
+- **Solid** compiles its reactivity away. At runtime there is no component instance to find and
+  nothing on the DOM but its event delegation — this is the architecture, not a missing API. Reading
+  it would mean asking projects to add `solid-devtools`' Babel plugin for a secondary field.
+- **Astro** does emit `data-astro-source-file` and `data-astro-source-loc`, but its dev toolbar
+  strips them from the DOM the moment it loads, and turning the toolbar off stops them being emitted
+  at all. They are that tool's private detail, not an API; harvesting them would be a race against
+  Astro's own init code.
+
+Where nothing answers, `framework` is `null` and the selector, DOM path and text carry the pick on
+their own — which is enough for an agent, just with one more step.
 
 #### Agent notes
 
@@ -289,6 +397,64 @@ never fire there.
 A combination with **no** Alt, Ctrl or Cmd is ignored while the focus is in an input, textarea,
 select or contenteditable, so a bare `q` cannot toggle picker mode mid-sentence. Combinations that
 hold a modifier are not filtered, since they do not collide with typing.
+
+### webpack
+
+```js
+// webpack.config.js
+import QuelloWebpackPlugin from 'webpack-plugin-quello'
+
+export default {
+  plugins: [new HtmlWebpackPlugin({ template: './src/index.html' }), new QuelloWebpackPlugin()],
+  devServer: { port: 3000 },
+}
+```
+
+It takes the same options as the Vite plugin. The script tag goes in through `html-webpack-plugin`;
+without it there is no generated HTML to add to, and `plugin.scriptTag()` returns the tag to paste
+into your own template. Production builds are skipped whatever the config says.
+
+### No bundler, or a bundler quello cannot reach
+
+Angular's dev server, a Rails or Laravel app, three HTML files in a folder — anything that will not
+take a plugin. Run quello beside it:
+
+```bash
+npx quello              # endpoint only, for an app already on its own server
+npx quello . --serve    # also serve this folder, for a plain html/js/css project
+```
+
+It prints the tag to paste into your page:
+
+```html
+<script defer src="http://127.0.0.1:5100/__quello/client.js"
+        data-quello-endpoint="http://127.0.0.1:5100/__quello/picks"></script>
+```
+
+The endpoint answers cross-origin, since your app is usually on a different port. It writes the same
+`.quello/picks.json` and the same `CLAUDE.md` section as every other integration — the agent cannot
+tell which one you used.
+
+### Frameworks that render their own HTML
+
+`transformIndexHtml` is a Vite SPA hook: Nuxt, Astro and SvelteKit build their document themselves
+and never call it. For those, keep the plugin in the Vite config — it still serves the runtime, the
+picks endpoint and CLAUDE.md — and import the virtual module from a client-only file:
+
+```ts
+// Nuxt — plugins/quello.client.ts
+export default defineNuxtPlugin(() => {
+  if (import.meta.dev) import('virtual:quello')
+})
+```
+
+```astro
+<!-- Astro — in your base layout, before </body> -->
+{import.meta.env.DEV && <script>import('virtual:quello')</script>}
+```
+
+The module is generated by the plugin, so the options you passed it — shortcut, theme, HTML mode —
+apply exactly as they would to an injected tag. In a production build it resolves to nothing.
 
 ### Plugin options
 
@@ -424,8 +590,14 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
 
 - **MCP server.** Let the agent read picks over MCP instead of from a file, so it works outside
   editors that read `CLAUDE.md`.
-- **Next.js adapter.** The runtime is framework-agnostic already; what is missing is the equivalent
-  of the Vite plugin for the Next dev server.
+- **Qwik playground.** Qwik's own dev server threw `Converting circular structure to JSON` on a
+  hand-rolled scaffold, with or without quello in the config — so the playground was dropped rather
+  than shipped broken. The integration path is the same `virtual:quello` that Nuxt, SvelteKit and
+  Astro use, so this is a scaffolding job: start from `npm create qwik@latest`.
+- **`@quello/next` package.** The Next playground already proves the pieces work — the runtime
+  imported from a client component, a route handler writing `.quello/picks.json`. What is missing is
+  packaging those forty lines so a project does not have to write them, plus reading options from
+  `next.config`.
 
 **Pick list**
 
@@ -445,6 +617,10 @@ These only start paying off past roughly ten picks, which is why none of them ar
 
 **Smaller things**
 
+- **Solid and Astro component names.** Both are ruled out for now, for reasons that are structural
+  rather than temporary — see [what a pick can know](#what-a-pick-can-know). Solid would become
+  possible if a project already runs `solid-devtools`' Babel plugin; Astro, only if it ever exposes
+  its source annotations as a supported API.
 - **`opacity` in `style`.** The computed `color` of an element inside a faded parent looks opaque,
   because the transparency lives on the ancestor. Worth adding if "why is this grey?" comes up.
 - **Route-aware navigation.** Cross-page scrolling reloads the page because the runtime cannot ask

@@ -29,7 +29,13 @@ export {
   truncateMiddle,
 } from './settings'
 export { PicksTransport } from './transport'
-export { detectFramework, detectReact, detectVue } from './framework'
+export {
+  detectAngular,
+  detectFramework,
+  detectReact,
+  detectSvelte,
+  detectVue,
+} from './framework'
 export {
   collapseText,
   domPath,
