@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gallery · quello Vanilla playground</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <nav class="site-nav">
+      <span class="brand">quello</span>
+      <a href="/index.html">Overview</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/article.html">Article</a>
+      <span class="spacer"></span>
+      <span class="hint">Alt+Q to pick</span>
+    </nav>
+    <main class="page">
+      <header class="hero">
+        <h1>Gallery</h1>
+        <p class="lead">
+          28 near-identical tiles. They share a tag and a class, so a selector has to fall back on
+          position to tell one from another.
+        </p>
+      </header>
+      <div class="filters" id="filters"></div>
+      <section class="grid" id="tiles"></section>
+      <h2>Why this page exists</h2>
+      <p>
+        Filtering removes tiles from the DOM. A pick made on a tile that is later filtered out keeps
+        its entry, but the element it points at is gone.
+      </p>
+    </main>
+    <footer class="site-footer">quello · Vanilla playground</footer>
+    <script defer src="http://127.0.0.1:5181/__quello/client.js" data-quello-endpoint="http://127.0.0.1:5181/__quello/picks"></script>
+    <script type="module">
+      import { tiles } from '/js/content.js'
+      import { markCurrentLink } from '/js/nav.js'
+
+      markCurrentLink()
+      const groups = ['all', 'layout', 'typography', 'colour', 'motion']
+      let active = 'all'
+
+      const filters = document.getElementById('filters')
+      const grid = document.getElementById('tiles')
+
+      function render() {
+        filters.innerHTML = groups
+          .map((g) => `<button class="${g === active ? 'on' : ''}" data-group="${g}">${g}</button>`)
+          .join('')
+        grid.innerHTML = tiles
+          .filter((t) => active === 'all' || t.group === active)
+          .map((t) => `<article class="tile"><div class="swatch" style="background: hsl(${t.hue} 55% 42%)"></div><div class="body"><h3>${t.name}</h3><p>${t.group}</p></div></article>`)
+          .join('')
+      }
+
+      filters.addEventListener('click', (event) => {
+        const group = event.target.dataset?.group
+        if (!group) return
+        active = group
+        render()
+      })
+
+      render()
+    </script>
+  </body>
+</html>

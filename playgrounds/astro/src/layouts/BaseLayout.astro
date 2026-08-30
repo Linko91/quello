@@ -1,0 +1,23 @@
+---
+import '../styles/style.css'
+import SiteNav from '../components/SiteNav.astro'
+
+const { title } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} · quello Astro playground</title>
+  </head>
+  <body>
+    <SiteNav />
+    <slot />
+    <footer class="site-footer">
+      quello · Astro playground — three routes, all of them longer than the viewport.
+    </footer>
+    {import.meta.env.DEV && <script>import('virtual:quello')</script>}
+  </body>
+</html>

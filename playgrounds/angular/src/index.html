@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>quello · Angular playground</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <app-root></app-root>
+  <!--
+    Angular's dev server is not Vite-configurable, so quello runs beside it from
+    the CLI (`quello . --port 5187`) and the page points at that origin. Remove
+    these two attributes and the tag for a production build.
+  -->
+  <script defer src="http://127.0.0.1:5187/__quello/client.js"
+          data-quello-endpoint="http://127.0.0.1:5187/__quello/picks"></script>
+</body>
+</html>

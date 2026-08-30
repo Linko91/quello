@@ -1,0 +1,14 @@
+{
+  "name": "playground-astro",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 5179",
+    "build": "astro build"
+  },
+  "devDependencies": {
+    "astro": "^5.1.5",
+    "vite-plugin-quello": "workspace:^"
+  }
+}

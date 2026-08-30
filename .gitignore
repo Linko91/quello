@@ -137,6 +137,9 @@ dist
 !.yarn/sdks
 !.yarn/versions
 
+# AI
+.agents/
+
 # Vite files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
@@ -144,3 +147,8 @@ vite.config.ts.timestamp-*
 
 # quello — picks captured in the browser during development
 .quello/
+
+# framework playground build output
+.nuxt/
+.astro/
+.angular/

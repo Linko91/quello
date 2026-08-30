@@ -1,0 +1,17 @@
+---
+const links = [
+  { to: '/', label: 'Overview' },
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/article', label: 'Article' },
+]
+const here = Astro.url.pathname
+---
+
+<nav class="site-nav">
+  <span class="brand">quello</span>
+  {links.map((link) => (
+    <a href={link.to} class={here === link.to ? 'active' : ''}>{link.label}</a>
+  ))}
+  <span class="spacer"></span>
+  <span class="hint">Alt+Q to pick</span>
+</nav>
