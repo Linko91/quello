@@ -277,8 +277,48 @@ quello({
   claudeMd: true,                   // append the agent instructions to CLAUDE.md on first run
   htmlMode: 'truncated',            // initial setting: 'none' | 'truncated' | 'full'
   htmlLimit: 1000,                  // initial character budget for 'truncated'
+  theme: { /* see below */ },       // look of the outlines drawn on the page
 })
 ```
+
+### Theming the outlines
+
+How the two outlines look is set in code, at plugin setup — not in the toolbar, which is for what
+you change while working. Six values, everything else derived from them:
+
+```ts
+quello({
+  theme: {
+    hoverColor: '#0ea5e9',                  // hover outline; its fill and label follow
+    hoverBorderWidth: 3,                    // a bare number means px
+    pickedFill: 'rgba(16, 185, 129, 0.12)', // inside a picked element
+    pickedBorderColor: '#10b981',
+    pickedBorderStyle: 'solid',             // solid | dashed | dotted | double
+    pickedBorderWidth: 2,
+  },
+})
+```
+
+| Option | Default |
+| --- | --- |
+| `hoverColor` | `#7c5cff` |
+| `hoverBorderWidth` | `2px` |
+| `pickedFill` | `transparent` |
+| `pickedBorderColor` | `rgba(124, 92, 255, 0.85)` |
+| `pickedBorderStyle` | `dashed` |
+| `pickedBorderWidth` | `1.5px` |
+
+Derived rather than configured: the hover outline's translucent fill (`color-mix` at 12% of
+`hoverColor`) and the element label's background (`hoverColor` itself). Set the hover colour and the
+three follow, instead of drifting apart.
+
+Values reach the page as CSS custom properties on quello's host element, so any valid CSS value
+works — `tomato`, `0.125rem`, `color-mix(...)`. Unlike normal declarations, custom properties are
+not validated by the browser, so quello refuses values carrying `;`, braces or comment markers, and
+falls back to the default for that one option.
+
+The badges and the toolbar keep the brand purple: they are the tool's own UI, not marks on your
+page.
 
 ## The `.quello/` directory
 

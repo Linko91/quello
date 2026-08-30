@@ -36,6 +36,8 @@ export interface QuelloStyle {
   borderRadius: string
 }
 
+import type { QuelloTheme } from './theme'
+
 /** How much of an element's markup a pick should carry. */
 export type QuelloHtmlMode =
   /** No `html` field at all. */
@@ -133,6 +135,8 @@ export interface QuelloOptions {
   htmlMode?: QuelloHtmlMode
   /** Initial value for the `htmlLimit` setting. */
   htmlLimit?: number
+  /** Look of the hover and picked outlines. Code-level only; not exposed in the toolbar. */
+  theme?: QuelloTheme
 }
 
 export interface QuelloInstance {

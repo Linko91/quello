@@ -1,6 +1,8 @@
 import { logoSvg, markSvg } from './brand'
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 import { PicksList, PICKS_LIST_STYLES } from './picks-list'
+import { applyTheme } from './theme'
+import type { QuelloTheme } from './theme'
 import type { PickRow } from './picks-list'
 import { MAX_HTML_LIMIT, MIN_HTML_LIMIT } from './settings'
 import type {
@@ -38,8 +40,11 @@ const STYLES = `${PICKS_LIST_STYLES}
 
 .highlight {
   position: fixed;
-  border: 2px solid #7c5cff;
+  border: var(--quello-hover-border-width, 2px) solid var(--quello-hover-color, #7c5cff);
+  /* The fill is derived from the hover colour, not configured separately. The
+     literal first is the fallback where color-mix is unavailable. */
   background: rgba(124, 92, 255, 0.12);
+  background: color-mix(in srgb, var(--quello-hover-color, #7c5cff) 12%, transparent);
   border-radius: 3px;
   /* No transition: the outline is re-placed every frame to follow scrolling, and
      an easing would leave it trailing the element it is supposed to be marking. */
@@ -51,7 +56,8 @@ const STYLES = `${PICKS_LIST_STYLES}
   max-width: 320px;
   padding: 3px 7px;
   border-radius: 4px;
-  background: #7c5cff;
+  /* The label belongs to the hover outline, so it takes its colour. */
+  background: var(--quello-hover-color, #7c5cff);
   color: #fff;
   font-size: 11px;
   line-height: 1.5;
@@ -158,7 +164,9 @@ const STYLES = `${PICKS_LIST_STYLES}
 
 .marker {
   position: fixed;
-  border: 1.5px dashed rgba(124, 92, 255, 0.85);
+  border: var(--quello-picked-border-width, 1.5px) var(--quello-picked-border-style, dashed)
+    var(--quello-picked-border-color, rgba(124, 92, 255, 0.85));
+  background: var(--quello-picked-fill, transparent);
   border-radius: 3px;
   pointer-events: none;
 }
@@ -359,6 +367,12 @@ export interface OverlayHandlers {
   onSettingsChange(patch: Partial<QuelloSettings>): void
 }
 
+export interface OverlayOptions {
+  /** Rendered into the tooltips, so they name whatever combination is configured. */
+  shortcutLabel?: string
+  theme?: QuelloTheme
+}
+
 export interface BadgeTarget {
   id: number
   element: Element
@@ -372,6 +386,7 @@ interface BadgeNodes {
 
 export class Overlay {
   readonly host: HTMLElement
+  private readonly shortcutLabel: string
   private readonly root: ShadowRoot
   private readonly layer: HTMLElement
   private readonly highlight: HTMLElement
@@ -416,11 +431,12 @@ export class Overlay {
 
   constructor(
     private readonly handlers: OverlayHandlers,
-    /** Rendered into the tooltips, so they name whatever combination is configured. */
-    private readonly shortcutLabel = 'Alt+Q',
+    { shortcutLabel = 'Alt+Q', theme }: OverlayOptions = {},
   ) {
+    this.shortcutLabel = shortcutLabel
     this.host = document.createElement(HOST_TAG)
     this.host.setAttribute('data-quello', 'root')
+    applyTheme(this.host, theme)
     this.root = this.host.attachShadow({ mode: 'open' })
 
     const style = document.createElement('style')
@@ -437,7 +453,7 @@ export class Overlay {
     grip.textContent = '⠿'
     grip.title = 'Drag to move'
 
-    this.toggleButton = button('primary', '', `Start picking (${shortcutLabel})`)
+    this.toggleButton = button('primary', '', `Start picking (${this.shortcutLabel})`)
     this.toggleButton.setAttribute('aria-label', 'Toggle element picker')
     this.toggleButton.innerHTML = logoSvg(17)
     this.toggleButton.dataset.on = 'false'

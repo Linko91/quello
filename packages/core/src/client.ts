@@ -14,6 +14,16 @@ function readOptions(): QuelloOptions {
   if (data.quelloTextLimit) options.textLimit = Number(data.quelloTextLimit)
   if (data.quelloHtmlMode) options.htmlMode = data.quelloHtmlMode as QuelloOptions['htmlMode']
   if (data.quelloHtmlLimit) options.htmlLimit = Number(data.quelloHtmlLimit)
+
+  const theme = {
+    hoverColor: data.quelloHoverColor,
+    hoverBorderWidth: data.quelloHoverBorderWidth,
+    pickedFill: data.quelloPickedFill,
+    pickedBorderColor: data.quelloPickedBorderColor,
+    pickedBorderStyle: data.quelloPickedBorderStyle,
+    pickedBorderWidth: data.quelloPickedBorderWidth,
+  }
+  if (Object.values(theme).some(Boolean)) options.theme = theme
   return options
 }
 

@@ -5,9 +5,15 @@ import type { Plugin } from 'vite'
 import { ensureClaudeMd } from './claude-md'
 import { DEFAULT_PICKS_FILE, normalize, readPicks, resolvePicksPath, writePicks } from './store'
 
-import type { QuelloHtmlMode } from '@quello/core'
+import type { QuelloHtmlMode, QuelloTheme } from '@quello/core'
 
-export type { QuelloHtmlMode, QuelloPick, QuelloPicksFile, QuelloSettings } from '@quello/core'
+export type {
+  QuelloHtmlMode,
+  QuelloPick,
+  QuelloPicksFile,
+  QuelloSettings,
+  QuelloTheme,
+} from '@quello/core'
 
 const CLIENT_ROUTE = '/__quello/client.js'
 const PICKS_ROUTE = '/__quello/picks'
@@ -35,6 +41,11 @@ export interface QuelloPluginOptions {
   htmlMode?: QuelloHtmlMode
   /** Initial character budget for `htmlMode: 'truncated'`. Defaults to `1000`. */
   htmlLimit?: number
+  /**
+   * Look of the outlines quello draws on the page. Code-level only — deliberately
+   * absent from the toolbar, which is for what you change while working.
+   */
+  theme?: QuelloTheme
 }
 
 const requireFrom = createRequire(import.meta.url)
@@ -42,6 +53,24 @@ const requireFrom = createRequire(import.meta.url)
 /** Absolute path of the prebuilt, self-executing core runtime. */
 function clientBundlePath(): string {
   return requireFrom.resolve('@quello/core/client')
+}
+
+/** Only the keys that were actually set are injected, so the runtime keeps its defaults. */
+function themeAttrs(theme: QuelloTheme): Record<string, string> {
+  const names: Record<keyof QuelloTheme, string> = {
+    hoverColor: 'data-quello-hover-color',
+    hoverBorderWidth: 'data-quello-hover-border-width',
+    pickedFill: 'data-quello-picked-fill',
+    pickedBorderColor: 'data-quello-picked-border-color',
+    pickedBorderStyle: 'data-quello-picked-border-style',
+    pickedBorderWidth: 'data-quello-picked-border-width',
+  }
+  const attrs: Record<string, string> = {}
+  for (const [key, name] of Object.entries(names) as Array<[keyof QuelloTheme, string]>) {
+    const value = theme[key]
+    if (value !== undefined && value !== null && value !== '') attrs[name] = String(value)
+  }
+  return attrs
 }
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -83,6 +112,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     claudeMd = true,
     htmlMode = 'truncated',
     htmlLimit = 1000,
+    theme = {},
   } = options
 
   let picksPath = ''
@@ -161,6 +191,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
             'data-quello-text-limit': String(textLimit),
             'data-quello-html-mode': htmlMode,
             'data-quello-html-limit': String(htmlLimit),
+            ...themeAttrs(theme),
           },
         },
       ]

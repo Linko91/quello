@@ -3,6 +3,8 @@ import type { QuelloInstance, QuelloOptions } from './types'
 
 export { pageKey, QuelloPicker, withNote } from './picker'
 export { collectAttributes } from './attributes'
+export { applyTheme, DEFAULT_THEME, normalizeTheme, THEME_VARS } from './theme'
+export type { QuelloTheme } from './theme'
 export {
   DEFAULT_SHORTCUT,
   formatShortcut,

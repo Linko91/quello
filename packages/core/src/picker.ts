@@ -110,7 +110,7 @@ export class QuelloPicker implements QuelloInstance {
         onCopyPick: (id) => void this.copyPick(id),
         onSettingsChange: (patch) => this.setSettings(patch),
       },
-      formatShortcut(this.shortcut),
+      { shortcutLabel: formatShortcut(this.shortcut), theme: options.theme },
     )
 
     this.overlay.mount()
