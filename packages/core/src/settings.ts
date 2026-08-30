@@ -1,4 +1,10 @@
-import type { QuelloCopyScope, QuelloHtmlMode, QuelloPoint, QuelloSettings } from './types'
+import type {
+  QuelloCopyScope,
+  QuelloHtmlMode,
+  QuelloPoint,
+  QuelloSettings,
+  QuelloSkin,
+} from './types'
 
 const STORAGE_KEY = 'quello.settings'
 
@@ -7,6 +13,7 @@ const ELISION = ' … '
 
 const HTML_MODES: readonly QuelloHtmlMode[] = ['none', 'truncated', 'full']
 const COPY_SCOPES: readonly QuelloCopyScope[] = ['last', 'all']
+const SKINS: readonly QuelloSkin[] = ['fill', 'glass']
 
 export const MIN_HTML_LIMIT = 50
 export const MAX_HTML_LIMIT = 100_000
@@ -20,6 +27,7 @@ export const DEFAULT_SETTINGS: QuelloSettings = {
   copyOnPick: false,
   copyScope: 'last',
   noteOnPick: false,
+  toolbarSkin: 'fill',
 }
 
 /**
@@ -79,6 +87,9 @@ export function normalizeSettings(
       ? (raw.copyScope as QuelloCopyScope)
       : fallback.copyScope,
     noteOnPick: Boolean(raw.noteOnPick ?? fallback.noteOnPick),
+    toolbarSkin: SKINS.includes(raw.toolbarSkin as QuelloSkin)
+      ? (raw.toolbarSkin as QuelloSkin)
+      : fallback.toolbarSkin,
   }
 }
 

@@ -142,8 +142,14 @@ another page, so in-page anchors leave badges alone.
 
 ### Settings panel
 
-The **⚙** button in the toolbar opens a small panel that controls how much of an element's markup
-each pick carries:
+The **⚙** button in the toolbar opens a small panel, split into four tabs — **HTML**, **Clipboard**,
+**Notes**, **Theme**. Everything in it is a working preference, kept per-developer in `localStorage`;
+anything that belongs to the project rather than the person is a [plugin option](#plugin-options)
+instead.
+
+#### HTML
+
+How much of an element's markup each pick carries:
 
 | Mode | `html` field |
 | --- | --- |
@@ -157,7 +163,84 @@ in between is the least identifying part. A `1000`-character budget on a long se
 `<section class="card-list"><article class="card"> … .json by the dev server.</p></section>`, and
 the result is never longer than the budget. The budget is clamped to 50–100000.
 
-#### The pick list
+#### Copy to clipboard
+
+**Copy on pick** mirrors each selection to the clipboard as you make it, so you can paste straight
+into a chat instead of pointing the agent at the file. Two scopes:
+
+| Scope | What lands on the clipboard |
+| --- | --- |
+| **Last pick** *(default)* | the pick you just made, as one JSON object |
+| **Whole list** | every pick so far, as a JSON array |
+
+Both use the same shape as `.quello/picks.json`, pretty-printed, so a pasted pick is something the
+agent already knows how to read. The toolbar flashes `Copied PICK 3` (or `Copied 3 picks`) to
+confirm, and turns red if the browser refused the write.
+
+It is **off by default**: the clipboard belongs to you, not to the tool. Copying needs the user
+activation that a real click provides, which is exactly when it runs — but a pick made
+programmatically (`window.__quello__` from the console) will report a failed copy.
+
+Changing an HTML
+setting re-describes the picks you have already made, so the file on disk always matches
+what the panel shows. Choices are per-developer, not per-project: they live in `localStorage`, so a
+teammate cloning the repo is unaffected. The plugin's `htmlMode` / `htmlLimit` options only set the
+starting point for someone who has not touched the panel yet.
+
+`attributes` is every attribute as written in the markup, in document order, with values
+whitespace-collapsed and truncated at 160 characters. Nothing is filtered out — `class` and `id`
+appear there too, even though `classes` already holds the cleaned-up list — because an attribute
+dump that silently omits attributes is worse than a slightly redundant one. A boolean attribute
+reads as an empty string, so a Vue root picks up `{ "id": "app", "data-v-app": "" }`.
+
+`style` is read from `getComputedStyle`, so it is what the element actually renders as rather than
+what a stylesheet asked for — enough to act on "make this bigger" or "why is this grey?" without
+anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
+always describes the element as it is now.
+
+Component metadata is best effort and dev-build only: Vue via `__vueParentComponent` (or a
+`data-v-inspector` attribute), React by walking the fiber tree to the nearest named component and
+reading `_debugSource` for file and line.
+
+#### Agent notes
+
+A pick can carry a `note`: free text you write for the agent, sitting right after `label` near the
+top of the entry. Click a badge to open the editor — `Enter` saves, `Shift+Enter` adds a line,
+`Esc` closes keeping what you typed. The box grows as you type, up to 40% of the viewport.
+
+The panel follows the toolbar, flipping below it when there is no room above.
+
+The editor anchors to the pick's badge. A pick made on another page has no badge to anchor to, so it
+opens beside the toolbar instead, on whichever side has room.
+
+An empty note removes the field entirely, so `note` is only ever there when you wrote one. A badge
+with a note is ringed and dotted in amber.
+
+Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
+It is off by default, so picking stays a single click when you have nothing to say.
+
+This is what makes *"resolve the picks"* work. The section written into `CLAUDE.md` tells the agent
+that when you ask it to resolve the picks, it should read `.quello/picks.json` and carry out each
+entry's `note` against the element that entry points at, in `id` order, treating entries without a
+note as bookmarks. So you can annotate five elements in the browser and then type four words.
+
+Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
+its note intact.
+
+#### Theme
+
+Two surfaces for quello's own chrome — the toolbar, the puck and every popover:
+
+| | |
+| --- | --- |
+| **Fill** *(default)* | solid dark surfaces |
+| **Glass** | frosted and translucent, blurring whatever is beneath |
+
+This is the tool's own appearance, and is deliberately separate from the plugin's
+[`theme`](#theming-the-outlines), which styles the outlines drawn on *your* page. One is how quello
+looks; the other is how quello marks your work.
+
+### The pick list
 
 The counter in the toolbar (`3 picks`) is a button: it opens a dropdown holding every pick you have
 made, on every page. Each row shows the number, the component (or the tag, when no framework owns
@@ -181,68 +264,6 @@ is framework-agnostic and has no way to ask *your* router to navigate. The pendi
 across the reload in `sessionStorage` and resumed once picks are restored.
 
 Opening the list closes the settings panel and vice versa; `Esc` closes whichever is open.
-
-#### Agent notes
-
-A pick can carry a `note`: free text you write for the agent, sitting right after `label` near the
-top of the entry. Click a badge to open the editor — `Enter` saves, `Shift+Enter` adds a line,
-`Esc` closes keeping what you typed. The box grows as you type, up to 40% of the viewport.
-
-The editor anchors to the pick's badge. A pick made on another page has no badge to anchor to, so it
-opens beside the toolbar instead, on whichever side has room.
-
-An empty note removes the field entirely, so `note` is only ever there when you wrote one. A badge
-with a note is ringed and dotted in amber.
-
-Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
-It is off by default, so picking stays a single click when you have nothing to say.
-
-This is what makes *"resolve the picks"* work. The section written into `CLAUDE.md` tells the agent
-that when you ask it to resolve the picks, it should read `.quello/picks.json` and carry out each
-entry's `note` against the element that entry points at, in `id` order, treating entries without a
-note as bookmarks. So you can annotate five elements in the browser and then type four words.
-
-Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
-its note intact.
-
-#### Copy to clipboard
-
-**Copy on pick** mirrors each selection to the clipboard as you make it, so you can paste straight
-into a chat instead of pointing the agent at the file. Two scopes:
-
-| Scope | What lands on the clipboard |
-| --- | --- |
-| **Last pick** *(default)* | the pick you just made, as one JSON object |
-| **Whole list** | every pick so far, as a JSON array |
-
-Both use the same shape as `.quello/picks.json`, pretty-printed, so a pasted pick is something the
-agent already knows how to read. The toolbar flashes `Copied PICK 3` (or `Copied 3 picks`) to
-confirm, and turns red if the browser refused the write.
-
-It is **off by default**: the clipboard belongs to you, not to the tool. Copying needs the user
-activation that a real click provides, which is exactly when it runs — but a pick made
-programmatically (`window.__quello__` from the console) will report a failed copy.
-
-The panel follows the toolbar, flipping below it when there is no room above. Changing an HTML
-setting re-describes the picks you have already made, so the file on disk always matches
-what the panel shows. Choices are per-developer, not per-project: they live in `localStorage`, so a
-teammate cloning the repo is unaffected. The plugin's `htmlMode` / `htmlLimit` options only set the
-starting point for someone who has not touched the panel yet.
-
-`attributes` is every attribute as written in the markup, in document order, with values
-whitespace-collapsed and truncated at 160 characters. Nothing is filtered out — `class` and `id`
-appear there too, even though `classes` already holds the cleaned-up list — because an attribute
-dump that silently omits attributes is worse than a slightly redundant one. A boolean attribute
-reads as an empty string, so a Vue root picks up `{ "id": "app", "data-v-app": "" }`.
-
-`style` is read from `getComputedStyle`, so it is what the element actually renders as rather than
-what a stylesheet asked for — enough to act on "make this bigger" or "why is this grey?" without
-anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
-always describes the element as it is now.
-
-Component metadata is best effort and dev-build only: Vue via `__vueParentComponent` (or a
-`data-v-inspector` attribute), React by walking the fiber tree to the nearest named component and
-reading `_debugSource` for file and line.
 
 ### The shortcut
 

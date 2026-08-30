@@ -54,6 +54,13 @@ export type QuelloCopyScope =
   /** Every pick made so far, as an array. */
   | 'all'
 
+/** Surface treatment of quello's own chrome — the toolbar, puck and popovers. */
+export type QuelloSkin =
+  /** Solid dark surfaces. */
+  | 'fill'
+  /** Frosted, translucent surfaces that pick up the page beneath. */
+  | 'glass'
+
 /** Where the toolbar sits, as px from the viewport's top-left. */
 export interface QuelloPoint {
   x: number
@@ -75,6 +82,11 @@ export interface QuelloSettings {
   copyScope: QuelloCopyScope
   /** Open the note editor as soon as an element is picked. */
   noteOnPick: boolean
+  /**
+   * Look of quello's own chrome. Distinct from the plugin's `theme`, which styles
+   * the outlines drawn on your page rather than the tool around them.
+   */
+  toolbarSkin: QuelloSkin
 }
 
 /** The page a pick was made on. */

@@ -1,6 +1,7 @@
 import { logoSvg, markSvg } from './brand'
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 import { PicksList, PICKS_LIST_STYLES } from './picks-list'
+import { SettingsPanel, SETTINGS_PANEL_STYLES } from './settings-panel'
 import { applyTheme } from './theme'
 import type { QuelloTheme } from './theme'
 import type { PickRow } from './picks-list'
@@ -27,6 +28,7 @@ const PARKED_INSET = 16
 const PANEL_GAP = 8
 
 const STYLES = `${PICKS_LIST_STYLES}
+${SETTINGS_PANEL_STYLES}
 
 :host { all: initial; }
 * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -288,72 +290,42 @@ button.count[hidden] { display: none; }
 }
 .puck[data-on="true"] .tally { background: #fff; color: #7c5cff; }
 
-.panel {
-  position: fixed;
-  z-index: ${Z_INDEX};
-  width: 232px;
-  padding: 12px;
-  border: 1px solid #2a2833;
-  border-radius: 10px;
-  background: #17161d;
-  color: #fff;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-  pointer-events: auto;
+`
+
+/**
+ * The `glass` skin, applied to every surface quello puts on screen so the chrome
+ * stays one material. Only the surfaces change: the outlines drawn on the page
+ * are the plugin's `theme`, and are left alone.
+ */
+const SKIN_STYLES = `
+:host([data-skin="glass"]) .toolbar,
+:host([data-skin="glass"]) .puck,
+:host([data-skin="glass"]) .panel,
+:host([data-skin="glass"]) .picks-list,
+:host([data-skin="glass"]) .note-editor {
+  background: rgba(28, 26, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
-
-.toast {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 8px);
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: #7c5cff;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+:host([data-skin="glass"]) .toolbar button,
+:host([data-skin="glass"]) .panel .tabs,
+:host([data-skin="glass"]) .limit input,
+:host([data-skin="glass"]) .note-editor textarea {
+  background: rgba(255, 255, 255, 0.1);
 }
-.toast[data-failed="true"] { background: #ef4444; }
-.dock[data-flip="true"] .toast { bottom: auto; top: calc(100% + 8px); }
-
-.panel h2 {
-  margin: 0 0 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.5;
+:host([data-skin="glass"]) .toolbar button:hover { background: rgba(255, 255, 255, 0.18); }
+:host([data-skin="glass"]) .panel .tabs button[aria-selected="true"] {
+  background: rgba(255, 255, 255, 0.18);
 }
-
-.limit + h2, .scopes + h2 { margin-top: 14px; }
-
-.field { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; }
-.field input { accent-color: #7c5cff; margin: 0; cursor: pointer; }
-.field .note { display: block; font-size: 11px; opacity: 0.5; }
-
-.limit {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0 0 22px;
-  font-size: 11px;
-  opacity: 0.75;
-}
-.limit[data-disabled="true"] { opacity: 0.3; pointer-events: none; }
-
-.scopes { margin-left: 22px; }
-.scopes .field { padding: 3px 0; }
-.scopes[data-disabled="true"] { opacity: 0.3; pointer-events: none; }
-.limit input {
-  width: 74px;
-  padding: 4px 6px;
-  border: 1px solid #37343f;
-  border-radius: 6px;
-  background: #0f0e13;
-  color: #fff;
-  font: inherit;
+:host([data-skin="glass"]) .toolbar button.primary { background: transparent; }
+:host([data-skin="glass"]) .toolbar button.primary[data-on="true"] { background: #7c5cff; }
+:host([data-skin="glass"]) .picks-list .row:hover { background: rgba(255, 255, 255, 0.07); }
+:host([data-skin="glass"]) .picks-list .row + .row { border-top-color: rgba(255, 255, 255, 0.08); }
+:host([data-skin="glass"]) .puck[data-on="true"] {
+  background: rgba(124, 92, 255, 0.78);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 `
 
@@ -402,19 +374,12 @@ export class Overlay {
   private readonly settingsButton: HTMLButtonElement
   private readonly count: HTMLButtonElement
   private readonly picksList: PicksList
+  private readonly panel: SettingsPanel
   private rows: PickRow[] = []
   private previewFor: number | null = null
   private hoverElement: Element | null = null
   private hoverLabel = ''
 
-  private readonly panel: HTMLElement
-  private readonly modeInputs = new Map<QuelloHtmlMode, HTMLInputElement>()
-  private readonly limitRow: HTMLElement
-  private readonly limitInput: HTMLInputElement
-  private readonly copyToggle: HTMLInputElement
-  private readonly scopeRow: HTMLElement
-  private readonly scopeInputs = new Map<QuelloCopyScope, HTMLInputElement>()
-  private readonly noteToggle: HTMLInputElement
   private toastTimer: number | null = null
   private spotlightTimer: number | null = null
 
@@ -440,7 +405,7 @@ export class Overlay {
     this.root = this.host.attachShadow({ mode: 'open' })
 
     const style = document.createElement('style')
-    style.textContent = STYLES
+    style.textContent = STYLES + SKIN_STYLES
 
     this.layer = el('div', 'layer')
     this.highlight = el('div', 'highlight')
@@ -511,19 +476,20 @@ export class Overlay {
     this.dock = el('div', 'dock')
     this.dock.append(this.toolbar, this.puck, this.toast)
 
-    const panel = this.buildPanel()
-    this.panel = panel.root
-    this.limitRow = panel.limitRow
-    this.limitInput = panel.limitInput
-    this.copyToggle = panel.copyToggle
-    this.scopeRow = panel.scopeRow
-    this.noteToggle = panel.noteToggle
+    this.panel = new SettingsPanel({ onChange: (patch) => this.handlers.onSettingsChange(patch) })
 
     const note = this.buildNoteEditor()
     this.noteEditor = note.root
     this.noteInput = note.input
 
-    this.root.append(style, this.layer, this.panel, this.picksList.root, this.noteEditor, this.dock)
+    this.root.append(
+      style,
+      this.layer,
+      this.panel.root,
+      this.picksList.root,
+      this.noteEditor,
+      this.dock,
+    )
 
     this.teardown.push(
       draggable(grip, this.dragOptions()),
@@ -623,7 +589,7 @@ export class Overlay {
   }
 
   private positionPanel(): void {
-    this.anchorToDock(this.panel)
+    this.anchorToDock(this.panel.root)
   }
 
   get picksListOpen(): boolean {
@@ -660,129 +626,6 @@ export class Overlay {
   }
 
   // --- settings panel ----------------------------------------------------
-
-  private buildPanel(): {
-    root: HTMLElement
-    limitRow: HTMLElement
-    limitInput: HTMLInputElement
-    copyToggle: HTMLInputElement
-    scopeRow: HTMLElement
-    noteToggle: HTMLInputElement
-  } {
-    const root = el('div', 'panel')
-    root.hidden = true
-
-    const heading = document.createElement('h2')
-    heading.textContent = 'HTML in picks'
-    root.append(heading)
-
-    const options: Array<{ mode: QuelloHtmlMode; label: string; note: string }> = [
-      { mode: 'none', label: 'None', note: 'No html field' },
-      { mode: 'truncated', label: 'Truncated', note: 'Middle elided to fit' },
-      { mode: 'full', label: 'Full', note: 'Complete outerHTML' },
-    ]
-
-    for (const option of options) {
-      const field = document.createElement('label')
-      field.className = 'field'
-      const input = document.createElement('input')
-      input.type = 'radio'
-      input.name = 'quello-html-mode'
-      input.value = option.mode
-      input.addEventListener('change', () => {
-        if (input.checked) this.handlers.onSettingsChange({ htmlMode: option.mode })
-      })
-      const text = document.createElement('span')
-      text.textContent = option.label
-      const note = el('span', 'note')
-      note.textContent = option.note
-      text.append(note)
-      field.append(input, text)
-      root.append(field)
-      this.modeInputs.set(option.mode, input)
-    }
-
-    const limitRow = el('div', 'limit')
-    const limitLabel = document.createElement('label')
-    limitLabel.textContent = 'max'
-    const limitInput = document.createElement('input')
-    limitInput.type = 'number'
-    limitInput.min = String(MIN_HTML_LIMIT)
-    limitInput.max = String(MAX_HTML_LIMIT)
-    limitInput.step = '50'
-    limitInput.setAttribute('aria-label', 'Maximum HTML characters')
-    limitInput.addEventListener('change', () => {
-      this.handlers.onSettingsChange({ htmlLimit: Number(limitInput.value) })
-    })
-    const unit = document.createElement('span')
-    unit.textContent = 'chars'
-    limitLabel.append(limitInput)
-    limitRow.append(limitLabel, unit)
-    root.append(limitRow)
-
-    const copyHeading = document.createElement('h2')
-    copyHeading.textContent = 'Copy to clipboard'
-    root.append(copyHeading)
-
-    const copyField = document.createElement('label')
-    copyField.className = 'field'
-    const copyToggle = document.createElement('input')
-    copyToggle.type = 'checkbox'
-    copyToggle.addEventListener('change', () => {
-      this.handlers.onSettingsChange({ copyOnPick: copyToggle.checked })
-    })
-    const copyText = document.createElement('span')
-    copyText.textContent = 'Copy on pick'
-    const copyNote = el('span', 'note')
-    copyNote.textContent = 'Every time you select an element'
-    copyText.append(copyNote)
-    copyField.append(copyToggle, copyText)
-    root.append(copyField)
-
-    const scopeRow = el('div', 'scopes')
-    const scopes: Array<{ scope: QuelloCopyScope; label: string }> = [
-      { scope: 'last', label: 'Last pick' },
-      { scope: 'all', label: 'Whole list' },
-    ]
-    for (const { scope, label } of scopes) {
-      const field = document.createElement('label')
-      field.className = 'field'
-      const input = document.createElement('input')
-      input.type = 'radio'
-      input.name = 'quello-copy-scope'
-      input.value = scope
-      input.addEventListener('change', () => {
-        if (input.checked) this.handlers.onSettingsChange({ copyScope: scope })
-      })
-      const text = document.createElement('span')
-      text.textContent = label
-      field.append(input, text)
-      scopeRow.append(field)
-      this.scopeInputs.set(scope, input)
-    }
-    root.append(scopeRow)
-
-    const noteHeading = document.createElement('h2')
-    noteHeading.textContent = 'Agent notes'
-    root.append(noteHeading)
-
-    const noteField = document.createElement('label')
-    noteField.className = 'field'
-    const noteToggle = document.createElement('input')
-    noteToggle.type = 'checkbox'
-    noteToggle.addEventListener('change', () => {
-      this.handlers.onSettingsChange({ noteOnPick: noteToggle.checked })
-    })
-    const noteText = document.createElement('span')
-    noteText.textContent = 'Ask on every pick'
-    const noteNote = el('span', 'note')
-    noteNote.textContent = 'Otherwise click a badge to write one'
-    noteText.append(noteNote)
-    noteField.append(noteToggle, noteText)
-    root.append(noteField)
-
-    return { root, limitRow, limitInput, copyToggle, scopeRow, noteToggle }
-  }
 
   /** Briefly confirm an action next to the toolbar. */
   flash(message: string, failed = false): void {
@@ -870,7 +713,10 @@ export class Overlay {
 
     const point = node
       ? clampToViewport(
-          { x: node.badge.getBoundingClientRect().left, y: node.badge.getBoundingClientRect().bottom + 8 },
+          {
+            x: node.badge.getBoundingClientRect().left,
+            y: node.badge.getBoundingClientRect().bottom + 8,
+          },
           size,
         )
       : this.besideDock(size)
@@ -891,11 +737,11 @@ export class Overlay {
   }
 
   get panelOpen(): boolean {
-    return !this.panel.hidden
+    return !this.panel.root.hidden
   }
 
-  togglePanel(open = this.panel.hidden): void {
-    this.panel.hidden = !open
+  togglePanel(open = this.panel.root.hidden): void {
+    this.panel.root.hidden = !open
     this.settingsButton.dataset.on = String(open)
     if (open) {
       this.togglePicksList(false)
@@ -905,14 +751,8 @@ export class Overlay {
 
   /** Render the toolbar and panel from the settings the picker actually holds. */
   setSettings(settings: QuelloSettings): void {
-    for (const [mode, input] of this.modeInputs) input.checked = mode === settings.htmlMode
-    this.limitInput.value = String(settings.htmlLimit)
-    this.limitRow.dataset.disabled = String(settings.htmlMode !== 'truncated')
-
-    this.copyToggle.checked = settings.copyOnPick
-    for (const [scope, input] of this.scopeInputs) input.checked = scope === settings.copyScope
-    this.scopeRow.dataset.disabled = String(!settings.copyOnPick)
-    this.noteToggle.checked = settings.noteOnPick
+    this.panel.setSettings(settings)
+    this.host.dataset.skin = settings.toolbarSkin
 
     this.position = settings.toolbarPosition
     this.compact = settings.toolbarCompact
