@@ -71,18 +71,18 @@ in the easy way and reports none. Neither axis constrains the other.
 | Framework | Vite | webpack | Its own toolchain | No bundler | What a pick knows |
 | --- | --- | --- | --- | --- | --- |
 | **Vue** | ✅ plugin | ○ plugin | — | ○ CLI | component, file |
-| **React** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line |
+| **React** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line¹ |
 | **Svelte** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line, column |
 | **Solid** | ✅ plugin | ○ plugin | — | ○ CLI | selector, path, text |
 | **Nuxt** | ✅ `virtual:quello` | — | — | — | component, file |
 | **SvelteKit** | ✅ `virtual:quello` | — | — | — | component, file, line |
 | **Astro** | ✅ `virtual:quello` | — | — | — | selector, path, text |
-| **Next** | — | ⚠️ ~40 lines | ⚠️ ~40 lines | — | component |
+| **Next** | — | ⚠️ ~40 lines | ⚠️ ~40 lines | — | component¹ |
 | **Angular** | — | — | ✅ CLI | — | component |
 | **None** (html/js/css) | ○ plugin | ✅ plugin | — | ✅ CLI | selector, path, text |
 
 ✅ verified in a playground · ○ supported, not exercised here
-⚠️ needs code of your own · — not a combination that exists
+⚠️ needs code of your own · — not a combination that exists · ¹ see the note below
 
 Reading the table:
 
@@ -94,14 +94,24 @@ Reading the table:
   playgrounds: [`npx quello`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
   own port and the page carries a script tag pointing at it. The same answer works for Rails, Laravel
   or anything else that serves HTML its own way.
-- **Next** is the one gap. It builds on webpack or turbopack but does not expose either in a way the
-  plugin can use, so its playground imports `@quello/core` from a client component and ships a route
-  handler for `.quello/picks.json`. It works, but you write those lines — see
-  [`playgrounds/next`](playgrounds/next). Packaging them is on the [roadmap](#ideas-not-built-yet).
+- **Next** is the one gap, and not because it is React. It builds on webpack or turbopack, but runs
+  its own dev server rather than `webpack-dev-server`, so there is no `setupMiddlewares` to add the
+  endpoint to; and it renders HTML with its own renderer rather than `html-webpack-plugin`, so there
+  is no generated document to add the tag to. Both halves of the integration have to go the Next
+  way: a client component importing `@quello/core`, and a route handler for `.quello/picks.json`.
+  It works — see [`playgrounds/next`](playgrounds/next) — but you write those lines. Packaging them
+  is on the [roadmap](#ideas-not-built-yet).
 
-The last column depends only on the framework, never on the builder, and never on the integration
-route: it is whatever the runtime leaves on the DOM in a development build. `selector, path, text`
-is the floor, and it is enough for an agent to find the code — see
+The last column is whatever the runtime leaves on the DOM in a development build. It follows the
+framework rather than the integration route — with one exception worth knowing about:
+
+> **React's source location follows the JSX compiler, not React.** Vite compiles JSX with Babel's
+> development transform, which annotates every element with its file and line; Next compiles with
+> SWC, which does not. Both playgrounds run React 18.3.1, and only the Vite one reports a line —
+> verified by reading `_debugSource` off the fibers in each. The component name is there either way,
+> so `OverviewPage` still points at the file, just without the line number.
+
+`selector, path, text` is the floor, and it is enough for an agent to find the code — see
 [what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
 
 ## Usage
@@ -281,7 +291,7 @@ one that recognises the element answers:
 | Framework | Read from | Yields |
 | --- | --- | --- |
 | **Vue** | `__vueParentComponent`, or a `data-v-inspector` attribute | name, source file |
-| **React** | the `__reactFiber$…` key, walked up to the nearest named component | name, file, line |
+| **React** | the `__reactFiber$…` key, walked up to the nearest named component | name, file and line *when the JSX compiler annotates them* |
 | **Svelte** | `__svelte_meta.loc`, left on every element the dev build creates | name, file, line, column |
 | **Angular** | `window.ng.getComponent` / `getOwningComponent`, Ivy's debug API | name |
 
