@@ -52,8 +52,8 @@ Start the dev server, then:
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to write a note for the agent, or remove that pick from there
-- **Click the pick counter** to open the list of every pick, across every page
-- **Clear all** empties the list
+- **Click the pick counter** to open the list of every pick, across every page; **Clear all** lives
+  at the bottom of that list
 - **⚙** opens the settings panel (HTML capture, clipboard); **–** collapses the toolbar
 - **Drag the ⠿ grip** to move the toolbar anywhere
 - **Esc** closes the panel if it is open, otherwise leaves picker mode
@@ -143,7 +143,8 @@ another page, so in-page anchors leave badges alone.
 ### Settings panel
 
 The **⚙** button in the toolbar opens a small panel, split into four tabs — **HTML**, **Clipboard**,
-**Notes**, **Theme**. Everything in it is a working preference, kept per-developer in `localStorage`;
+**Notes**, **Theme**. The tabs share one grid cell, so the panel is always as tall as its tallest tab
+and switching never resizes it. Everything in it is a working preference, kept per-developer in `localStorage`;
 anything that belongs to the project rather than the person is a [plugin option](#plugin-options)
 instead.
 
@@ -174,8 +175,9 @@ into a chat instead of pointing the agent at the file. Two scopes:
 | **Whole list** | every pick so far, as a JSON array |
 
 Both use the same shape as `.quello/picks.json`, pretty-printed, so a pasted pick is something the
-agent already knows how to read. The toolbar flashes `Copied PICK 3` (or `Copied 3 picks`) to
-confirm, and turns red if the browser refused the write.
+agent already knows how to read. A successful copy is silent — you asked for it to happen on every
+pick, so announcing it each time would only be noise — but a refused write does flash a warning.
+Copying a single pick from the list with **⧉** confirms, since that one you asked for by hand.
 
 It is **off by default**: the clipboard belongs to you, not to the tool. Copying needs the user
 activation that a real click provides, which is exactly when it runs — but a pick made
@@ -242,17 +244,18 @@ looks; the other is how quello marks your work.
 
 ### The pick list
 
-The counter in the toolbar (`3 picks`) is a button: it opens a dropdown holding every pick you have
-made, on every page. Each row shows the number, the component (or the tag, when no framework owns
-the element), the selector and a snippet of text to tell one instance from another, the page it
-belongs to, and its note if it has one. A pick on a page you are not looking at is flagged in amber.
+The counter in the toolbar (`3 picks`) opens a dropdown holding every pick you have made, on every
+page. Each row pairs the component (or the tag, when no framework owns the element) with the page it
+belongs to, then the selector and a snippet of text to tell one instance from another, and its note
+if it has one. A pick on a page you are not looking at is flagged in amber. **Clear all** sits at the
+foot of the list, with the picks it empties rather than in the toolbar.
 
 Four actions per row:
 
 | | |
 | --- | --- |
 | **⤓ / ↗** | scroll until the element's top-left corner is in the middle of the viewport; on another page, go there first and scroll on arrival |
-| **✎ / ✚** | open the note editor |
+| **✎** | open the note editor — amber when the pick already carries a note |
 | **⧉** | copy that one pick as JSON |
 | **×** | remove it |
 

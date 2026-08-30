@@ -1,4 +1,4 @@
-import { logoSvg, markSvg } from './brand'
+import { iconSvg, logoSvg, markSvg } from './brand'
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
 import { PicksList, PICKS_LIST_STYLES } from './picks-list'
 import { SettingsPanel, SETTINGS_PANEL_STYLES } from './settings-panel'
@@ -221,23 +221,40 @@ button.primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Wide enough for the wordmark, so swapping in "picking…" does not shuffle
-     everything to its right. */
+  /* Fixed box: the wordmark and "picking…" have different natural sizes, and the
+     toolbar must not change shape when picker mode is toggled. */
   min-width: 83px;
-  /* Asymmetric on purpose: the wordmark's box includes the q's descender, so
-     centring it geometrically leaves the letters sitting high. */
-  padding: 9px 11px 5px;
+  height: 31px;
+  padding: 0 11px;
 }
-/* The text has no descender to allow for, so it centres normally. */
-button.primary[data-on="true"] { padding: 7px 12px; }
+/* The wordmark's box includes the q's descender, so centring it geometrically
+   leaves the letters sitting high; this nudges them back onto the optical centre. */
+button.primary svg { margin-top: 4px; }
 button.primary[data-on="true"] { background: #7c5cff; }
 button.primary[data-on="true"]:hover { background: #6b4cf0; }
-button.icon { padding: 7px 10px; font-size: 13px; line-height: 1; }
+button.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  line-height: 0;
+}
+/* Both icons are SVG so they centre on geometry rather than on font metrics,
+   which is what left the glyph versions sitting high in the button. */
+button.icon svg { display: block; }
 button.icon[data-on="true"] { background: #37343f; }
 
+/* Not a pill: a pill here would be a second button shape at a second height,
+   sitting between two round ones. A label with a chevron reads as a disclosure. */
 button.count {
-  padding: 6px 9px;
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 31px;
+  padding: 0 4px 0 6px;
+  border-radius: 0;
   background: transparent;
   font-size: 11px;
   font-weight: 600;
@@ -245,8 +262,26 @@ button.count {
   opacity: 0.65;
   white-space: nowrap;
 }
-button.count:hover { background: #2a2833; opacity: 1; }
-button.count[data-on="true"] { background: #2a2833; opacity: 1; }
+button.count:hover, button.count[data-on="true"] { background: transparent; opacity: 1; }
+/* Tabular figures keep 1 and 9 the same width; the min-width covers what they
+   cannot — the second digit at 10, and the plural's "s". The label is left-aligned
+   inside that box, so the chevron never moves either. */
+.count-label {
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: left;
+}
+/* An SVG rather than a glyph: a chevron character sits off-centre in its own box,
+   so rotating it shifts it vertically. This one turns about its actual middle. */
+.chev {
+  display: flex;
+  opacity: 0.55;
+  transform-origin: 50% 50%;
+  transition: opacity 120ms linear, transform 160ms ease;
+}
+button.count:hover .chev { opacity: 0.9; }
+button.count[data-on="true"] .chev { opacity: 0.9; transform: rotate(180deg); }
 button.count[hidden] { display: none; }
 
 /* Compact form: one puck that is both the drag handle and the expand button. */
@@ -309,13 +344,15 @@ const SKIN_STYLES = `
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
-:host([data-skin="glass"]) .toolbar button,
+/* The counter is excluded on purpose: it is a label with a chevron, not a button
+   surface, and giving it one puts a short pill between two round ones. */
+:host([data-skin="glass"]) .toolbar button:not(.count),
 :host([data-skin="glass"]) .panel .tabs,
 :host([data-skin="glass"]) .limit input,
 :host([data-skin="glass"]) .note-editor textarea {
   background: rgba(255, 255, 255, 0.1);
 }
-:host([data-skin="glass"]) .toolbar button:hover { background: rgba(255, 255, 255, 0.18); }
+:host([data-skin="glass"]) .toolbar button:not(.count):hover { background: rgba(255, 255, 255, 0.18); }
 :host([data-skin="glass"]) .panel .tabs button[aria-selected="true"] {
   background: rgba(255, 255, 255, 0.18);
 }
@@ -370,9 +407,9 @@ export class Overlay {
   private readonly tally: HTMLElement
   private readonly toast: HTMLElement
   private readonly toggleButton: HTMLButtonElement
-  private readonly clearButton: HTMLButtonElement
   private readonly settingsButton: HTMLButtonElement
   private readonly count: HTMLButtonElement
+  private readonly countLabel: HTMLElement
   private readonly picksList: PicksList
   private readonly panel: SettingsPanel
   private rows: PickRow[] = []
@@ -424,40 +461,36 @@ export class Overlay {
     this.toggleButton.dataset.on = 'false'
     this.toggleButton.addEventListener('click', () => this.handlers.onToggle())
 
-    this.clearButton = button('', 'Clear all', 'Remove every pick')
-    this.clearButton.hidden = true
-    this.clearButton.addEventListener('click', () => this.handlers.onClear())
-
     this.count = button('count', '', 'Show every pick')
     this.count.hidden = true
     this.count.dataset.on = 'false'
     this.count.addEventListener('click', () => this.togglePicksList())
+    this.countLabel = el('span', 'count-label')
+    const chevron = el('span', 'chev')
+    chevron.innerHTML = iconSvg('chevron', 13)
+    this.count.append(this.countLabel, chevron)
 
     this.picksList = new PicksList({
       onScrollTo: (id) => this.handlers.onScrollToPick(id),
       onEditNote: (id) => this.openNote(id, this.pickById(id)?.note ?? ''),
       onCopy: (id) => this.handlers.onCopyPick(id),
       onRemove: (id) => this.handlers.onRemovePick(id),
+      onClearAll: () => this.handlers.onClear(),
       onPreview: (id) => this.preview(id),
     })
 
-    this.settingsButton = button('icon', '⚙', 'Settings')
+    this.settingsButton = button('icon', '', 'Settings')
+    this.settingsButton.innerHTML = iconSvg('gear', 18)
     this.settingsButton.setAttribute('aria-label', 'Settings')
     this.settingsButton.addEventListener('click', () => this.togglePanel())
 
-    const collapseButton = button('icon', '–', 'Collapse the toolbar')
+    const collapseButton = button('icon', '', 'Collapse the toolbar')
+    collapseButton.innerHTML = iconSvg('minus', 18)
     collapseButton.setAttribute('aria-label', 'Collapse the toolbar')
     collapseButton.addEventListener('click', () => this.setCompact(true))
 
     this.toolbar = el('div', 'toolbar')
-    this.toolbar.append(
-      grip,
-      this.toggleButton,
-      this.count,
-      this.clearButton,
-      this.settingsButton,
-      collapseButton,
-    )
+    this.toolbar.append(grip, this.toggleButton, this.count, this.settingsButton, collapseButton)
 
     this.puck = el('div', 'puck')
     this.puck.dataset.on = 'false'
@@ -856,14 +889,13 @@ export class Overlay {
     if (this.previewFor !== null && !seen.has(this.previewFor)) this.preview(null)
 
     this.count.hidden = total === 0
-    this.count.textContent = total === 1 ? '1 pick' : `${total} picks`
+    this.countLabel.textContent = total === 1 ? '1 pick' : `${total} picks`
     if (total === 0) this.togglePicksList(false)
 
     const here = new Set(targets.map((target) => target.id))
     this.rows = all.map((pick) => ({ pick, here: here.has(pick.id) }))
     this.picksList.render(this.rows)
     if (this.picksList.open) this.anchorToDock(this.picksList.root)
-    this.clearButton.hidden = total === 0
     this.tally.hidden = total === 0
     this.tally.textContent = String(total)
 

@@ -1,5 +1,5 @@
 import { collectAttributes } from './attributes'
-import { copyText, describeCopy, formatPicks } from './clipboard'
+import { copyText, formatPicks } from './clipboard'
 import { detectFramework } from './framework'
 import { Overlay } from './overlay'
 import { collapseText, domPath, stableClasses, uniqueSelector } from './selector'
@@ -373,8 +373,9 @@ export class QuelloPicker implements QuelloInstance {
     const picks = this.getPicks()
     const text = formatPicks(picks, copyScope)
     if (!text) return
-    const copied = await copyText(text)
-    this.overlay.flash(copied ? describeCopy(picks, copyScope) : 'Copy failed', !copied)
+    // No confirmation when it works: you asked for this to happen on every pick,
+    // so saying so every time is noise. A failure still needs reporting.
+    if (!(await copyText(text))) this.overlay.flash('Copy failed', true)
   }
 
   /** Push state to the overlay and persist it. */

@@ -35,3 +35,16 @@ export function logoSvg(height = 24): string {
   <circle cx="8.6" cy="8.6" r="1.8" fill="currentColor"/>
 </svg>`
 }
+
+/** Small monochrome icons for the toolbar, drawn on a 24-unit grid. */
+export function iconSvg(name: 'gear' | 'minus' | 'chevron', size: number): string {
+  const open = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">`
+  const body = {
+    // Eight stubby teeth around a hub. Short and thick rather than long spokes:
+    // long ones read as rays, and the icon starts to look like brightness.
+    gear: `<circle cx="12" cy="12" r="4.4" stroke-width="2.1"/><g stroke-width="3" stroke-linecap="butt"><path d="M12 5.9V3.7"/><path d="M12 18.1v2.2"/><path d="M5.9 12H3.7"/><path d="M18.1 12h2.2"/><path d="M7.68 7.68 6.13 6.13"/><path d="M16.32 16.32l1.55 1.55"/><path d="M16.32 7.68l1.55-1.55"/><path d="M7.68 16.32l-1.55 1.55"/></g>`,
+    minus: `<path d="M6 12h12"/>`,
+    chevron: `<path d="M6 9.5 12 15.5 18 9.5"/>`,
+  }[name]
+  return `${open}${body}</svg>`
+}

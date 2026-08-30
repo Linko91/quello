@@ -36,6 +36,26 @@ export const PICKS_LIST_STYLES = `
 }
 .picks-list .empty { padding: 14px 10px; font-size: 12px; opacity: 0.5; text-align: center; }
 
+.picks-list .foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  padding-top: 7px;
+  border-top: 1px solid #221f2b;
+}
+.picks-list .foot button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #ef4444;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.picks-list .foot button:hover { background: #3a1f24; }
+
 .row {
   display: grid;
   grid-template-columns: 24px 1fr;
@@ -49,21 +69,39 @@ export const PICKS_LIST_STYLES = `
 .row:hover { background: #1e1c26; }
 .row[data-elsewhere="true"] .where { color: #ffd166; }
 
+/* Quiet by default: the number identifies the row, it does not need to shout. */
 .row .n {
   width: 22px;
   height: 22px;
   border-radius: 11px;
-  background: #7c5cff;
-  color: #fff;
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  background: rgba(124, 92, 255, 0.16);
+  color: #b6a2ff;
   font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.row[data-note="true"] .n { box-shadow: 0 0 0 2px #ffd166; }
+.row:hover .n { border-color: rgba(124, 92, 255, 0.8); color: #cdbcff; }
+.row[data-note="true"] .n {
+  border-color: rgba(255, 209, 102, 0.75);
+  background: rgba(255, 209, 102, 0.14);
+  color: #ffd166;
+}
 
-.row .who { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.row .title { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.row .who { font-size: 12px; font-weight: 600; line-height: 1.3; white-space: nowrap; }
+.row .where {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  color: #6f6c7d;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .row .what {
   margin-top: 2px;
   font-size: 11px;
@@ -73,7 +111,6 @@ export const PICKS_LIST_STYLES = `
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.row .where { margin-top: 3px; font-size: 10px; color: #6f6c7d; }
 .row .memo {
   margin-top: 5px;
   padding: 4px 7px;
@@ -87,23 +124,26 @@ export const PICKS_LIST_STYLES = `
   overflow-wrap: anywhere;
 }
 
-.row .acts { display: flex; gap: 2px; margin-top: 6px; }
+.row .acts { display: flex; gap: 2px; margin-top: 7px; }
 .row .acts button {
-  padding: 4px 7px;
+  padding: 5px 8px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: #9b98a8;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
 .row .acts button:hover { background: #2f2c3a; color: #fff; }
 .row .acts button.danger:hover { background: #3a1f24; color: #ef4444; }
+.row .acts button.noted { color: #ffd166; }
+.row .acts button.noted:hover { background: #2f2919; color: #ffd166; }
 `
 
 export interface PicksListHandlers {
   onScrollTo(id: number): void
+  onClearAll(): void
   onEditNote(id: number): void
   onCopy(id: number): void
   onRemove(id: number): void
@@ -150,6 +190,20 @@ export class PicksList {
       return
     }
     for (const row of rows) this.root.append(this.buildRow(row))
+
+    // "Clear all" lives with the list it empties, rather than in the toolbar.
+    const foot = document.createElement('div')
+    foot.className = 'foot'
+    const clear = document.createElement('button')
+    clear.textContent = `Clear all ${rows.length}`
+    clear.title = 'Remove every pick, on every page'
+    clear.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      this.handlers.onClearAll()
+    })
+    foot.append(clear)
+    this.root.append(foot)
   }
 
   private buildRow({ pick, here }: PickRow): HTMLElement {
@@ -164,9 +218,17 @@ export class PicksList {
 
     const body = document.createElement('div')
 
-    const who = document.createElement('div')
+    const title = document.createElement('div')
+    title.className = 'title'
+    const who = document.createElement('span')
     who.className = 'who'
     who.textContent = pick.framework?.component ?? `<${pick.tag}>`
+    // The page sits beside the component name: together they say which one this is.
+    const where = document.createElement('span')
+    where.className = 'where'
+    where.textContent = pathOf(pick.page.url)
+    where.title = pick.page.url
+    title.append(who, where)
 
     const what = document.createElement('div')
     what.className = 'what'
@@ -174,11 +236,7 @@ export class PicksList {
     what.textContent = pick.text ? `${pick.selector} · ${collapseText(pick.text, 40)}` : pick.selector
     what.title = pick.selector
 
-    const where = document.createElement('div')
-    where.className = 'where'
-    where.textContent = pathOf(pick.page.url) + (here ? '' : ' · another page')
-
-    body.append(who, what, where)
+    body.append(title, what)
 
     if (pick.note) {
       const memo = document.createElement('div')
@@ -193,8 +251,13 @@ export class PicksList {
       action(here ? '⤓' : '↗', here ? 'Scroll to element' : 'Open that page and scroll to it', () =>
         this.handlers.onScrollTo(pick.id),
       ),
-      action(pick.note ? '✎' : '✚', pick.note ? 'Edit note' : 'Add a note', () =>
-        this.handlers.onEditNote(pick.id),
+      // One icon for one action: the button opens the note editor either way, and
+      // whether a note exists already is told by colour, as it is on the number.
+      action(
+        '✎',
+        pick.note ? 'Edit note' : 'Add a note',
+        () => this.handlers.onEditNote(pick.id),
+        pick.note ? 'noted' : '',
       ),
       action('⧉', 'Copy this pick as JSON', () => this.handlers.onCopy(pick.id)),
       action('×', 'Remove this pick', () => this.handlers.onRemove(pick.id), 'danger'),

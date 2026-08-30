@@ -39,14 +39,20 @@ export const SETTINGS_PANEL_STYLES = `
 .tabs button:hover { color: #fff; }
 .tabs button[aria-selected="true"] { background: #2a2833; color: #fff; }
 
-.tabpanel[hidden] { display: none; }
-.tabpanel h3 {
+/* Every tab occupies the same grid cell, so the panel is always as tall as the
+   tallest one and switching tabs never resizes it. */
+.tabpanels { display: grid; }
+.tabpanel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  align-self: start;
+}
+.tabpanel[data-active="true"] { visibility: visible; }
+.tabpanel .lede {
   margin: 0 0 8px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.45;
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0.5;
 }
 
 .field { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; }
@@ -83,11 +89,11 @@ export interface SettingsPanelHandlers {
 
 type TabKey = 'html' | 'clipboard' | 'notes' | 'theme'
 
-const TABS: Array<{ key: TabKey; label: string; heading: string }> = [
-  { key: 'html', label: 'HTML', heading: 'HTML in picks' },
-  { key: 'clipboard', label: 'Clipboard', heading: 'Copy on pick' },
-  { key: 'notes', label: 'Notes', heading: 'Agent notes' },
-  { key: 'theme', label: 'Theme', heading: 'Toolbar surface' },
+const TABS: Array<{ key: TabKey; label: string; lede: string }> = [
+  { key: 'html', label: 'HTML', lede: 'How much of the element’s markup each pick carries.' },
+  { key: 'clipboard', label: 'Clipboard', lede: 'Mirror picks to the clipboard as you make them.' },
+  { key: 'notes', label: 'Notes', lede: 'Instructions the agent reads when it resolves the picks.' },
+  { key: 'theme', label: 'Theme', lede: 'How quello’s own toolbar and panels look.' },
 ]
 
 /**
@@ -125,12 +131,17 @@ export class SettingsPanel {
 
       const panel = element('div', 'tabpanel')
       panel.setAttribute('role', 'tabpanel')
-      const heading = document.createElement('h3')
-      heading.textContent = tab.heading
-      panel.append(heading)
+      // A short description of what the tab is for, rather than a heading that
+      // only repeats the tab's own label.
+      const lede = element('p', 'lede')
+      lede.textContent = tab.lede
+      panel.append(lede)
       this.tabPanels.set(tab.key, panel)
     }
-    this.root.append(tabs, ...this.tabPanels.values())
+
+    const panels = element('div', 'tabpanels')
+    panels.append(...this.tabPanels.values())
+    this.root.append(tabs, panels)
 
     const html = this.tabPanels.get('html')!
     for (const option of [
@@ -212,7 +223,7 @@ export class SettingsPanel {
     for (const [tab, button] of this.tabButtons) {
       button.setAttribute('aria-selected', String(tab === key))
     }
-    for (const [tab, panel] of this.tabPanels) panel.hidden = tab !== key
+    for (const [tab, panel] of this.tabPanels) panel.dataset.active = String(tab === key)
   }
 
   /** Render every control from the settings the picker actually holds. */
