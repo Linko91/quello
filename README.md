@@ -23,8 +23,9 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
 | [`@quello/cli`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
 
-Plus six manual test apps, one per framework. They mirror each other: same three routes, same
-content, so a difference you see is the framework's and not the page's.
+Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
+same three routes, same content, so a difference you see belongs to the framework and not to the
+page.
 
 | Route | What it is for |
 | --- | --- |
@@ -36,19 +37,16 @@ Every page is taller than the viewport, the nav is sticky, and navigation is cli
 three things worth exercising by hand — scrolling, sticky positioning and route changes — are all
 reachable in a few clicks.
 
-| Playground | Port | How quello gets in | What a pick knows |
-| --- | --- | --- | --- |
-| [`vue`](playgrounds/vue) | 5175 | Vite plugin, injected tag | component, file |
-| [`react`](playgrounds/react) | 5176 | Vite plugin, injected tag | component, file, line |
-| [`svelte`](playgrounds/svelte) | 5177 | Vite plugin, injected tag | component, file, line, column |
-| [`nuxt`](playgrounds/nuxt) | 5178 | Vite plugin, `virtual:quello` | component, file |
-| [`astro`](playgrounds/astro) | 5179 | Vite plugin, `virtual:quello` | selector and text only |
-| [`next`](playgrounds/next) | 5180 | direct import + route handler | component |
-| [`vanilla`](playgrounds/vanilla) | 5181 | `quello` CLI, hand-written tag | selector and text only |
-| [`webpack`](playgrounds/webpack) | 5182 | webpack plugin | selector and text only |
-| [`solid`](playgrounds/solid) | 5183 | Vite plugin, injected tag | selector and text only |
-| [`sveltekit`](playgrounds/sveltekit) | 5184 | Vite plugin, `virtual:quello` | component, file, line |
-| [`angular`](playgrounds/angular) | 5186 | `quello` CLI on 5187 | component |
+Each one is a row of the [compatibility matrix](#compatibility), running:
+
+| Playground | Port | | Playground | Port |
+| --- | --- | --- | --- | --- |
+| [`vue`](playgrounds/vue) | 5175 | | [`vanilla`](playgrounds/vanilla) | 5181 |
+| [`react`](playgrounds/react) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
+| [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
+| [`nuxt`](playgrounds/nuxt) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
+| [`astro`](playgrounds/astro) | 5179 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
+| [`next`](playgrounds/next) | 5180 | | | |
 
 ```bash
 pnpm play:vue     pnpm play:react   pnpm play:svelte   pnpm play:solid
@@ -56,19 +54,55 @@ pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro  pnpm play:next
 pnpm play:webpack pnpm play:angular pnpm play:vanilla
 ```
 
-**How quello gets in** is the interesting column, and there are four answers:
+Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
+looks like in practice.
 
-1. **Vite SPA** — the plugin's `transformIndexHtml` adds the script tag. Nothing to do.
-2. **Vite + its own HTML** (Nuxt, SvelteKit, Astro) — that hook is never called, so a client-only
-   file imports `virtual:quello` instead. One line, with the plugin's options already baked in.
-3. **webpack** — `webpack-plugin-quello` adds the tag through `html-webpack-plugin` and the endpoint
-   through `webpack-dev-server`.
-4. **Neither** (Angular, plain HTML, anything else) — `npx quello` runs the endpoint beside your own
-   server, and the page carries a script tag pointing at it.
+## Compatibility
 
-Solid, Astro, webpack and the vanilla page report no component, and the pick falls back to selector,
-DOM path and text — which is exactly why those playgrounds exist. See
-[what a pick can know](#what-a-pick-can-know) for why those four, and not the others.
+Two questions decide whether quello works on a project, and they are independent:
+
+- **The builder** decides *how quello gets in* — a plugin, a virtual module, or the CLI beside it.
+- **The framework** decides *what a pick can know* — whether the runtime leaves anything on the DOM
+  to identify the component that rendered an element.
+
+So Vue on webpack gets in the webpack way and still reports Vue components, while Solid on Vite gets
+in the easy way and reports none. Neither axis constrains the other.
+
+| Framework | Vite | webpack | Its own toolchain | No bundler | What a pick knows |
+| --- | --- | --- | --- | --- | --- |
+| **Vue** | ✅ plugin | ○ plugin | — | ○ CLI | component, file |
+| **React** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line |
+| **Svelte** | ✅ plugin | ○ plugin | — | ○ CLI | component, file, line, column |
+| **Solid** | ✅ plugin | ○ plugin | — | ○ CLI | selector, path, text |
+| **Nuxt** | ✅ `virtual:quello` | — | — | — | component, file |
+| **SvelteKit** | ✅ `virtual:quello` | — | — | — | component, file, line |
+| **Astro** | ✅ `virtual:quello` | — | — | — | selector, path, text |
+| **Next** | — | ⚠️ ~40 lines | ⚠️ ~40 lines | — | component |
+| **Angular** | — | — | ✅ CLI | — | component |
+| **None** (html/js/css) | ○ plugin | ✅ plugin | — | ✅ CLI | selector, path, text |
+
+✅ verified in a playground · ○ supported, not exercised here
+⚠️ needs code of your own · — not a combination that exists
+
+Reading the table:
+
+- **Vite** is the easy column. An SPA gets the script tag injected; a framework that renders its own
+  HTML imports [`virtual:quello`](#frameworks-that-render-their-own-html) from one client-only file.
+- **webpack** needs [`webpack-plugin-quello`](#webpack), which adds the tag through
+  `html-webpack-plugin` and the endpoint through `webpack-dev-server`.
+- **Its own toolchain** means a dev server quello cannot configure. Angular's is the case in the
+  playgrounds: [`npx quello`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
+  own port and the page carries a script tag pointing at it. The same answer works for Rails, Laravel
+  or anything else that serves HTML its own way.
+- **Next** is the one gap. It builds on webpack or turbopack but does not expose either in a way the
+  plugin can use, so its playground imports `@quello/core` from a client component and ships a route
+  handler for `.quello/picks.json`. It works, but you write those lines — see
+  [`playgrounds/next`](playgrounds/next). Packaging them is on the [roadmap](#ideas-not-built-yet).
+
+The last column depends only on the framework, never on the builder, and never on the integration
+route: it is whatever the runtime leaves on the DOM in a development build. `selector, path, text`
+is the floor, and it is enough for an agent to find the code — see
+[what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
 
 ## Usage
 
@@ -182,7 +216,8 @@ another page, so in-page anchors leave badges alone.
 
 The **⚙** button in the toolbar opens a small panel, split into four tabs — **HTML**, **Clipboard**,
 **Notes**, **Theme**. The tabs share one grid cell, so the panel is always as tall as its tallest tab
-and switching never resizes it. Everything in it is a working preference, kept per-developer in `localStorage`;
+and switching never resizes it. Everything in it is a working preference, kept per-developer
+in `localStorage`;
 anything that belongs to the project rather than the person is a [plugin option](#plugin-options)
 instead.
 
