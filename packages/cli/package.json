@@ -1,6 +1,6 @@
 {
-  "name": "quello",
-  "version": "0.1.0",
+  "name": "quello-cli",
+  "version": "0.1.1",
   "description": "Run quello against any project \u2014 no bundler required.",
   "license": "MIT",
   "engines": {

@@ -7,6 +7,6 @@
     "dev": "quello . --serve --port 5181"
   },
   "devDependencies": {
-    "quello": "workspace:^"
+    "quello-cli": "workspace:^"
   }
 }

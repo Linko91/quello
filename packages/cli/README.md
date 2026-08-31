@@ -1,23 +1,23 @@
-# quello
+# quello-cli
 
 Run [quello](https://github.com/Linko91/quello) — the visual element picker for AI coding agents —
 against any project, with or without a bundler. Point at an element in the browser, and your agent
 knows which component you meant.
 
 ```bash
-npx quello
+npx quello-cli
 ```
 
 No install needed. Add it as a dev dependency if you would rather pin it:
 
 ```bash
-pnpm add -D quello
+pnpm add -D quello-cli
 ```
 
 ## Usage
 
 ```bash
-npx quello [dir] [options]
+npx quello-cli [dir] [options]
 ```
 
 It runs the picks endpoint beside your own dev server and prints the script tag to paste into your
@@ -46,8 +46,8 @@ not take a plugin.
 running. Paths that try to escape the served directory are refused.
 
 ```bash
-npx quello              # endpoint only, for an app already on its own server
-npx quello . --serve    # also serve this folder, for a plain html/js/css project
+npx quello-cli              # endpoint only, for an app already on its own server
+npx quello-cli . --serve    # also serve this folder, for a plain html/js/css project
 ```
 
 ## Options

@@ -21,7 +21,7 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
 | [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
-| [`quello`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
+| [`quello-cli`](packages/cli) | `npx quello-cli` — for projects with no bundler to hook into. |
 
 Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
 same three routes, same content, so a difference you see belongs to the framework and not to the
@@ -91,7 +91,7 @@ Reading the table:
 - **webpack** needs [`webpack-plugin-quello`](#webpack), which adds the tag through
   `html-webpack-plugin` and the endpoint through `webpack-dev-server`.
 - **Its own toolchain** means a dev server quello cannot configure. Angular's is the case in the
-  playgrounds: [`npx quello`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
+  playgrounds: [`npx quello-cli`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
   own port and the page carries a script tag pointing at it. The same answer works for Rails, Laravel
   or anything else that serves HTML its own way.
 - **Next** needs [`@quello/next`](packages/next), because Next has no plugin API: it runs its own
@@ -453,8 +453,8 @@ Angular's dev server, a Rails or Laravel app, three HTML files in a folder — a
 take a plugin. Run quello beside it:
 
 ```bash
-npx quello              # endpoint only, for an app already on its own server
-npx quello . --serve    # also serve this folder, for a plain html/js/css project
+npx quello-cli              # endpoint only, for an app already on its own server
+npx quello-cli . --serve    # also serve this folder, for a plain html/js/css project
 ```
 
 It prints the tag to paste into your page:

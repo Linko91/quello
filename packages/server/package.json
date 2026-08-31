@@ -1,6 +1,6 @@
 {
   "name": "@quello/server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dev-server plumbing shared by every quello integration: picks endpoint, storage, CLAUDE.md.",
   "license": "MIT",
   "engines": {

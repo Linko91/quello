@@ -1,6 +1,6 @@
 {
   "name": "webpack-plugin-quello",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Webpack plugin that injects quello, the visual element picker for AI coding agents.",
   "license": "MIT",
   "engines": {

@@ -11,7 +11,7 @@ depend on — pick the one that matches your builder and it comes along:
 | [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7 |
 | [`webpack-plugin-quello`](https://www.npmjs.com/package/webpack-plugin-quello) | webpack 5 |
 | [`@quello/next`](https://www.npmjs.com/package/@quello/next) | Next 14, 15, 16 |
-| [`quello`](https://www.npmjs.com/package/quello) | the CLI, for everything else |
+| [`quello-cli`](https://www.npmjs.com/package/quello-cli) | the CLI, for everything else |
 
 ## What is in here
 
