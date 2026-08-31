@@ -27,6 +27,11 @@ export default defineNuxtConfig({
     domain: process.env.NUXT_SITE_URL || 'https://quello-docs.vercel.app',
   },
 
+  // The homepage's hero scene is a Vue component used from Markdown. MDC resolves
+  // components through the global registry, so it has to be registered as global —
+  // an auto-imported-only component is invisible to `content/index.md`.
+  components: [{ path: '~/components', pathPrefix: false, global: true }],
+
   modules: [
     // @nuxtjs/mdc pre-bundles its transitive deps as `@nuxtjs/mdc > <pkg>` ids, which
     // Vite resolves from this directory — and under pnpm the package only exists
