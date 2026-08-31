@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'playgrounds/*'
+  - 'docs'
 
 allowBuilds:
   esbuild: true
@@ -9,3 +10,5 @@ allowBuilds:
   msgpackr-extract: true
   "@parcel/watcher": true
   nx: true
+  better-sqlite3: true
+  vue-demi: true
