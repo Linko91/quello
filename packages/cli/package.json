@@ -1,8 +1,11 @@
 {
-  "name": "@quello/cli",
+  "name": "quello",
   "version": "0.1.0",
   "description": "Run quello against any project \u2014 no bundler required.",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "type": "module",
   "bin": {
     "quello": "./dist/cli.js"

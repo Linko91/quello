@@ -90,4 +90,4 @@ Render `<Quello />` in `pages/_document.tsx`, inside `<body>`.
 | `@quello/next/config` | `withQuello` — `next.config` only. |
 | `@quello/next/route` | `quelloRoute`, `quelloApiRoute`, `quelloApiConfig`. |
 
-[Full guide](https://quello.vercel.app/guides/next) · [MIT](../../LICENSE)
+[Full guide](https://quello.vercel.app/guides/next) · [MIT](./LICENSE)

@@ -30,7 +30,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.7.2",
-    "@quello/cli": "workspace:^",
+    "quello": "workspace:^",
     "concurrently": "^9.1.2"
   }
 }

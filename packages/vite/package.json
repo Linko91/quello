@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Vite plugin that injects quello, the visual element picker for AI coding agents.",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
