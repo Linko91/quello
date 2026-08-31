@@ -3,7 +3,7 @@
 The documentation site, built with [Docus](https://docus.dev) (a Nuxt layer).
 
 ```bash
-pnpm docs          # dev server on http://localhost:5190
+pnpm docs:dev      # dev server on http://localhost:5190
 pnpm docs:build    # production build
 ```
 

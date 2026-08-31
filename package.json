@@ -20,7 +20,7 @@
     "play:webpack": "pnpm --filter playground-webpack dev",
     "play:angular": "pnpm --filter playground-angular dev",
     "play:vanilla": "pnpm --filter playground-vanilla dev",
-    "docs": "pnpm --filter quello-docs dev",
+    "docs:dev": "pnpm --filter quello-docs dev",
     "docs:build": "pnpm --filter quello-docs build"
   },
   "devDependencies": {
