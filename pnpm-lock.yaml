@@ -215,9 +215,6 @@ importers:
       '@angular/compiler-cli':
         specifier: ^19.2.0
         version: 19.2.25(@angular/compiler@19.2.25)(supports-color@10.2.2)(typescript@5.7.3)
-      '@quello/cli':
-        specifier: workspace:^
-        version: link:../../packages/cli
       '@types/jasmine':
         specifier: ~5.1.0
         version: 5.1.15
@@ -242,6 +239,9 @@ importers:
       karma-jasmine-html-reporter:
         specifier: ~2.1.0
         version: 2.1.0(jasmine-core@5.6.0)(karma-jasmine@5.1.0(karma@6.4.4(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)))(karma@6.4.4(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
+      quello:
+        specifier: workspace:^
+        version: link:../../packages/cli
       typescript:
         specifier: ~5.7.2
         version: 5.7.3
@@ -374,7 +374,7 @@ importers:
 
   playgrounds/vanilla:
     devDependencies:
-      '@quello/cli':
+      quello:
         specifier: workspace:^
         version: link:../../packages/cli
 

@@ -21,7 +21,7 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
 | [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
-| [`@quello/cli`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
+| [`quello`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
 
 Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
 same three routes, same content, so a difference you see belongs to the framework and not to the
