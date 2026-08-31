@@ -405,7 +405,9 @@ onBeforeUnmount(() => {
   <span class="p">]</span>
 <span class="p">}</span></code></pre>
 
-        <p class="say">
+        <!-- The payoff line only makes sense once there is a PICK 2 to point at, so
+             it arrives with the second pick rather than sitting there ahead of it. -->
+        <p class="say" :data-shown="picked.length > 1">
           <span class="say-q">“</span>make <b>PICK 2</b> a link instead<span class="say-q">”</span>
           <span class="say-tail">— and the agent knows which one.</span>
         </p>
@@ -912,13 +914,20 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 0.3);
 }
 
+/* Held in the layout rather than removed from it: the card would otherwise change
+   height on every pass of the loop, and the whole scene would twitch. */
 .say {
+  opacity: 0;
+  transition: opacity 260ms ease-out;
   margin: 0;
   padding: 12px 14px 14px;
   border-top: 1px solid var(--line);
   color: rgba(255, 255, 255, 0.82);
   font-size: 12.5px;
   line-height: 1.55;
+}
+.say[data-shown='true'] {
+  opacity: 1;
 }
 .say b {
   color: var(--amber-bright);

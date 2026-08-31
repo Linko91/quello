@@ -102,6 +102,19 @@ description: The toolbar rides along with your dev server. Nothing to wire up, n
 
 ::u-page-section
 ---
+title: Write the change on the pick
+description: A pick can carry an instruction. Click its badge, say what should happen, and the
+  badge marks itself as annotated. When a few of them are, one sentence hands the lot over —
+  the agent works through every annotated pick in order.
+---
+
+#bottom
+  :::notes-demo
+  :::
+::
+
+::u-page-section
+---
 title: Install it where you already are
 description: A plugin for your bundler, a package for Next, or a CLI that runs beside whatever
   dev server you have. All of them are dev-only and disable themselves on build.
