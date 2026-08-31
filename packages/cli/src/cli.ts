@@ -2,8 +2,9 @@ import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import {
   CLIENT_ROUTE,
+  DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
-  ensureClaudeMd,
+  ensureAgentFile,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -17,7 +18,8 @@ interface Args {
   port: number
   host: string
   serve: boolean
-  claudeMd: boolean
+  writeAgentFile: boolean
+  agentFile: string
   shortcut?: string
 }
 
@@ -29,7 +31,8 @@ function parse(argv: string[]): Args {
     // `serve` off by default: the common case is an app already running on its own
     // dev server that only needs somewhere to put picks.
     serve: false,
-    claudeMd: true,
+    writeAgentFile: true,
+    agentFile: DEFAULT_AGENT_FILE,
   }
   const rest: string[] = []
   for (let i = 0; i < argv.length; i++) {
@@ -38,7 +41,8 @@ function parse(argv: string[]): Args {
     else if (arg === '--host') args.host = String(argv[++i])
     else if (arg === '--shortcut') args.shortcut = String(argv[++i])
     else if (arg === '--serve' || arg === '-s') args.serve = true
-    else if (arg === '--no-claude-md') args.claudeMd = false
+    else if (arg === '--agent-file') args.agentFile = String(argv[++i])
+    else if (arg === '--no-agent-file') args.writeAgentFile = false
     else if (arg === '--help' || arg === '-h') rest.push('--help')
     else if (arg && !arg.startsWith('-')) args.dir = resolve(process.cwd(), arg)
   }
@@ -64,7 +68,8 @@ Options
   -p, --port <n>      port to listen on (default 5100)
       --host <host>   host to bind (default 127.0.0.1)
       --shortcut <s>  picker shortcut, e.g. "ctrl+shift+p" (default alt+q)
-      --no-claude-md  do not touch CLAUDE.md
+      --agent-file <f>  agent instructions file (default AGENTS.md)
+      --no-agent-file   do not write one
   -h, --help          show this
 `
 
@@ -72,11 +77,11 @@ async function main(): Promise<void> {
   const args = parse(process.argv.slice(2))
   const picksPath = resolvePicksPath(args.dir, DEFAULT_PICKS_FILE)
 
-  if (args.claudeMd) {
+  if (args.writeAgentFile) {
     try {
-      await ensureClaudeMd(args.dir, DEFAULT_PICKS_FILE)
+      await ensureAgentFile(args.dir, { file: args.agentFile, picksFile: DEFAULT_PICKS_FILE })
     } catch (error) {
-      console.warn(`[quello] could not update CLAUDE.md: ${(error as Error).message}`)
+      console.warn(`[quello] could not update ${args.agentFile}: ${(error as Error).message}`)
     }
   }
 
@@ -118,6 +123,7 @@ async function main(): Promise<void> {
 
     console.log(`\n  quello  ${origin}`)
     console.log(`  picks   ${picksPath}`)
+    if (args.writeAgentFile) console.log(`  agent   ${args.agentFile}`)
     if (args.serve) console.log(`  serving ${args.dir}`)
     console.log(`\n  Add to your page in development:\n`)
     console.log(`    <script defer src="${origin}${CLIENT_ROUTE}" ${attrText}></script>\n`)

@@ -18,7 +18,7 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | Package | Description |
 | --- | --- |
 | [`@quello/core`](packages/core) | Framework-agnostic browser runtime. Zero dependencies. |
-| [`@quello/server`](packages/server) | Picks endpoint, storage and CLAUDE.md, shared by the rest. |
+| [`@quello/server`](packages/server) | Picks endpoint, storage and agent instructions, shared by the rest. |
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
 | [`@quello/cli`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
@@ -329,7 +329,8 @@ with a note is ringed and dotted in amber.
 Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
 It is off by default, so picking stays a single click when you have nothing to say.
 
-This is what makes *"resolve the picks"* work. The section written into `CLAUDE.md` tells the agent
+This is what makes *"resolve the picks"* work. The section written into your
+[agent file](#the-quello-directory) tells the agent
 that when you ask it to resolve the picks, it should read `.quello/picks.json` and carry out each
 entry's `note` against the element that entry points at, in `id` order, treating entries without a
 note as bookmarks. So you can annotate five elements in the browser and then type four words.
@@ -432,14 +433,14 @@ It prints the tag to paste into your page:
 ```
 
 The endpoint answers cross-origin, since your app is usually on a different port. It writes the same
-`.quello/picks.json` and the same `CLAUDE.md` section as every other integration — the agent cannot
+`.quello/picks.json` and the same agent-file section as every other integration — the agent cannot
 tell which one you used.
 
 ### Frameworks that render their own HTML
 
 `transformIndexHtml` is a Vite SPA hook: Nuxt, Astro and SvelteKit build their document themselves
 and never call it. For those, keep the plugin in the Vite config — it still serves the runtime, the
-picks endpoint and CLAUDE.md — and import the virtual module from a client-only file:
+picks endpoint and the agent file — and import the virtual module from a client-only file:
 
 ```ts
 // Nuxt — plugins/quello.client.ts
@@ -464,7 +465,8 @@ quello({
   picksFile: '.quello/picks.json',  // relative to the Vite root
   shortcut: 'alt+q',                // full combination, nothing implied
   textLimit: 120,                   // characters of element text kept per pick
-  claudeMd: true,                   // append the agent instructions to CLAUDE.md on first run
+  writeAgentFile: true,             // write the agent instructions on first run
+  agentFile: 'AGENTS.md',           // or CLAUDE.md, GEMINI.md, .github/copilot-instructions.md…
   htmlMode: 'truncated',            // initial setting: 'none' | 'truncated' | 'full'
   htmlLimit: 1000,                  // initial character budget for 'truncated'
   theme: { /* see below */ },       // look of the outlines drawn on the page
@@ -523,10 +525,22 @@ repo ignores `.quello/` at the root and you should do the same in your project:
 Deleting the directory is always safe; it is recreated on the next pick. The runtime keeps working
 without a dev server (badges still render), it just cannot persist.
 
-On first run the plugin also appends a short section to your `CLAUDE.md`, creating the file if
-needed, telling the agent to resolve `PICK <n>` against `.quello/picks.json`. The section is fenced
-in `<!-- quello:start -->` / `<!-- quello:end -->` markers and is never rewritten, so your edits
-stick. Pass `claudeMd: false` to opt out.
+On first run quello also writes a short section into an agent instructions file, creating it if
+needed, telling the agent to resolve `PICK <n>` against `.quello/picks.json`.
+
+The default is **`AGENTS.md`**, the open convention Codex, Cursor, Zed and Aider read — and which
+Claude Code reads too, alongside its own `CLAUDE.md`. One file therefore reaches every agent, which
+`CLAUDE.md` alone would not. Point it anywhere you like:
+
+```ts
+quello({ agentFile: 'CLAUDE.md' })                        // Claude Code only
+quello({ agentFile: '.github/copilot-instructions.md' })  // directories are created as needed
+quello({ writeAgentFile: false })                         // write nothing
+```
+
+The section is fenced in `<!-- quello:start -->` / `<!-- quello:end -->` markers and is never
+rewritten, so your edits to it stick. Calling quello twice with two different `agentFile` values
+writes both, independently.
 
 ## Development
 
