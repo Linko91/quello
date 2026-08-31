@@ -5,6 +5,7 @@ import {
   DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
   ensureAgentFile,
+  ensureGitignored,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -51,6 +52,11 @@ export interface QuelloPluginOptions {
    */
   agentFile?: string
   /**
+   * Add the picks directory to `.gitignore` on first run. Defaults to `true`:
+   * picks describe your current browser session, not the project.
+   */
+  gitignorePicks?: boolean
+  /**
    * Initial HTML capture mode. Defaults to `truncated`. Only a starting point:
    * once a developer picks a mode in the settings panel, their choice wins.
    */
@@ -76,6 +82,7 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     textLimit = 120,
     writeAgentFile = true,
     agentFile = DEFAULT_AGENT_FILE,
+    gitignorePicks = true,
     htmlMode = 'truncated',
     htmlLimit = 1000,
     theme = {},
@@ -111,11 +118,20 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     },
 
     async buildStart() {
-      if (!enabled || !writeAgentFile) return
-      try {
-        await ensureAgentFile(root, { file: agentFile, picksFile })
-      } catch (error) {
-        this.warn(`[quello] could not update ${agentFile}: ${(error as Error).message}`)
+      if (!enabled) return
+      if (writeAgentFile) {
+        try {
+          await ensureAgentFile(root, { file: agentFile, picksFile })
+        } catch (error) {
+          this.warn(`[quello] could not update ${agentFile}: ${(error as Error).message}`)
+        }
+      }
+      if (gitignorePicks) {
+        try {
+          await ensureGitignored(root, { picksFile })
+        } catch (error) {
+          this.warn(`[quello] could not update .gitignore: ${(error as Error).message}`)
+        }
       }
     },
 

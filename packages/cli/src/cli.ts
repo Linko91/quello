@@ -5,6 +5,7 @@ import {
   DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
   ensureAgentFile,
+  ensureGitignored,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -20,6 +21,7 @@ interface Args {
   serve: boolean
   writeAgentFile: boolean
   agentFile: string
+  gitignorePicks: boolean
   shortcut?: string
 }
 
@@ -33,6 +35,7 @@ function parse(argv: string[]): Args {
     serve: false,
     writeAgentFile: true,
     agentFile: DEFAULT_AGENT_FILE,
+    gitignorePicks: true,
   }
   const rest: string[] = []
   for (let i = 0; i < argv.length; i++) {
@@ -43,6 +46,7 @@ function parse(argv: string[]): Args {
     else if (arg === '--serve' || arg === '-s') args.serve = true
     else if (arg === '--agent-file') args.agentFile = String(argv[++i])
     else if (arg === '--no-agent-file') args.writeAgentFile = false
+    else if (arg === '--no-gitignore') args.gitignorePicks = false
     else if (arg === '--help' || arg === '-h') rest.push('--help')
     else if (arg && !arg.startsWith('-')) args.dir = resolve(process.cwd(), arg)
   }
@@ -70,6 +74,7 @@ Options
       --shortcut <s>  picker shortcut, e.g. "ctrl+shift+p" (default alt+q)
       --agent-file <f>  agent instructions file (default AGENTS.md)
       --no-agent-file   do not write one
+      --no-gitignore    do not add .quello/ to .gitignore
   -h, --help          show this
 `
 
@@ -82,6 +87,14 @@ async function main(): Promise<void> {
       await ensureAgentFile(args.dir, { file: args.agentFile, picksFile: DEFAULT_PICKS_FILE })
     } catch (error) {
       console.warn(`[quello] could not update ${args.agentFile}: ${(error as Error).message}`)
+    }
+  }
+
+  if (args.gitignorePicks) {
+    try {
+      await ensureGitignored(args.dir, { picksFile: DEFAULT_PICKS_FILE })
+    } catch (error) {
+      console.warn(`[quello] could not update .gitignore: ${(error as Error).message}`)
     }
   }
 

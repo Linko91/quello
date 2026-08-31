@@ -467,6 +467,7 @@ quello({
   textLimit: 120,                   // characters of element text kept per pick
   writeAgentFile: true,             // write the agent instructions on first run
   agentFile: 'AGENTS.md',           // or CLAUDE.md, GEMINI.md, .github/copilot-instructions.md…
+  gitignorePicks: true,             // add the picks directory to .gitignore on first run
   htmlMode: 'truncated',            // initial setting: 'none' | 'truncated' | 'full'
   htmlLimit: 1000,                  // initial character budget for 'truncated'
   theme: { /* see below */ },       // look of the outlines drawn on the page
@@ -515,12 +516,18 @@ page.
 ## The `.quello/` directory
 
 The dev server writes picks to `.quello/picks.json` in your Vite root, pretty-printed and ordered by
-`id`. It is a scratch file describing your current browser session, so **it is gitignored** — this
-repo ignores `.quello/` at the root and you should do the same in your project:
+`id`. It is a scratch file describing your current browser session, so it does not belong in a
+commit — quello adds it to your `.gitignore` on first run:
 
 ```gitignore
+# quello — visual element picks (generated, safe to delete)
 .quello/
 ```
+
+It appends once and never duplicates: an entry already ignoring that path in any of its usual
+spellings (`.quello`, `/.quello/`, `.quello/*`) counts, and the file is created only if you have
+none. Pass `gitignorePicks: false` — or `--no-gitignore` to the CLI — to keep quello out of it. The
+pattern follows `picksFile`, so a custom location is ignored instead.
 
 Deleting the directory is always safe; it is recreated on the next pick. The runtime keeps working
 without a dev server (badges still render), it just cannot persist.

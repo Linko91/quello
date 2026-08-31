@@ -4,6 +4,7 @@ import {
   DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
   ensureAgentFile,
+  ensureGitignored,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -26,6 +27,8 @@ export interface QuelloWebpackOptions {
   writeAgentFile?: boolean
   /** Which file, relative to the compiler context. Defaults to `AGENTS.md`. */
   agentFile?: string
+  /** Add the picks directory to `.gitignore` on first run. Defaults to `true`. */
+  gitignorePicks?: boolean
   htmlMode?: QuelloHtmlMode
   htmlLimit?: number
   theme?: QuelloTheme
@@ -66,6 +69,7 @@ export default class QuelloWebpackPlugin {
       textLimit: options.textLimit ?? 120,
       writeAgentFile: options.writeAgentFile ?? true,
       agentFile: options.agentFile ?? DEFAULT_AGENT_FILE,
+      gitignorePicks: options.gitignorePicks ?? true,
       htmlMode: options.htmlMode ?? 'truncated',
       htmlLimit: options.htmlLimit ?? 1000,
       theme: options.theme ?? {},
@@ -94,11 +98,17 @@ export default class QuelloWebpackPlugin {
     const picksPath = resolvePicksPath(root, this.options.picksFile)
 
     compiler.hooks.afterEnvironment.tap(NAME, () => {
-      if (!this.options.writeAgentFile) return
-      const file = this.options.agentFile
-      void ensureAgentFile(root, { file, picksFile: this.options.picksFile }).catch(
-        (error: Error) => console.warn(`[quello] could not update ${file}: ${error.message}`),
-      )
+      const { agentFile: file, picksFile } = this.options
+      if (this.options.writeAgentFile) {
+        void ensureAgentFile(root, { file, picksFile }).catch((error: Error) =>
+          console.warn(`[quello] could not update ${file}: ${error.message}`),
+        )
+      }
+      if (this.options.gitignorePicks) {
+        void ensureGitignored(root, { picksFile }).catch((error: Error) =>
+          console.warn(`[quello] could not update .gitignore: ${error.message}`),
+        )
+      }
     })
 
     compiler.hooks.compilation.tap(NAME, (compilation) => {

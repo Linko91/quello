@@ -15,9 +15,9 @@ export default defineAppConfig({
     title: 'quello',
     logo: { alt: 'quello', light: '/quello-logo.svg', dark: '/quello-logo.svg' },
   },
-  socials: {
-    github: 'https://github.com/Linko91/quello',
-  },
+  // Only `github`, not `socials.github` — the footer concatenates both, so setting
+  // the two produced a duplicate icon. This one also drives the header link and the
+  // "Edit this page" / "Report an issue" links, which need branch and rootDir.
   github: {
     url: 'https://github.com/Linko91/quello',
     branch: 'main',
