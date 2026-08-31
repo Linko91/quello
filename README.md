@@ -631,6 +631,35 @@ These only start paying off past roughly ten picks, which is why none of them ar
 
 **Smaller things**
 
+- **Live inside Vue DevTools instead of beside it.**
+  [`vite-plugin-vue-devtools`](https://devtools.vuejs.org/guide/vite-plugin) already puts a floating
+  panel on the page and accepts custom tabs, so on a Vue project quello could be one of them rather
+  than a second overlay competing for the same corner.
+
+  Only half of quello can move, and the split is already in the code. The **layer** — hover outline,
+  badges pinned to elements, the note editor anchored to a badge — has to stay on the page: it draws
+  on top of the user's own elements and cannot do that from inside a panel. The **chrome** — the
+  pick list, the settings tabs, the counter — is self-contained and would be at home in a tab, where
+  it would have room the floating toolbar does not.
+
+  So the shape is: keep `Overlay`'s layer, move `PicksList` and `SettingsPanel` behind a devtools
+  tab, and keep the standalone toolbar for every other framework. The two already talk through
+  handler callbacks rather than reaching into each other, which is what makes this plausible; the
+  awkward part is `openNote`, which anchors to a badge on the page and would have to keep doing so
+  from a panel that lives elsewhere.
+
+  It only pays off for Vue projects that already run the devtools plugin, so it is worth doing after
+  the standalone toolbar has settled — not instead of it.
+- **Read `data-v-inspector` when it is there.** Related, and cheaper. That same plugin annotates
+  every element with `src/App.vue:12:3` — file, **line and column**. quello already parses that
+  attribute, but only as a last resort, reached when no ancestor carries a Vue instance, which in a
+  real Vue app never happens. The richer location is sitting on the DOM and being ignored: Vue stays
+  at "component, file" while Svelte gets down to the column. Reading the attribute *in addition to*
+  the instance, rather than instead of it, is a small change to `detectVue`.
+- **Open in the editor.** With a file and a line on a pick, the list could grow an action that opens
+  the source directly, through the `/__open-in-editor` endpoint Vue DevTools ships and the
+  launch-editor middleware Vite exposes — for the picks you want to fix yourself rather than hand to
+  an agent.
 - **Solid and Astro component names.** Both are ruled out for now, for reasons that are structural
   rather than temporary — see [what a pick can know](#what-a-pick-can-know). Solid would become
   possible if a project already runs `solid-devtools`' Babel plugin; Astro, only if it ever exposes
