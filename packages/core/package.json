@@ -1,6 +1,6 @@
 {
   "name": "@quello/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Framework-agnostic browser runtime for quello, the visual element picker for AI coding agents.",
   "license": "MIT",
   "engines": {
