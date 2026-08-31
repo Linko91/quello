@@ -8,9 +8,8 @@ Claude Code, Cursor, Codex, Windsurf & Copilot.
 You pick elements in the running app; quello writes them to `.quello/picks.json` as `PICK 1`,
 `PICK 2`, … Then you say *"make PICK 2 sticky"* and the agent knows exactly which component you mean.
 
-> **MVP status** — dev mode only. Vite, webpack, or no bundler at all: eleven playgrounds cover the
-> ground. Next still needs ~40 lines of its own (see [`playgrounds/next`](playgrounds/next)), and
-> there is no MCP server yet.
+> **MVP status** — dev mode only. Vite, webpack, Next, or no bundler at all: eleven playgrounds
+> cover the ground. There is no MCP server yet.
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
 ## Packages
@@ -21,6 +20,7 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`@quello/server`](packages/server) | Picks endpoint, storage and agent instructions, shared by the rest. |
 | [`vite-plugin-quello`](packages/vite) | Vite plugin: injects the runtime and persists picks. |
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
+| [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
 | [`@quello/cli`](packages/cli) | `npx quello` — for projects with no bundler to hook into. |
 
 Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
@@ -77,12 +77,12 @@ in the easy way and reports none. Neither axis constrains the other.
 | **Nuxt** | ✅ `virtual:quello` | — | — | — | component, file |
 | **SvelteKit** | ✅ `virtual:quello` | — | — | — | component, file, line |
 | **Astro** | ✅ `virtual:quello` | — | — | — | selector, path, text |
-| **Next** | — | ⚠️ ~40 lines | ⚠️ ~40 lines | — | component¹ |
+| **Next** | — | ✅ `@quello/next` | ✅ `@quello/next` | — | component, file¹ |
 | **Angular** | — | — | ✅ CLI | — | component |
 | **None** (html/js/css) | ○ plugin | ✅ plugin | — | ✅ CLI | selector, path, text |
 
 ✅ verified in a playground · ○ supported, not exercised here
-⚠️ needs code of your own · — not a combination that exists · ¹ see the note below
+— not a combination that exists · ¹ see the note below
 
 Reading the table:
 
@@ -94,22 +94,26 @@ Reading the table:
   playgrounds: [`npx quello`](#no-bundler-or-a-bundler-quello-cannot-reach) runs the endpoint on its
   own port and the page carries a script tag pointing at it. The same answer works for Rails, Laravel
   or anything else that serves HTML its own way.
-- **Next** is the one gap, and not because it is React. It builds on webpack or turbopack, but runs
-  its own dev server rather than `webpack-dev-server`, so there is no `setupMiddlewares` to add the
-  endpoint to; and it renders HTML with its own renderer rather than `html-webpack-plugin`, so there
-  is no generated document to add the tag to. Both halves of the integration have to go the Next
-  way: a client component importing `@quello/core`, and a route handler for `.quello/picks.json`.
-  It works — see [`playgrounds/next`](playgrounds/next) — but you write those lines. Packaging them
-  is on the [roadmap](#ideas-not-built-yet).
+- **Next** needs [`@quello/next`](packages/next), because Next has no plugin API: it runs its own
+  dev server, so there is no `setupMiddlewares` to add the endpoint to, and it renders HTML with its
+  own renderer, so there is no `transformIndexHtml` or `html-webpack-plugin` to add the tag through.
+  The only places it accepts code from a package are `next.config`, a component, and a route file —
+  so that is what the package is: `withQuello()`, `<Quello />`, `quelloRoute()`. One line each, and
+  the first writes the third for you. It is also the only shape that survives Turbopack, which is
+  why it is not built on a webpack hook. See the [Next guide](https://quello.vercel.app/guides/next).
 
 The last column is whatever the runtime leaves on the DOM in a development build. It follows the
 framework rather than the integration route — with one exception worth knowing about:
 
-> **React's source location follows the JSX compiler, not React.** Vite compiles JSX with Babel's
-> development transform, which annotates every element with its file and line; Next compiles with
-> SWC, which does not. Both playgrounds run React 18.3.1, and only the Vite one reports a line —
-> verified by reading `_debugSource` off the fibers in each. The component name is there either way,
-> so `OverviewPage` still points at the file, just without the line number.
+> **React's source location follows the React version, not the bundler.** React ≤ 18 annotates every
+> element with `_debugSource` — file, line and column — whenever the JSX compiler emits `__source`,
+> which Babel's development transform and SWC both do. React 19 removed it in favour of *owner
+> stacks*: an `Error` captured where the element was written. quello reads both, but a stack frame
+> addresses the **compiled** module and a browser does not run `error.stack` through source maps, so
+> on React 19 a pick carries the file without the line — a file the agent can search beats a line
+> number that quietly points at the wrong element. Next's App Router bundles React 19 whatever your
+> `package.json` says, which is why its row stops at the file; the Vite playground on React 18.3.1
+> still reports the line, and will stop when it upgrades.
 
 `selector, path, text` is the floor, and it is enough for an agent to find the code — see
 [what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
@@ -415,6 +419,34 @@ It takes the same options as the Vite plugin. The script tag goes in through `ht
 without it there is no generated HTML to add to, and `plugin.scriptTag()` returns the tag to paste
 into your own template. Production builds are skipped whatever the config says.
 
+### Next
+
+```ts
+// next.config.ts
+import { withQuello } from '@quello/next/config'
+
+export default withQuello({
+  // your config, untouched
+})
+```
+
+```tsx
+// app/layout.tsx
+import { Quello } from '@quello/next'
+
+// …inside <body>, once
+<Quello />
+```
+
+On the next `next dev`, `withQuello` writes the agent file, the `.gitignore` entry and the route
+handler at `app/api/quello/[...quello]/route.ts`, then prints where each went. It takes the same
+options as the plugins, plus `basePath` and `scaffoldRoute`.
+
+`<Quello />` is a Server Component rendering a script tag, so nothing from `@quello/core` reaches
+your client bundle, and both halves are dead in a production build: the component renders `null` and
+the route answers `404`. Full details, Pages Router included, in the
+[Next guide](https://quello.vercel.app/guides/next).
+
 ### No bundler, or a bundler quello cannot reach
 
 Angular's dev server, a Rails or Laravel app, three HTML files in a folder — anything that will not
@@ -615,10 +647,12 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
   hand-rolled scaffold, with or without quello in the config — so the playground was dropped rather
   than shipped broken. The integration path is the same `virtual:quello` that Nuxt, SvelteKit and
   Astro use, so this is a scaffolding job: start from `npm create qwik@latest`.
-- **`@quello/next` package.** The Next playground already proves the pieces work — the runtime
-  imported from a client component, a route handler writing `.quello/picks.json`. What is missing is
-  packaging those forty lines so a project does not have to write them, plus reading options from
-  `next.config`.
+- **Source lines on React 19.** React 19's owner stacks give quello the file an element was written
+  in, but the line in a stack frame belongs to the compiled module and browsers do not source-map
+  `error.stack`. Next's dev server already resolves frames for its error overlay, at
+  `/__nextjs_original-stack-frame`; asking it at pick time would put the line back. Vite has no
+  equivalent endpoint, so the general answer is probably to fetch the module's source map and
+  resolve the frame in the browser — worth doing once, in `@quello/core`, for every React project.
 
 **Pick list**
 

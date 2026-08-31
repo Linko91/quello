@@ -27,7 +27,10 @@ interface ReactFiber {
   type?: unknown
   elementType?: unknown
   return?: ReactFiber | null
+  /** React 18 and earlier, from the JSX compiler's `__source` annotation. */
   _debugSource?: ReactDebugSource
+  /** React 19's replacement: an Error captured where the element was written. */
+  _debugStack?: Error
   _debugOwner?: ReactFiber | null
 }
 
@@ -108,6 +111,64 @@ function fiberOf(el: Element): ReactFiber | null {
   return null
 }
 
+/** Frames belonging to the framework rather than to the code that was written. */
+const INTERNAL_FRAME =
+  /(?:\/node_modules\/|next\/dist\/|react-dom|react-jsx|react-stack|react-server|<anonymous>|\[native code\])/
+
+/**
+ * Reduce a stack frame's file to something a developer would recognise:
+ *
+ * - `webpack-internal:///(app-pages-browser)/./app/page.tsx` → `app/page.tsx`
+ * - `about://React/Server/webpack-internal:///(rsc)/./app/layout.tsx?8` → `app/layout.tsx`
+ * - `http://localhost:5173/src/App.tsx?t=17` → `/src/App.tsx`
+ *
+ * A Server Component's frame nests one scheme inside another, so the schemes are
+ * peeled in that order rather than as alternatives.
+ */
+function normalizeFrameFile(file: string): string {
+  let path = file.replace(/\?.*$/, '')
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) {
+    try {
+      path = new URL(path).pathname
+    } catch {
+      // Not a URL after all; the raw path is still better than nothing.
+    }
+  }
+  const nested = path.lastIndexOf(':///')
+  if (nested !== -1) path = path.slice(nested + 4)
+  return path.replace(/^\/*\([^)]*\)\//, '').replace(/^(?:\.\.?\/)+/, '')
+}
+
+/**
+ * React 19 removed `_debugSource` in favour of **owner stacks**: every fiber
+ * carries an `Error` captured inside `jsx()`, so the frame right after that one
+ * belongs to the component that wrote the element. Next's App Router bundles
+ * that React, so this is the only route to a source file there — and it is where
+ * every React project ends up.
+ *
+ * **Only the file is taken.** The line and column in a stack frame address the
+ * *compiled* module, and a browser does not run `error.stack` through source
+ * maps — so `page.tsx:22` there is not line 22 of `page.tsx`. A file the agent
+ * can search beats a line number that quietly points at the wrong element.
+ */
+function fileFromDebugStack(fiber: ReactFiber): string | undefined {
+  const stack = fiber._debugStack?.stack
+  if (!stack) return undefined
+
+  // Frame 0 is the `Error:` message line rather than a frame.
+  const frames = stack.split('\n').slice(1)
+  const jsx = frames.findIndex((frame) => /jsx/i.test(frame))
+  const owner = frames[jsx + 1] ?? frames[0]
+  if (!owner) return undefined
+
+  const match = /\((.+):\d+:\d+\)\s*$/.exec(owner) ?? /at\s+(.+):\d+:\d+\s*$/.exec(owner)
+  const file = match?.[1]
+  // Everything below the owner frame is React's render machinery, so a frame
+  // that belongs to a dependency means the element was written by one.
+  if (!file || INTERNAL_FRAME.test(file)) return undefined
+  return normalizeFrameFile(file)
+}
+
 function componentNameOf(type: unknown): string | undefined {
   if (typeof type === 'function') {
     const fn = type as { displayName?: string; name?: string }
@@ -126,16 +187,23 @@ export function detectReact(el: Element): FrameworkInfo | null {
     const fiber = fiberOf(node)
     if (!fiber) continue
 
+    // An owner stack describes the element that captured it, so only this
+    // element's own fiber is asked. An ancestor's stack points somewhere else
+    // entirely, and a confidently wrong file is worse than no file at all.
+    const ownFile = fileFromDebugStack(fiber)
+
     let current: ReactFiber | null | undefined = fiber
     let source: ReactDebugSource | undefined
     for (let depth = 0; current && depth < MAX_WALK; depth++) {
       source ??= current._debugSource
       const name = componentNameOf(current.type ?? current.elementType)
       if (name) {
+        const file = source?.fileName ?? ownFile
         return {
           framework: 'react',
           component: name,
-          ...(source?.fileName ? { file: source.fileName } : {}),
+          ...(file ? { file } : {}),
+          // Only ever from `_debugSource`: see `fileFromDebugStack`.
           ...(source?.lineNumber ? { line: source.lineNumber } : {}),
           ...(source?.columnNumber ? { column: source.columnNumber } : {}),
         }

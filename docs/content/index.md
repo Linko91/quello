@@ -92,7 +92,8 @@ replaces all of that with a click.
   Any bundler, or none
 
   #description
-  A Vite plugin, a webpack plugin, or a CLI that runs beside whatever dev server you already have.
+  A Vite plugin, a webpack plugin, a Next package, or a CLI that runs beside whatever dev server you
+  already have.
   :::
 
   :::u-page-feature

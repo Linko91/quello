@@ -2,13 +2,15 @@ import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { QuelloTheme } from '@quello/core'
+import { CLIENT_ROUTE, PICKS_ROUTE } from './runtime'
 import { normalize, readPicks, writePicks } from './store'
 
-export const CLIENT_ROUTE = '/__quello/client.js'
-export const PICKS_ROUTE = '/__quello/picks'
+export { CLIENT_ROUTE, CLIENT_SEGMENT, PICKS_ROUTE, PICKS_SEGMENT, runtimeAttrs } from './runtime'
+export type { RuntimeOptions } from './runtime'
 
-const MAX_BODY_BYTES = 2_000_000
+/** Anything larger than this is not a pick file, so it is refused unread. */
+export const MAX_BODY_BYTES = 2_000_000
+
 const requireFrom = createRequire(import.meta.url)
 
 /** Absolute path of the prebuilt, self-executing core runtime. */
@@ -21,34 +23,9 @@ export function coreEsmPath(): string {
   return join(dirname(requireFrom.resolve('@quello/core/package.json')), 'dist', 'index.js')
 }
 
-export interface RuntimeOptions {
-  endpoint?: string
-  shortcut?: string
-  textLimit?: number
-  htmlMode?: string
-  htmlLimit?: number
-  /** Values are stringified as they are; only the keys that are set are emitted. */
-  theme?: QuelloTheme
-}
-
-/**
- * `data-quello-*` attributes for a script tag. Kebab-cased here so every
- * integration spells them the same way.
- */
-export function runtimeAttrs(options: RuntimeOptions): Record<string, string> {
-  const attrs: Record<string, string> = {}
-  const set = (name: string, value: unknown) => {
-    if (value !== undefined && value !== null && value !== '') attrs[`data-quello-${name}`] = String(value)
-  }
-  set('endpoint', options.endpoint ?? PICKS_ROUTE)
-  set('shortcut', options.shortcut)
-  set('text-limit', options.textLimit)
-  set('html-mode', options.htmlMode)
-  set('html-limit', options.htmlLimit)
-  for (const [key, value] of Object.entries(options.theme ?? {})) {
-    set(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), value)
-  }
-  return attrs
+/** The runtime bundle's source, or an error to report in the browser console. */
+export async function readClientBundle(): Promise<string> {
+  return readFile(clientBundlePath(), 'utf8')
 }
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -87,17 +64,19 @@ export interface HandlerOptions {
   cors?: boolean
 }
 
-/** Serve the runtime bundle. Returns `true` when it handled the request. */
+/** Serve the runtime bundle. */
 export async function serveClient(res: ServerResponse): Promise<void> {
   try {
-    const code = await readFile(clientBundlePath(), 'utf8')
+    const code = await readClientBundle()
     res.statusCode = 200
     res.setHeader('content-type', 'application/javascript; charset=utf-8')
     res.setHeader('cache-control', 'no-cache')
     res.end(code)
   } catch (error) {
     res.statusCode = 500
-    res.end(`console.error(${JSON.stringify(`[quello] runtime not built: ${(error as Error).message}`)})`)
+    res.end(
+      `console.error(${JSON.stringify(`[quello] runtime not built: ${(error as Error).message}`)})`,
+    )
   }
 }
 

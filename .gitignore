@@ -156,6 +156,8 @@ vite.config.ts.timestamp-*
 # agent instructions generated into the playgrounds on first run
 playgrounds/*/AGENTS.md
 playgrounds/*/CLAUDE.md
+# …and the .gitignore quello adds beside them, which the root already covers
+playgrounds/*/.gitignore
 
 .claude/skills
 

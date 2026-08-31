@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import type { QuelloPick, QuelloPicksFile } from '@quello/core'
 
-export const DEFAULT_PICKS_FILE = '.quello/picks.json'
+export { DEFAULT_PICKS_FILE } from './runtime'
 
 export function resolvePicksPath(root: string, picksFile: string): string {
   return isAbsolute(picksFile) ? picksFile : resolve(root, picksFile)
