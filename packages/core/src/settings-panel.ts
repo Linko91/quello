@@ -7,9 +7,9 @@ export const SETTINGS_PANEL_STYLES = `
   z-index: 2147483647;
   width: 244px;
   padding: 10px;
-  border: 1px solid #2a2833;
+  border: 1px solid #2a2d33;
   border-radius: 10px;
-  background: #17161d;
+  background: #17191c;
   color: #fff;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
@@ -22,7 +22,7 @@ export const SETTINGS_PANEL_STYLES = `
   margin-bottom: 10px;
   padding: 2px;
   border-radius: 8px;
-  background: #0f0e13;
+  background: #0e1013;
 }
 .tabs button {
   flex: 1;
@@ -30,14 +30,14 @@ export const SETTINGS_PANEL_STYLES = `
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #9b98a8;
+  color: #9b9fa8;
   font: inherit;
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
 }
 .tabs button:hover { color: #fff; }
-.tabs button[aria-selected="true"] { background: #2a2833; color: #fff; }
+.tabs button[aria-selected="true"] { background: #2a2d33; color: #fff; }
 
 /* Every tab occupies the same grid cell, so the panel is always as tall as the
    tallest one and switching tabs never resizes it. */
@@ -56,7 +56,7 @@ export const SETTINGS_PANEL_STYLES = `
 }
 
 .field { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; }
-.field input { accent-color: #7c5cff; margin: 0; cursor: pointer; }
+.field input { accent-color: #ffb020; margin: 0; cursor: pointer; }
 .field .note { display: block; font-size: 11px; opacity: 0.5; }
 
 .limit {
@@ -71,9 +71,9 @@ export const SETTINGS_PANEL_STYLES = `
 .limit input {
   width: 74px;
   padding: 4px 6px;
-  border: 1px solid #37343f;
+  border: 1px solid #373b41;
   border-radius: 6px;
-  background: #0f0e13;
+  background: #0e1013;
   color: #fff;
   font: inherit;
 }

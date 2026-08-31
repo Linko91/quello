@@ -22,10 +22,10 @@ export interface QuelloTheme {
 type Resolved = Required<{ [K in keyof QuelloTheme]: string }>
 
 export const DEFAULT_THEME: Resolved = {
-  hoverColor: '#7c5cff',
+  hoverColor: '#e09000',
   hoverBorderWidth: '2px',
   pickedFill: 'transparent',
-  pickedBorderColor: 'rgba(124, 92, 255, 0.85)',
+  pickedBorderColor: 'rgba(224, 144, 0, 0.85)',
   pickedBorderStyle: 'dashed',
   pickedBorderWidth: '1.5px',
 }

@@ -42,11 +42,11 @@ ${SETTINGS_PANEL_STYLES}
 
 .highlight {
   position: fixed;
-  border: var(--quello-hover-border-width, 2px) solid var(--quello-hover-color, #7c5cff);
+  border: var(--quello-hover-border-width, 2px) solid var(--quello-hover-color, #e09000);
   /* The fill is derived from the hover colour, not configured separately. The
      literal first is the fallback where color-mix is unavailable. */
-  background: rgba(124, 92, 255, 0.12);
-  background: color-mix(in srgb, var(--quello-hover-color, #7c5cff) 12%, transparent);
+  background: rgba(224, 144, 0, 0.12);
+  background: color-mix(in srgb, var(--quello-hover-color, #e09000) 12%, transparent);
   border-radius: 3px;
   /* No transition: the outline is re-placed every frame to follow scrolling, and
      an easing would leave it trailing the element it is supposed to be marking. */
@@ -59,8 +59,11 @@ ${SETTINGS_PANEL_STYLES}
   padding: 3px 7px;
   border-radius: 4px;
   /* The label belongs to the hover outline, so it takes its colour. */
-  background: var(--quello-hover-color, #7c5cff);
-  color: #fff;
+  background: var(--quello-hover-color, #e09000);
+  /* Inchiostro scuro: l'accento predefinito e' chiaro, e lo resta per la maggior
+     parte dei valori che si passano a hoverColor. Su un hoverColor scuro va
+     scavalcato dal CSS del progetto. */
+  color: #17191c;
   font-size: 11px;
   line-height: 1.5;
   white-space: nowrap;
@@ -76,8 +79,8 @@ ${SETTINGS_PANEL_STYLES}
   padding: 0 6px;
   border: 2px solid #fff;
   border-radius: 11px;
-  background: #7c5cff;
-  color: #fff;
+  background: #e09000;
+  color: #17191c;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -88,11 +91,11 @@ ${SETTINGS_PANEL_STYLES}
   pointer-events: auto;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
-.badge:hover { background: #6b4cf0; }
+.badge:hover { background: #c87e00; }
 .badge:hover::after { content: "✎"; margin-left: 4px; font-size: 11px; }
 
 /* A pick that carries a note is marked, so notes are visible without opening them. */
-.badge[data-note="true"] { border-color: #ffd166; }
+.badge[data-note="true"] { border-color: #5ec2f2; }
 .badge[data-note="true"]::before {
   content: "";
   position: absolute;
@@ -101,7 +104,7 @@ ${SETTINGS_PANEL_STYLES}
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ffd166;
+  background: #5ec2f2;
 }
 
 .note-editor {
@@ -109,9 +112,9 @@ ${SETTINGS_PANEL_STYLES}
   z-index: ${Z_INDEX};
   width: 264px;
   padding: 10px;
-  border: 1px solid #2a2833;
+  border: 1px solid #2a2d33;
   border-radius: 10px;
-  background: #17161d;
+  background: #17191c;
   color: #fff;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
@@ -132,24 +135,24 @@ ${SETTINGS_PANEL_STYLES}
   min-height: 66px;
   max-height: 40vh;
   scrollbar-width: thin;
-  scrollbar-color: #3a3745 transparent;
+  scrollbar-color: #3a3e46 transparent;
   padding: 7px 9px;
-  border: 1px solid #37343f;
+  border: 1px solid #373b41;
   border-radius: 7px;
-  background: #0f0e13;
+  background: #0e1013;
   color: #fff;
   font: inherit;
   font-size: 12px;
   line-height: 1.5;
   resize: vertical;
 }
-.note-editor textarea:focus { outline: none; border-color: #7c5cff; }
+.note-editor textarea:focus { outline: none; border-color: #ffb020; }
 .note-editor textarea::-webkit-scrollbar { width: 9px; }
 .note-editor textarea::-webkit-scrollbar-track { background: transparent; }
 .note-editor textarea::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 999px;
-  background: #3a3745;
+  background: #3a3e46;
   background-clip: padding-box;
 }
 .note-editor .row {
@@ -167,7 +170,7 @@ ${SETTINGS_PANEL_STYLES}
 .marker {
   position: fixed;
   border: var(--quello-picked-border-width, 1.5px) var(--quello-picked-border-style, dashed)
-    var(--quello-picked-border-color, rgba(124, 92, 255, 0.85));
+    var(--quello-picked-border-color, rgba(224, 144, 0, 0.85));
   background: var(--quello-picked-fill, transparent);
   border-radius: 3px;
   pointer-events: none;
@@ -187,7 +190,7 @@ ${SETTINGS_PANEL_STYLES}
   gap: 6px;
   padding: 6px;
   border-radius: 999px;
-  background: #17161d;
+  background: #17191c;
   color: #fff;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
@@ -209,14 +212,14 @@ ${SETTINGS_PANEL_STYLES}
 button {
   border: 0;
   border-radius: 999px;
-  background: #2a2833;
+  background: #2a2d33;
   color: #fff;
   font-size: 12px;
   font-weight: 600;
   padding: 7px 12px;
   cursor: pointer;
 }
-button:hover { background: #37343f; }
+button:hover { background: #373b41; }
 button.primary {
   display: inline-flex;
   align-items: center;
@@ -230,8 +233,8 @@ button.primary {
 /* The wordmark's box includes the q's descender, so centring it geometrically
    leaves the letters sitting high; this nudges them back onto the optical centre. */
 button.primary svg { margin-top: 4px; }
-button.primary[data-on="true"] { background: #7c5cff; }
-button.primary[data-on="true"]:hover { background: #6b4cf0; }
+button.primary[data-on="true"] { background: #ffb020; color: #17191c; }
+button.primary[data-on="true"]:hover { background: #e09000; }
 button.icon {
   display: inline-flex;
   align-items: center;
@@ -244,7 +247,7 @@ button.icon {
 /* Both icons are SVG so they centre on geometry rather than on font metrics,
    which is what left the glyph versions sitting high in the button. */
 button.icon svg { display: block; }
-button.icon[data-on="true"] { background: #37343f; }
+button.icon[data-on="true"] { background: #373b41; }
 
 /* Not a pill: a pill here would be a second button shape at a second height,
    sitting between two round ones. A label with a chevron reads as a disclosure. */
@@ -290,8 +293,8 @@ button.count[hidden] { display: none; }
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 1px solid #2a2833;
-  background: #17161d;
+  border: 1px solid #2a2d33;
+  background: #17191c;
   color: #fff;
   display: flex;
   align-items: center;
@@ -304,7 +307,7 @@ button.count[hidden] { display: none; }
 .puck:active { cursor: grabbing; }
 /* The descender sits below the optical centre, so the mark is nudged up. */
 .puck .mark { display: flex; margin-top: -1px; }
-.puck[data-on="true"] { background: #7c5cff; border-color: #7c5cff; }
+.puck[data-on="true"] { background: #ffb020; border-color: #ffb020; color: #17191c; }
 
 .tally {
   position: absolute;
@@ -313,17 +316,17 @@ button.count[hidden] { display: none; }
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
-  border: 2px solid #0f0e13;
+  border: 2px solid #0e1013;
   border-radius: 9px;
-  background: #7c5cff;
-  color: #fff;
+  background: #ffb020;
+  color: #17191c;
   font-size: 9px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.puck[data-on="true"] .tally { background: #fff; color: #7c5cff; }
+.puck[data-on="true"] .tally { background: #fff; color: #17191c; }
 
 `
 
@@ -357,11 +360,11 @@ const SKIN_STYLES = `
   background: rgba(255, 255, 255, 0.18);
 }
 :host([data-skin="glass"]) .toolbar button.primary { background: transparent; }
-:host([data-skin="glass"]) .toolbar button.primary[data-on="true"] { background: #7c5cff; }
+:host([data-skin="glass"]) .toolbar button.primary[data-on="true"] { background: #ffb020; }
 :host([data-skin="glass"]) .picks-list .row:hover { background: rgba(255, 255, 255, 0.07); }
 :host([data-skin="glass"]) .picks-list .row + .row { border-top-color: rgba(255, 255, 255, 0.08); }
 :host([data-skin="glass"]) .puck[data-on="true"] {
-  background: rgba(124, 92, 255, 0.78);
+  background: rgba(255, 176, 32, 0.78);
   border-color: rgba(255, 255, 255, 0.22);
 }
 `
