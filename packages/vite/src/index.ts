@@ -2,8 +2,9 @@ import type { Plugin } from 'vite'
 import {
   CLIENT_ROUTE,
   coreEsmPath,
+  DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
-  ensureClaudeMd,
+  ensureAgentFile,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -41,8 +42,14 @@ export interface QuelloPluginOptions {
   shortcut?: string
   /** Characters of element text kept per pick. Defaults to `120`. */
   textLimit?: number
-  /** Append the quello section to CLAUDE.md on first run. Defaults to `true`. */
-  claudeMd?: boolean
+  /** Write the quello instructions into an agent file on first run. Defaults to `true`. */
+  writeAgentFile?: boolean
+  /**
+   * Which file to write them to, relative to the project root. Defaults to
+   * `AGENTS.md`, the open convention Claude Code, Codex, Cursor and others read.
+   * Any path works: `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`.
+   */
+  agentFile?: string
   /**
    * Initial HTML capture mode. Defaults to `truncated`. Only a starting point:
    * once a developer picks a mode in the settings panel, their choice wins.
@@ -67,7 +74,8 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     picksFile = DEFAULT_PICKS_FILE,
     shortcut = 'alt+q',
     textLimit = 120,
-    claudeMd = true,
+    writeAgentFile = true,
+    agentFile = DEFAULT_AGENT_FILE,
     htmlMode = 'truncated',
     htmlLimit = 1000,
     theme = {},
@@ -103,11 +111,11 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     },
 
     async buildStart() {
-      if (!enabled || !claudeMd) return
+      if (!enabled || !writeAgentFile) return
       try {
-        await ensureClaudeMd(root, picksFile)
+        await ensureAgentFile(root, { file: agentFile, picksFile })
       } catch (error) {
-        this.warn(`[quello] could not update CLAUDE.md: ${(error as Error).message}`)
+        this.warn(`[quello] could not update ${agentFile}: ${(error as Error).message}`)
       }
     },
 

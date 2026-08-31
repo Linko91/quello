@@ -1,8 +1,9 @@
 import type { Compiler } from 'webpack'
 import {
   CLIENT_ROUTE,
+  DEFAULT_AGENT_FILE,
   DEFAULT_PICKS_FILE,
-  ensureClaudeMd,
+  ensureAgentFile,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -21,7 +22,10 @@ export interface QuelloWebpackOptions {
   /** Full combination, e.g. `alt+q`, `ctrl+shift+p`, `f2`. */
   shortcut?: string
   textLimit?: number
-  claudeMd?: boolean
+  /** Write the quello instructions into an agent file on first run. Defaults to `true`. */
+  writeAgentFile?: boolean
+  /** Which file, relative to the compiler context. Defaults to `AGENTS.md`. */
+  agentFile?: string
   htmlMode?: QuelloHtmlMode
   htmlLimit?: number
   theme?: QuelloTheme
@@ -60,7 +64,8 @@ export default class QuelloWebpackPlugin {
       picksFile: options.picksFile ?? DEFAULT_PICKS_FILE,
       shortcut: options.shortcut ?? 'alt+q',
       textLimit: options.textLimit ?? 120,
-      claudeMd: options.claudeMd ?? true,
+      writeAgentFile: options.writeAgentFile ?? true,
+      agentFile: options.agentFile ?? DEFAULT_AGENT_FILE,
       htmlMode: options.htmlMode ?? 'truncated',
       htmlLimit: options.htmlLimit ?? 1000,
       theme: options.theme ?? {},
@@ -89,10 +94,11 @@ export default class QuelloWebpackPlugin {
     const picksPath = resolvePicksPath(root, this.options.picksFile)
 
     compiler.hooks.afterEnvironment.tap(NAME, () => {
-      if (!this.options.claudeMd) return
-      void ensureClaudeMd(root, this.options.picksFile).catch((error: Error) => {
-        console.warn(`[quello] could not update CLAUDE.md: ${error.message}`)
-      })
+      if (!this.options.writeAgentFile) return
+      const file = this.options.agentFile
+      void ensureAgentFile(root, { file, picksFile: this.options.picksFile }).catch(
+        (error: Error) => console.warn(`[quello] could not update ${file}: ${error.message}`),
+      )
     })
 
     compiler.hooks.compilation.tap(NAME, (compilation) => {

@@ -152,3 +152,7 @@ vite.config.ts.timestamp-*
 .nuxt/
 .astro/
 .angular/
+
+# agent instructions generated into the playgrounds on first run
+playgrounds/*/AGENTS.md
+playgrounds/*/CLAUDE.md

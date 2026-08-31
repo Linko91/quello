@@ -1,4 +1,5 @@
-export { ensureClaudeMd, section } from './claude-md'
+export { DEFAULT_AGENT_FILE, ensureAgentFile, section } from './agent-file'
+export type { AgentFileOptions, AgentFileResult } from './agent-file'
 export {
   DEFAULT_PICKS_FILE,
   normalize,

@@ -1,8 +1,17 @@
-import { appendFile, readFile, writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 
 const START = '<!-- quello:start -->'
 const END = '<!-- quello:end -->'
+
+/**
+ * Where the instructions go by default.
+ *
+ * `AGENTS.md` is the open convention shared by Codex, Cursor, Zed, Aider and
+ * others, and Claude Code reads it alongside its own `CLAUDE.md` — so one file
+ * reaches every agent, which `CLAUDE.md` alone would not.
+ */
+export const DEFAULT_AGENT_FILE = 'AGENTS.md'
 
 export function section(picksFile: string): string {
   return `${START}
@@ -46,12 +55,24 @@ user clears it from the toolbar.
 ${END}`
 }
 
+export type AgentFileResult = 'created' | 'appended' | 'skipped'
+
+export interface AgentFileOptions {
+  /** File to write, relative to `root`. Defaults to `AGENTS.md`. */
+  file?: string
+  /** Path shown in the instructions. */
+  picksFile: string
+}
+
 /**
- * Append the quello instructions to CLAUDE.md once, creating the file if needed.
- * An existing quello section is left untouched so user edits survive.
+ * Append the quello instructions once, creating the file if needed. An existing
+ * quello section is left untouched, so edits to it survive.
  */
-export async function ensureClaudeMd(root: string, picksFile: string): Promise<'created' | 'appended' | 'skipped'> {
-  const path = resolve(root, 'CLAUDE.md')
+export async function ensureAgentFile(
+  root: string,
+  { file = DEFAULT_AGENT_FILE, picksFile }: AgentFileOptions,
+): Promise<AgentFileResult> {
+  const path = resolve(root, file)
   let existing: string | null = null
   try {
     existing = await readFile(path, 'utf8')
@@ -60,6 +81,8 @@ export async function ensureClaudeMd(root: string, picksFile: string): Promise<'
   }
 
   if (existing === null) {
+    // The file may live in a directory that does not exist yet, e.g. `.github/`.
+    await mkdir(dirname(path), { recursive: true })
     await writeFile(path, `# Project notes\n\n${section(picksFile)}\n`, 'utf8')
     return 'created'
   }
