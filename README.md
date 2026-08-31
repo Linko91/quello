@@ -493,10 +493,10 @@ quello({
 
 | Option | Default |
 | --- | --- |
-| `hoverColor` | `#7c5cff` |
+| `hoverColor` | `#e09000` |
 | `hoverBorderWidth` | `2px` |
 | `pickedFill` | `transparent` |
-| `pickedBorderColor` | `rgba(124, 92, 255, 0.85)` |
+| `pickedBorderColor` | `rgba(224, 144, 0, 0.85)` |
 | `pickedBorderStyle` | `dashed` |
 | `pickedBorderWidth` | `1.5px` |
 
@@ -582,12 +582,16 @@ The mark is a lowercase **q** whose bowl is the picker's target ring, with the p
 dot at its centre. The descender is load-bearing: without it the bowl and stem read as the lens and
 handle of a magnifier, which would say *search* rather than *this one*.
 
-The wordmark is built on the mark's grid — one stroke weight (2.6 units), one x-height (the bowl's
-diameter), round caps and joins throughout — so "uello" belongs to the same alphabet as the q rather
-than being a typeface set next to it.
+The wordmark is built on the mark's grid — one stroke weight (2.9 units), one x-height (the bowl's
+diameter), square caps and round joins throughout — so "uello" belongs to the same alphabet as the q
+rather than being a typeface set next to it. The caps are the reason the weight can sit this high
+without the mark going soft: they end each stroke flat, so the stem reads as cut rather than as a
+blob at small sizes.
 
-- **Colour** — `#7c5cff` on light or dark. Both files ship in that purple; for a single-colour
-  context, recolour every stroke and fill at once.
+- **Colour** — amber, in two values. `#ffb020` on a dark ground, `#e09000` wherever the ground is
+  unknown or light — the full amber is too weak on white. Both files ship in `#e09000` for that
+  reason; for a single-colour context, recolour every stroke and fill at once. Anything set on the
+  amber takes `#17191c`, not white: white on amber is 1.8:1, graphite on amber is 9.6:1.
 - **Minimum size** — the mark holds down to 16px; the wordmark down to 14px tall. Below that use the
   mark alone.
 - **Clear space** — leave the bowl's radius (a quarter of the height) on every side.

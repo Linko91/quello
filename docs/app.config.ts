@@ -1,9 +1,11 @@
 export default defineAppConfig({
-  // `violet` is the closest Nuxt UI palette to the brand's #7c5cff.
+  // `amber` is the closest Nuxt UI palette to the brand's #e09000. `stone` is
+  // the neutral with the same warm drift as the brand's bone, where `zinc`
+  // leans cool and reads slightly blue next to the amber.
   ui: {
     colors: {
-      primary: 'violet',
-      neutral: 'zinc',
+      primary: 'amber',
+      neutral: 'stone',
     },
   },
   site: {

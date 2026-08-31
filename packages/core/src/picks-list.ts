@@ -10,11 +10,11 @@ export const PICKS_LIST_STYLES = `
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #3a3745 transparent;
+  scrollbar-color: #3a3e46 transparent;
   padding: 6px;
-  border: 1px solid #2a2833;
+  border: 1px solid #2a2d33;
   border-radius: 10px;
-  background: #17161d;
+  background: #17191c;
   color: #fff;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
@@ -27,11 +27,11 @@ export const PICKS_LIST_STYLES = `
 .picks-list::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: 999px;
-  background: #3a3745;
+  background: #3a3e46;
   background-clip: padding-box;
 }
 .picks-list::-webkit-scrollbar-thumb:hover {
-  background: #524e63;
+  background: #525764;
   background-clip: padding-box;
 }
 .picks-list .empty { padding: 14px 10px; font-size: 12px; opacity: 0.5; text-align: center; }
@@ -41,7 +41,7 @@ export const PICKS_LIST_STYLES = `
   justify-content: flex-end;
   margin-top: 4px;
   padding-top: 7px;
-  border-top: 1px solid #221f2b;
+  border-top: 1px solid #22262c;
 }
 .picks-list .foot button {
   padding: 5px 10px;
@@ -63,31 +63,31 @@ export const PICKS_LIST_STYLES = `
   padding: 8px;
   border-radius: 8px;
 }
-.row + .row { border-top: 1px solid #221f2b; }
+.row + .row { border-top: 1px solid #22262c; }
 /* Without this the ellipsis never kicks in and the row widens the whole list. */
 .row > div { min-width: 0; }
-.row:hover { background: #1e1c26; }
-.row[data-elsewhere="true"] .where { color: #ffd166; }
+.row:hover { background: #1e2126; }
+.row[data-elsewhere="true"] .where { color: #5ec2f2; }
 
 /* Quiet by default: the number identifies the row, it does not need to shout. */
 .row .n {
   width: 22px;
   height: 22px;
   border-radius: 11px;
-  border: 1px solid rgba(124, 92, 255, 0.45);
-  background: rgba(124, 92, 255, 0.16);
-  color: #b6a2ff;
+  border: 1px solid rgba(255, 176, 32, 0.45);
+  background: rgba(255, 176, 32, 0.16);
+  color: #ffc266;
   font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.row:hover .n { border-color: rgba(124, 92, 255, 0.8); color: #cdbcff; }
+.row:hover .n { border-color: rgba(255, 176, 32, 0.8); color: #ffd699; }
 .row[data-note="true"] .n {
-  border-color: rgba(255, 209, 102, 0.75);
-  background: rgba(255, 209, 102, 0.14);
-  color: #ffd166;
+  border-color: rgba(94, 194, 242, 0.75);
+  background: rgba(94, 194, 242, 0.14);
+  color: #5ec2f2;
 }
 
 .row .title { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
@@ -96,7 +96,7 @@ export const PICKS_LIST_STYLES = `
   flex: 1;
   min-width: 0;
   font-size: 10px;
-  color: #6f6c7d;
+  color: #6f747e;
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -105,7 +105,7 @@ export const PICKS_LIST_STYLES = `
 .row .what {
   margin-top: 2px;
   font-size: 11px;
-  color: #9b98a8;
+  color: #9b9fa8;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,12 +114,12 @@ export const PICKS_LIST_STYLES = `
 .row .memo {
   margin-top: 5px;
   padding: 4px 7px;
-  border-left: 2px solid #ffd166;
+  border-left: 2px solid #5ec2f2;
   border-radius: 0 5px 5px 0;
-  background: #201d29;
+  background: #20242a;
   font-size: 11px;
   line-height: 1.4;
-  color: #e6e3f0;
+  color: #e6e9ee;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -130,15 +130,15 @@ export const PICKS_LIST_STYLES = `
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #9b98a8;
+  color: #9b9fa8;
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
-.row .acts button:hover { background: #2f2c3a; color: #fff; }
+.row .acts button:hover { background: #2f333a; color: #fff; }
 .row .acts button.danger:hover { background: #3a1f24; color: #ef4444; }
-.row .acts button.noted { color: #ffd166; }
-.row .acts button.noted:hover { background: #2f2919; color: #ffd166; }
+.row .acts button.noted { color: #5ec2f2; }
+.row .acts button.noted:hover { background: #192730; color: #5ec2f2; }
 `
 
 export interface PicksListHandlers {
