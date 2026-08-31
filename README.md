@@ -100,7 +100,7 @@ Reading the table:
   The only places it accepts code from a package are `next.config`, a component, and a route file —
   so that is what the package is: `withQuello()`, `<Quello />`, `quelloRoute()`. One line each, and
   the first writes the third for you. It is also the only shape that survives Turbopack, which is
-  why it is not built on a webpack hook. See the [Next guide](https://quello.vercel.app/guides/next).
+  why it is not built on a webpack hook. See the [Next guide](https://quello-docs.vercel.app/guides/next).
 
 The last column is whatever the runtime leaves on the DOM in a development build. It follows the
 framework rather than the integration route — with one exception worth knowing about:
@@ -445,7 +445,7 @@ options as the plugins, plus `basePath` and `scaffoldRoute`.
 `<Quello />` is a Server Component rendering a script tag, so nothing from `@quello/core` reaches
 your client bundle, and both halves are dead in a production build: the component renders `null` and
 the route answers `404`. Full details, Pages Router included, in the
-[Next guide](https://quello.vercel.app/guides/next).
+[Next guide](https://quello-docs.vercel.app/guides/next).
 
 ### No bundler, or a bundler quello cannot reach
 

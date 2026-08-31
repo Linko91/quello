@@ -84,4 +84,4 @@ Use the plugin instead — the script tag is injected for you.
 | [`webpack-plugin-quello`](https://www.npmjs.com/package/webpack-plugin-quello) | webpack 5 |
 | [`@quello/next`](https://www.npmjs.com/package/@quello/next) | Next 14, 15, 16 |
 
-[Full reference](https://quello.vercel.app/reference/cli) · [MIT](./LICENSE)
+[Full reference](https://quello-docs.vercel.app/reference/cli) · [MIT](./LICENSE)

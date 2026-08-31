@@ -42,4 +42,4 @@ the CLI.
 This package has no stable public API. It moves with the integrations that consume it and may
 change in a minor release.
 
-[Docs](https://quello.vercel.app) · [MIT](./LICENSE)
+[Docs](https://quello-docs.vercel.app) · [MIT](./LICENSE)

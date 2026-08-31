@@ -48,4 +48,4 @@ The default export surface — `createQuello` and the option and pick types — 
 internals it re-exports (`Overlay`, `PicksTransport`, `domPath`, and friends) are shared between the
 integrations in this repo and may change in a minor release.
 
-[Docs](https://quello.vercel.app) · [MIT](./LICENSE)
+[Docs](https://quello-docs.vercel.app) · [MIT](./LICENSE)

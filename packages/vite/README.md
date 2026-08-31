@@ -66,5 +66,5 @@ nothing to remember to remove.
 | `htmlLimit` | `1000` | Initial character budget for `truncated`. |
 | `theme` | `{}` | Look of the outlines quello draws. Code-level only. |
 
-[Full guide](https://quello.vercel.app/guides/vite) ·
-[Options reference](https://quello.vercel.app/reference/plugin-options) · [MIT](./LICENSE)
+[Full guide](https://quello-docs.vercel.app/guides/vite) ·
+[Options reference](https://quello-docs.vercel.app/reference/plugin-options) · [MIT](./LICENSE)

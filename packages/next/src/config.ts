@@ -76,7 +76,7 @@ function scaffoldRoute(root: string, options: ResolvedQuelloOptions): string | n
   if (!appDir) {
     warn(
       'no app directory found, so the picks endpoint was not created.\n' +
-        `          Add it yourself at pages${options.basePath}/[...quello].ts — see https://quello.vercel.app/guides/next`,
+        `          Add it yourself at pages${options.basePath}/[...quello].ts — see https://quello-docs.vercel.app/guides/next`,
     )
     return null
   }

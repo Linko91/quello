@@ -29,7 +29,7 @@ Nitro detects Vercel and builds to `.vercel/output` on its own, so no `vercel.js
 Two things need it, and they read it from different places:
 
 - **Canonical tags** come from `site.url` in `nuxt.config.ts`, which defaults to
-  `https://quello.vercel.app`.
+  `https://quello-docs.vercel.app`.
 - **The sitemap** is prerendered at build time by Docus, and its `inferSiteURL()` reads *only*
   environment variables — `NUXT_PUBLIC_SITE_URL`, `NUXT_SITE_URL`, then the platform's own
   (`VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_URL`, Netlify's `URL`, …). It ignores `nuxt.config.ts`.
@@ -42,7 +42,7 @@ which is not a valid sitemap. That is only a local artefact, but if you want to 
 output:
 
 ```bash
-NUXT_SITE_URL=https://quello.vercel.app pnpm build
+NUXT_SITE_URL=https://quello-docs.vercel.app pnpm build
 ```
 
 If the domain ever changes, update `site.url` in `nuxt.config.ts` *and* set `NUXT_SITE_URL` in the

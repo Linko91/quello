@@ -53,5 +53,5 @@ The plugin attaches to the dev server's middleware and does nothing in a product
 | `htmlLimit` | `1000` | Initial character budget for `truncated`. |
 | `theme` | `{}` | Look of the outlines quello draws. Code-level only. |
 
-[Full guide](https://quello.vercel.app/guides/webpack) ·
-[Options reference](https://quello.vercel.app/reference/plugin-options) · [MIT](./LICENSE)
+[Full guide](https://quello-docs.vercel.app/guides/webpack) ·
+[Options reference](https://quello-docs.vercel.app/reference/plugin-options) · [MIT](./LICENSE)

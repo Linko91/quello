@@ -51,7 +51,7 @@
     "url": "git+https://github.com/Linko91/quello.git",
     "directory": "packages/webpack"
   },
-  "homepage": "https://quello.vercel.app",
+  "homepage": "https://quello-docs.vercel.app",
   "bugs": {
     "url": "https://github.com/Linko91/quello/issues"
   }

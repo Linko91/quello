@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   // infers the URL from environment variables only — on Vercel, from
   // VERCEL_PROJECT_PRODUCTION_URL. See docs/README.md.
   site: {
-    url: process.env.NUXT_SITE_URL || 'https://quello.vercel.app',
+    url: process.env.NUXT_SITE_URL || 'https://quello-docs.vercel.app',
     name: 'quello',
   },
 
@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   // empty outside Vercel — nuxt-llms then warns on every local `dev`. Same value as
   // `site.url`, so llms.txt keeps absolute links in production too.
   llms: {
-    domain: process.env.NUXT_SITE_URL || 'https://quello.vercel.app',
+    domain: process.env.NUXT_SITE_URL || 'https://quello-docs.vercel.app',
   },
 
   modules: [

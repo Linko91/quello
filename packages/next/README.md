@@ -60,7 +60,7 @@ then prints where everything went.
 
 ## Options
 
-Every [quello option](https://quello.vercel.app/reference/plugin-options), plus two of Next's own.
+Every [quello option](https://quello-docs.vercel.app/reference/plugin-options), plus two of Next's own.
 Pass them to `withQuello` as a second argument, or to `<Quello />` as props for a one-off.
 
 | Option | Default | |
@@ -90,4 +90,4 @@ Render `<Quello />` in `pages/_document.tsx`, inside `<body>`.
 | `@quello/next/config` | `withQuello` — `next.config` only. |
 | `@quello/next/route` | `quelloRoute`, `quelloApiRoute`, `quelloApiConfig`. |
 
-[Full guide](https://quello.vercel.app/guides/next) · [MIT](./LICENSE)
+[Full guide](https://quello-docs.vercel.app/guides/next) · [MIT](./LICENSE)
