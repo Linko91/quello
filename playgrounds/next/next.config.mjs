@@ -1,2 +1,4 @@
+import { withQuello } from '@quello/next/config'
+
 /** @type {import('next').NextConfig} */
-export default {}
+export default withQuello({})

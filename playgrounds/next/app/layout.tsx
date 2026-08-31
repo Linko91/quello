@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { QuelloDev } from '../components/QuelloDev'
+import { Quello } from '@quello/next'
 import './style.css'
 
 export const metadata = { title: 'quello · Next playground' }
@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <footer className="site-footer">
           quello · Next playground — three routes, all of them longer than the viewport.
         </footer>
-        <QuelloDev />
+        <Quello />
       </body>
     </html>
   )

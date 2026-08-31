@@ -11,12 +11,20 @@ export {
 } from './store'
 export {
   CLIENT_ROUTE,
+  CLIENT_SEGMENT,
+  PICKS_ROUTE,
+  PICKS_SEGMENT,
+  runtimeAttrs,
+} from './runtime'
+export type { RuntimeOptions } from './runtime'
+export {
   clientBundlePath,
   coreEsmPath,
-  PICKS_ROUTE,
+  MAX_BODY_BYTES,
   quelloMiddleware,
-  runtimeAttrs,
+  readClientBundle,
   serveClient,
   servePicks,
 } from './routes'
-export type { HandlerOptions, RuntimeOptions } from './routes'
+export type { HandlerOptions } from './routes'
+export { clientResponse, handleQuelloRequest, picksResponse } from './fetch'

@@ -12,7 +12,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@quello/core": "workspace:^",
+    "@quello/next": "workspace:^",
     "@types/react": "^18.3.18",
     "@types/node": "^22.10.2"
   }

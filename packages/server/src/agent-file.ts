@@ -1,17 +1,11 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
+import { DEFAULT_AGENT_FILE } from './runtime'
 
 const START = '<!-- quello:start -->'
 const END = '<!-- quello:end -->'
 
-/**
- * Where the instructions go by default.
- *
- * `AGENTS.md` is the open convention shared by Codex, Cursor, Zed, Aider and
- * others, and Claude Code reads it alongside its own `CLAUDE.md` — so one file
- * reaches every agent, which `CLAUDE.md` alone would not.
- */
-export const DEFAULT_AGENT_FILE = 'AGENTS.md'
+export { DEFAULT_AGENT_FILE }
 
 export function section(picksFile: string): string {
   return `${START}
