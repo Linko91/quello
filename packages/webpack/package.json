@@ -15,8 +15,15 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
-  "keywords": ["webpack-plugin", "quello", "ai", "devtools"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "webpack-plugin",
+    "quello",
+    "ai",
+    "devtools"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -35,5 +42,14 @@
     "typescript": "^5.7.2",
     "vitest": "^2.1.8",
     "webpack": "^5.97.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Linko91/quello.git",
+    "directory": "packages/webpack"
+  },
+  "homepage": "https://quello.vercel.app",
+  "bugs": {
+    "url": "https://github.com/Linko91/quello/issues"
   }
 }

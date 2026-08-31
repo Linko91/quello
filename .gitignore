@@ -158,3 +158,6 @@ playgrounds/*/AGENTS.md
 playgrounds/*/CLAUDE.md
 
 .claude/skills
+
+# Nuxt Content's generated database (docs)
+.data/

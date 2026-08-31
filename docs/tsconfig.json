@@ -1,0 +1,8 @@
+{
+  // Nuxt generates the real config, with its auto-imported globals, into .nuxt —
+  // `nuxt typecheck` is what validates this project. Declaring no inputs keeps the
+  // workspace-wide `tsc --noEmit` sweep from failing on globals it cannot see.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "noEmit": true },
+  "files": []
+}

@@ -19,11 +19,18 @@
     "play:next": "pnpm --filter playground-next dev",
     "play:webpack": "pnpm --filter playground-webpack dev",
     "play:angular": "pnpm --filter playground-angular dev",
-    "play:vanilla": "pnpm --filter playground-vanilla dev"
+    "play:vanilla": "pnpm --filter playground-vanilla dev",
+    "docs": "pnpm --filter quello-docs dev",
+    "docs:build": "pnpm --filter quello-docs build"
   },
   "devDependencies": {
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Linko91/quello.git"
+  },
+  "homepage": "https://quello.vercel.app"
 }
