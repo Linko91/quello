@@ -2,6 +2,13 @@
 
 # quello
 
+[![npm](https://img.shields.io/npm/v/@quello/core?label=npm&color=e09000)](https://www.npmjs.com/package/@quello/core)
+[![dependencies](https://img.shields.io/badge/dependencies-zero-e09000)](packages/core/package.json)
+[![node](https://img.shields.io/node/v/@quello/core?label=node&color=e09000)](https://nodejs.org)
+[![types](https://img.shields.io/npm/types/@quello/core?label=types&color=e09000)](https://www.typescriptlang.org)
+[![license](https://img.shields.io/npm/l/@quello/core?label=license&color=e09000)](LICENSE)
+[![docs](https://img.shields.io/badge/docs-quello--docs.vercel.app-e09000)](https://quello-docs.vercel.app)
+
 Point at any element in your browser and tell your AI agent: "quello". Visual element picker for
 Claude Code, Cursor, Codex, Windsurf & Copilot.
 
@@ -117,6 +124,39 @@ framework rather than the integration route — with one exception worth knowing
 
 `selector, path, text` is the floor, and it is enough for an agent to find the code — see
 [what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
+
+## Install
+
+Every quello package is a development dependency. The plugins are `apply: 'serve'`, `<Quello />`
+renders `null` in a production build and its route answers `404` — nothing here reaches your users,
+so nothing here belongs in `dependencies`.
+
+Install the single package that matches your builder column in the table above. Each plugin depends
+on `@quello/core` and `@quello/server` itself, so those two are never installed by hand.
+
+| Your setup | Install |
+| --- | --- |
+| **Vite** — and Nuxt, SvelteKit or Astro, which are Vite underneath | `npm i -D vite-plugin-quello` |
+| **webpack** / webpack-dev-server | `npm i -D webpack-plugin-quello` |
+| **Next** — App or Pages Router, Turbopack included | `npm i -D @quello/next` |
+| **Anything with a dev server quello cannot configure** — Angular, Rails, Laravel, plain HTML | `npx quello-cli` — nothing to install |
+
+Swap the prefix for the package manager you use — `pnpm add -D`, `yarn add -D` and `bun add -d` take
+the same names:
+
+```bash
+pnpm add -D vite-plugin-quello
+```
+
+quello needs **Node 18 or newer**, the same floor as the frameworks it plugs into.
+
+The CLI is the one route that needs no install: `npx quello-cli` fetches and runs it on the spot,
+which is what the Angular playground does. Add it with `npm i -D quello-cli` only if you would
+rather pin its version alongside the rest of your toolchain.
+
+With the package in place, one line of config wires it up — that is the next section. Start the dev
+server afterwards and the toolbar appears bottom right; if it does not, the plugin is running in a
+production build, where it is meant to be inert.
 
 ## Usage
 
