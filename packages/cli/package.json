@@ -1,40 +1,40 @@
 {
-  "name": "quello-cli",
-  "version": "0.1.2",
-  "description": "Run quello against any project \u2014 no bundler required.",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "type": "module",
-  "bin": {
-    "quello": "./dist/cli.js"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "vitest run --passWithNoTests"
-  },
-  "dependencies": {
-    "@quello/core": "workspace:^",
-    "@quello/server": "workspace:^"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "tsup": "^8.3.5",
-    "typescript": "^6.0.3",
-    "vitest": "^2.1.8"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Linko91/quello.git",
-    "directory": "packages/cli"
-  },
-  "homepage": "https://quello-docs.vercel.app",
-  "bugs": {
-    "url": "https://github.com/Linko91/quello/issues"
-  }
+	"name": "quello-cli",
+	"version": "0.1.2",
+	"description": "Run quello against any project \u2014 no bundler required.",
+	"license": "MIT",
+	"engines": {
+		"node": ">=18"
+	},
+	"type": "module",
+	"bin": {
+		"quello": "./dist/cli.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run --passWithNoTests"
+	},
+	"dependencies": {
+		"@quello/core": "workspace:^",
+		"@quello/server": "workspace:^"
+	},
+	"devDependencies": {
+		"@types/node": "^26.4.0",
+		"tsup": "^8.5.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.11"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Linko91/quello.git",
+		"directory": "packages/cli"
+	},
+	"homepage": "https://quello-docs.vercel.app",
+	"bugs": {
+		"url": "https://github.com/Linko91/quello/issues"
+	}
 }

@@ -12,3 +12,8 @@ allowBuilds:
   nx: true
   better-sqlite3: true
   vue-demi: true
+
+overrides:
+  # docs declares ^13.0.3, but docus@5 peers on better-sqlite3 12.x. Pin the
+  # resolution back to 12 so the docs build/deploy matches what docus expects.
+  better-sqlite3: ^12.11.1
