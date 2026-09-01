@@ -1,47 +1,47 @@
 {
-  "name": "@quello/core",
-  "version": "0.1.2",
-  "description": "Framework-agnostic browser runtime for quello, the visual element picker for AI coding agents.",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./client": "./dist/quello.client.js",
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "sideEffects": false,
-  "scripts": {
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
-    "dev": "tsup --watch",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "devDependencies": {
-    "jsdom": "^25.0.1",
-    "tsup": "^8.3.5",
-    "typescript": "^6.0.3",
-    "vitest": "^2.1.8"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Linko91/quello.git",
-    "directory": "packages/core"
-  },
-  "homepage": "https://quello-docs.vercel.app",
-  "bugs": {
-    "url": "https://github.com/Linko91/quello/issues"
-  }
+	"name": "@quello/core",
+	"version": "0.1.2",
+	"description": "Framework-agnostic browser runtime for quello, the visual element picker for AI coding agents.",
+	"license": "MIT",
+	"engines": {
+		"node": ">=18"
+	},
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./client": "./dist/quello.client.js",
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"sideEffects": false,
+	"scripts": {
+		"build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"jsdom": "^30.0.1",
+		"tsup": "^8.5.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.11"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Linko91/quello.git",
+		"directory": "packages/core"
+	},
+	"homepage": "https://quello-docs.vercel.app",
+	"bugs": {
+		"url": "https://github.com/Linko91/quello/issues"
+	}
 }

@@ -1,58 +1,58 @@
 {
-  "name": "vite-plugin-quello",
-  "version": "0.1.2",
-  "description": "Vite plugin that injects quello, the visual element picker for AI coding agents.",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "vite-plugin",
-    "quello",
-    "ai",
-    "devtools"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "vitest run --passWithNoTests"
-  },
-  "dependencies": {
-    "@quello/core": "workspace:^",
-    "@quello/server": "workspace:^"
-  },
-  "peerDependencies": {
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "tsup": "^8.3.5",
-    "typescript": "^6.0.3",
-    "vite": "^6.0.7",
-    "vitest": "^2.1.8"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Linko91/quello.git",
-    "directory": "packages/vite"
-  },
-  "homepage": "https://quello-docs.vercel.app",
-  "bugs": {
-    "url": "https://github.com/Linko91/quello/issues"
-  }
+	"name": "vite-plugin-quello",
+	"version": "0.1.2",
+	"description": "Vite plugin that injects quello, the visual element picker for AI coding agents.",
+	"license": "MIT",
+	"engines": {
+		"node": ">=18"
+	},
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"keywords": [
+		"vite-plugin",
+		"quello",
+		"ai",
+		"devtools"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run --passWithNoTests"
+	},
+	"dependencies": {
+		"@quello/core": "workspace:^",
+		"@quello/server": "workspace:^"
+	},
+	"peerDependencies": {
+		"vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^26.4.0",
+		"tsup": "^8.5.1",
+		"typescript": "^6.0.3",
+		"vite": "^8.2.2",
+		"vitest": "^4.1.11"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Linko91/quello.git",
+		"directory": "packages/vite"
+	},
+	"homepage": "https://quello-docs.vercel.app",
+	"bugs": {
+		"url": "https://github.com/Linko91/quello/issues"
+	}
 }

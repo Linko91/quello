@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "types": []
+    "types": [],
+    // tsup always passes `baseUrl` to its .d.ts step, which TS 6 reports as deprecated (TS5101).
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src"]
 }
