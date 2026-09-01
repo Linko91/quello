@@ -30,39 +30,10 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
 | [`quello-cli`](packages/cli) | `npx quello-cli` — for projects with no bundler to hook into. |
 
-Plus eleven manual test apps, one per framework and builder combination. They mirror each other:
-same three routes, same content, so a difference you see belongs to the framework and not to the
-page.
-
-| Route | What it is for |
-| --- | --- |
-| `/` **Overview** | hero, feature grid, and a sticky rail beside long sections |
-| `/gallery` **Gallery** | 28 near-identical tiles, plus filters that unmount them |
-| `/article` **Article** | long-form text, a table, and a form with inputs and a select |
-
-Every page is taller than the viewport, the nav is sticky, and navigation is client-side, so the
-three things worth exercising by hand — scrolling, sticky positioning and route changes — are all
-reachable in a few clicks.
-
-Each one is a row of the [compatibility matrix](#compatibility), running:
-
-| Playground | Port | | Playground | Port |
-| --- | --- | --- | --- | --- |
-| [`vue`](playgrounds/vue) | 5175 | | [`vanilla`](playgrounds/vanilla) | 5181 |
-| [`react`](playgrounds/react) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
-| [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
-| [`nuxt`](playgrounds/nuxt) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
-| [`astro`](playgrounds/astro) | 5179 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
-| [`next`](playgrounds/next) | 5180 | | | |
-
-```bash
-pnpm play:vue     pnpm play:react   pnpm play:svelte   pnpm play:solid
-pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro  pnpm play:next
-pnpm play:webpack pnpm play:angular pnpm play:vanilla
-```
-
-Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
-looks like in practice.
+Plus eleven manual test apps — one per framework and builder combination, each a row of the
+[compatibility matrix](#compatibility) below. They live in [`playgrounds/`](playgrounds) and have a
+file of their own: [**PLAYGROUNDS.md**](PLAYGROUNDS.md) covers the three routes they all share, the
+port each one runs on, and the `pnpm play:*` command that starts it.
 
 ## Compatibility
 
@@ -628,13 +599,11 @@ pnpm install
 pnpm build          # build both packages
 pnpm test           # vitest unit tests (selectors, style, attributes, settings, notes, …)
 pnpm typecheck
-pnpm play:vue       # http://localhost:5175
-pnpm play:react     # http://localhost:5176
 ```
 
-The playgrounds consume the packages' built `dist/`, so run `pnpm build` (or `pnpm dev` for watch
-mode) before starting one. If a port is already taken Vite silently moves to the next free one, so
-check the URL it prints rather than assuming 5175/5176.
+The playgrounds have their own file — see [PLAYGROUNDS.md](PLAYGROUNDS.md) for every port and
+`pnpm play:*` command. They consume the packages' built `dist/`, so `pnpm build` (or `pnpm dev` for
+watch mode) comes first.
 
 ## Design notes
 
@@ -687,10 +656,8 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
 
 - **MCP server.** Let the agent read picks over MCP instead of from a file, so it works outside
   editors that read `CLAUDE.md`.
-- **Qwik playground.** Qwik's own dev server threw `Converting circular structure to JSON` on a
-  hand-rolled scaffold, with or without quello in the config — so the playground was dropped rather
-  than shipped broken. The integration path is the same `virtual:quello` that Nuxt, SvelteKit and
-  Astro use, so this is a scaffolding job: start from `npm create qwik@latest`.
+- **Qwik playground.** The one framework left without a playground — what broke and the way back in
+  are in [PLAYGROUNDS.md](PLAYGROUNDS.md#the-missing-one-qwik).
 - **Source lines on React 19.** React 19's owner stacks give quello the file an element was written
   in, but the line in a stack frame belongs to the compiled module and browsers do not source-map
   `error.stack`. Next's dev server already resolves frames for its error overlay, at
