@@ -96,3 +96,42 @@ Changing an HTML setting re-describes the picks you have already made, so the fi
 matches what the panel shows. Choices are per-developer, not per-project: they live in
 `localStorage`, so a teammate cloning the repo is unaffected. The plugin's `htmlMode` / `htmlLimit`
 options only set the starting point for someone who has not touched the panel yet.
+
+### Theme
+
+Two surfaces for quello's own chrome — the toolbar, the puck and every popover:
+
+| | |
+| --- | --- |
+| **Fill** *(default)* | solid dark surfaces |
+| **Glass** | frosted and translucent, blurring whatever is beneath |
+
+This is the tool's own appearance, and is deliberately separate from the plugin's
+[`theme`](README.md#theming-the-outlines), which styles the outlines drawn on *your* page. One is
+how quello looks; the other is how quello marks your work.
+
+## The pick list
+
+The counter in the toolbar (`3 picks`) opens a dropdown holding every pick you have made, on every
+page. Each row pairs the component (or the tag, when no framework owns the element) with the page it
+belongs to, then the selector and a snippet of text to tell one instance from another, and its note
+if it has one. A pick on a page you are not looking at is flagged in amber. **Clear all** sits at the
+foot of the list, with the picks it empties rather than in the toolbar.
+
+Four actions per row:
+
+| | |
+| --- | --- |
+| **⤓ / ↗** | scroll until the element's top-left corner is in the middle of the viewport; on another page, go there first and scroll on arrival |
+| **✎** | open the note editor — amber when the pick already carries a note |
+| **⧉** | copy that one pick as JSON |
+| **×** | remove it |
+
+Hovering a row outlines its element on the page, which is usually faster than scrolling to it. The
+outline is dropped if the pick it belongs to disappears while you are pointing at it.
+
+Cross-page scrolling loads the target page outright rather than pushing to the router: the runtime
+is framework-agnostic and has no way to ask *your* router to navigate. The pending scroll is handed
+across the reload in `sessionStorage` and resumed once picks are restored.
+
+Opening the list closes the settings panel and vice versa; `Esc` closes whichever is open.

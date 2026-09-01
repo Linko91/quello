@@ -149,8 +149,8 @@ Start the dev server, then:
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
 - **Click a badge** to write a note for the agent, or remove that pick from there
-- **Click the pick counter** to open the list of every pick, across every page; **Clear all** lives
-  at the bottom of that list
+- **Click the pick counter** to open the [pick list](FEATURES.md#the-pick-list) — every pick, on
+  every page; **Clear all** lives at the bottom of it
 - **⚙** opens the [settings panel](FEATURES.md#settings-panel) (HTML capture, clipboard); **–**
   collapses the toolbar
 - **Drag the ⠿ grip** to [move the toolbar](FEATURES.md#moving-and-collapsing-the-toolbar) anywhere
@@ -209,7 +209,8 @@ anyone describing the element in prose. `rect` and `style` are re-read on reload
 always describes the element as it is now.
 
 How the toolbar itself behaves — dragging and collapsing it, how badges survive scrolling and route
-changes, and what the four settings tabs control — is in [FEATURES.md](FEATURES.md).
+changes, what the four settings tabs control and what the pick list can do — is in
+[FEATURES.md](FEATURES.md).
 
 ### What a pick can know
 
@@ -265,45 +266,6 @@ note as bookmarks. So you can annotate five elements in the browser and then typ
 
 Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
 its note intact.
-
-#### Theme
-
-Two surfaces for quello's own chrome — the toolbar, the puck and every popover:
-
-| | |
-| --- | --- |
-| **Fill** *(default)* | solid dark surfaces |
-| **Glass** | frosted and translucent, blurring whatever is beneath |
-
-This is the tool's own appearance, and is deliberately separate from the plugin's
-[`theme`](#theming-the-outlines), which styles the outlines drawn on *your* page. One is how quello
-looks; the other is how quello marks your work.
-
-### The pick list
-
-The counter in the toolbar (`3 picks`) opens a dropdown holding every pick you have made, on every
-page. Each row pairs the component (or the tag, when no framework owns the element) with the page it
-belongs to, then the selector and a snippet of text to tell one instance from another, and its note
-if it has one. A pick on a page you are not looking at is flagged in amber. **Clear all** sits at the
-foot of the list, with the picks it empties rather than in the toolbar.
-
-Four actions per row:
-
-| | |
-| --- | --- |
-| **⤓ / ↗** | scroll until the element's top-left corner is in the middle of the viewport; on another page, go there first and scroll on arrival |
-| **✎** | open the note editor — amber when the pick already carries a note |
-| **⧉** | copy that one pick as JSON |
-| **×** | remove it |
-
-Hovering a row outlines its element on the page, which is usually faster than scrolling to it. The
-outline is dropped if the pick it belongs to disappears while you are pointing at it.
-
-Cross-page scrolling loads the target page outright rather than pushing to the router: the runtime
-is framework-agnostic and has no way to ask *your* router to navigate. The pending scroll is handed
-across the reload in `sessionStorage` and resumed once picks are restored.
-
-Opening the list closes the settings panel and vice versa; `Esc` closes whichever is open.
 
 ### The shortcut
 
