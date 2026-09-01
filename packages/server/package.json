@@ -46,6 +46,7 @@
 		"directory": "packages/server"
 	},
 	"homepage": "https://quello-docs.vercel.app",
+	"funding": "https://github.com/sponsors/Linko91",
 	"bugs": {
 		"url": "https://github.com/Linko91/quello/issues"
 	}

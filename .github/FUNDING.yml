@@ -1,0 +1,13 @@
+# Turns on the "Sponsor" button at the top of the repository page and in the
+# sidebar. GitHub renders an entry only once the account behind it exists, so a
+# key added ahead of the account shows nothing rather than breaking the file.
+
+github: [Linko91]
+
+# The rest stay commented until each account is open. GitHub renders them in the
+# order they appear here, so keep the one with the lowest friction first.
+#
+# thanks_dev: u/gh/Linko91   # take the exact handle from the thanks.dev dashboard
+# ko_fi: linko91
+# polar: linko91
+# liberapay: linko91

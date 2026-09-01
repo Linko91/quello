@@ -12,6 +12,9 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 > cover the ground. There is no MCP server yet.
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
+Built and maintained by one person. If quello saves you the paragraph you were about to write,
+you can [sponsor it](#sponsor).
+
 ## Packages
 
 | Package | Description |
@@ -714,6 +717,19 @@ These only start paying off past roughly ten picks, which is why none of them ar
 - **Route-aware navigation.** Cross-page scrolling reloads the page because the runtime cannot ask
   your router to navigate. An optional hook — `quello({ navigate: (url) => router.push(url) })` —
   would make it instant for projects willing to wire it up.
+
+## Sponsor
+
+quello is MIT and has one maintainer. What sponsorship actually pays for is the boring half: eleven
+playgrounds that have to keep agreeing with the [compatibility matrix](#compatibility) while Vite,
+webpack, Next, Nuxt, Astro and the rest move underneath them.
+
+- **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly.
+- **`npm fund`** — every published package carries the same link, so a project that already depends
+  on quello can find it without leaving the terminal.
+
+Sponsoring buys no priority and no private support; the issue tracker stays first-come. It buys the
+time to keep that matrix honest.
 
 ## License
 
