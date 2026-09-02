@@ -22,7 +22,7 @@ reachable in a few clicks.
 
 ## Ports and commands
 
-Each one is a row of the [compatibility matrix](README.md#compatibility), running:
+Each one is a row of the [compatibility matrix](COMPATIBILITY.md), running:
 
 | Playground | Port | | Playground | Port |
 | --- | --- | --- | --- | --- |
