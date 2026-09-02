@@ -30,14 +30,11 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 | [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
 | [`quello-cli`](packages/cli) | `npx quello-cli` — for projects with no bundler to hook into. |
 
-Whether quello can get into your project at all, and what a pick will know once it is there, are two
+Whether quello can get into your project, and what a pick will know once it is there, are two
 separate questions — [COMPATIBILITY.md](COMPATIBILITY.md) answers both, as a matrix of every
-framework against every way in.
-
-Plus eleven manual test apps — one per framework and builder combination, each a row of the
-[compatibility matrix](COMPATIBILITY.md). They live in [`playgrounds/`](playgrounds) and have a
-file of their own: [**PLAYGROUNDS.md**](PLAYGROUNDS.md) covers the three routes they all share, the
-port each one runs on, and the `pnpm play:*` command that starts it.
+framework against every way in. Every row has a matching test app in
+[`playgrounds/`](playgrounds), one per framework and builder combination;
+[PLAYGROUNDS.md](PLAYGROUNDS.md) has their shared routes, ports and `pnpm play:*` commands.
 
 ## Install
 
@@ -45,9 +42,9 @@ Every quello package is a development dependency. The plugins are `apply: 'serve
 renders `null` in a production build and its route answers `404` — nothing here reaches your users,
 so nothing here belongs in `dependencies`.
 
-Install the single package that matches your builder column in the [compatibility
-matrix](COMPATIBILITY.md). Each plugin depends on `@quello/core` and `@quello/server` itself, so those
-two are never installed by hand.
+Install the one package that matches your builder column in the
+[compatibility matrix](COMPATIBILITY.md); each plugin pulls in `@quello/core` and `@quello/server`
+itself.
 
 | Your setup | Install |
 | --- | --- |
@@ -56,22 +53,15 @@ two are never installed by hand.
 | **Next** — App or Pages Router, Turbopack included | `npm i -D @quello/next` |
 | **Anything with a dev server quello cannot configure** — Angular, Rails, Laravel, plain HTML | `npx quello-cli` — nothing to install |
 
-Swap the prefix for the package manager you use — `pnpm add -D`, `yarn add -D` and `bun add -d` take
-the same names:
+Swap the prefix for your package manager — `pnpm add -D`, `yarn add -D` and `bun add -d` take the
+same names. quello needs **Node 18 or newer**, the same floor as the frameworks it plugs into.
 
-```bash
-pnpm add -D vite-plugin-quello
-```
+The CLI needs no install at all: `npx quello-cli` fetches and runs it on the spot. Add it to
+`devDependencies` only if you would rather pin its version with the rest of your toolchain.
 
-quello needs **Node 18 or newer**, the same floor as the frameworks it plugs into.
-
-The CLI is the one route that needs no install: `npx quello-cli` fetches and runs it on the spot,
-which is what the Angular playground does. Add it with `npm i -D quello-cli` only if you would
-rather pin its version alongside the rest of your toolchain.
-
-With the package in place, one line of config wires it up — see [Usage](#usage). Start the dev
-server afterwards and the toolbar appears bottom right; if it does not, the plugin is running in a
-production build, where it is meant to be inert.
+One line of config then wires it up — see [Usage](#usage). Start the dev server and the toolbar
+appears bottom right; if it does not, the plugin is running in a production build, where it is meant
+to be inert.
 
 ## Usage
 
@@ -88,7 +78,7 @@ export default defineConfig({
 Start the dev server, then:
 
 - **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; while picking
-  the button turns accent-purple and reads `picking…`. The combination is configurable — see
+  the button turns amber and reads `picking…`. The combination is configurable — see
   [plugin options](#plugin-options)
 - **Hover** highlights the element under the cursor and names its component
 - **Click** assigns the next number and pins a badge to the element
@@ -162,10 +152,9 @@ A pick can carry a `note`: free text you write for the agent, sitting right afte
 top of the entry. Click a badge to open the editor — `Enter` saves, `Shift+Enter` adds a line,
 `Esc` closes keeping what you typed. The box grows as you type, up to 40% of the viewport.
 
-The panel follows the toolbar, flipping below it when there is no room above.
-
 The editor anchors to the pick's badge. A pick made on another page has no badge to anchor to, so it
-opens beside the toolbar instead, on whichever side has room.
+opens beside the toolbar instead, on whichever side has room — following the toolbar, and flipping
+below it when there is no room above.
 
 An empty note removes the field entirely, so `note` is only ever there when you wrote one. A badge
 with a note is ringed and dotted in amber.
@@ -173,11 +162,10 @@ with a note is ringed and dotted in amber.
 Turn on **Ask on every pick** to have the editor open by itself as soon as you select an element.
 It is off by default, so picking stays a single click when you have nothing to say.
 
-This is what makes *"resolve the picks"* work. The section written into your
-[agent file](#the-quello-directory) tells the agent
-that when you ask it to resolve the picks, it should read `.quello/picks.json` and carry out each
-entry's `note` against the element that entry points at, in `id` order, treating entries without a
-note as bookmarks. So you can annotate five elements in the browser and then type four words.
+This is what makes *"resolve the picks"* work: the section quello writes into your
+[agent file](#the-quello-directory) tells the agent to read `.quello/picks.json` and carry out each
+entry's `note` against the element it points at, in `id` order, treating entries without a note as
+bookmarks. So you can annotate five elements in the browser and then type four words.
 
 Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
 its note intact.
@@ -343,7 +331,7 @@ works — `tomato`, `0.125rem`, `color-mix(...)`. Unlike normal declarations, cu
 not validated by the browser, so quello refuses values carrying `;`, braces or comment markers, and
 falls back to the default for that one option.
 
-The badges and the toolbar keep the brand purple: they are the tool's own UI, not marks on your
+The badges and the toolbar keep the brand amber: they are the tool's own UI, not marks on your
 page.
 
 ## The `.quello/` directory
@@ -386,7 +374,7 @@ writes both, independently.
 
 ```bash
 pnpm install
-pnpm build          # build both packages
+pnpm build          # build every package
 pnpm test           # vitest unit tests (selectors, style, attributes, settings, notes, …)
 pnpm typecheck
 ```
@@ -472,8 +460,7 @@ These only start paying off past roughly ten picks, which is why none of them ar
 - **Solid and Astro component names.** Both are ruled out for now, for reasons that are structural
   rather than temporary — see [what a pick can know](COMPATIBILITY.md#what-a-pick-can-know). Solid
   would become possible if a project already runs `solid-devtools`' Babel plugin; Astro, only if it
-  ever exposes
-  its source annotations as a supported API.
+  ever exposes its source annotations as a supported API.
 - **`opacity` in `style`.** The computed `color` of an element inside a faded parent looks opaque,
   because the transparency lives on the ancestor. Worth adding if "why is this grey?" comes up.
 - **Route-aware navigation.** Cross-page scrolling reloads the page because the runtime cannot ask
