@@ -263,8 +263,8 @@ links:
 ::u-page-section
 ---
 title: Built by one person
-description: quello is MIT, and the compatibility matrix only stays honest because someone keeps
-  checking it against eleven playgrounds. That is what sponsors pay for.
+description: quello is MIT and free to use. Sponsoring helps cover the time it takes to keep
+  it working as Vite, webpack, Next and the rest keep changing.
 links:
   - label: Sponsor quello
     to: /sponsor
