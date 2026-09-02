@@ -1,7 +1,12 @@
+<img src="assets/quello-mark.svg" alt="" width="52" align="left" hspace="14" vspace="4">
+
 # Sponsors
 
+[README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
+[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md) · **Sponsors**
+
 quello is MIT and has one maintainer. What sponsorship pays for is the boring half: eleven
-playgrounds that have to keep agreeing with the [compatibility matrix](README.md#compatibility)
+playgrounds that have to keep agreeing with the [compatibility matrix](COMPATIBILITY.md)
 while Vite, webpack, Next, Nuxt, Astro and the rest move underneath them.
 
 [**Sponsor quello on GitHub**](https://github.com/sponsors/Linko91)

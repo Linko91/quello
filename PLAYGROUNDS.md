@@ -3,7 +3,7 @@
 # Playgrounds
 
 [README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
-**Playgrounds** · [Brand](BRAND.md)
+**Playgrounds** · [Brand](BRAND.md) · [Sponsors](SPONSORS.md)
 
 Eleven manual test apps, one per framework and builder combination. They mirror each other:
 same three routes, same content, so a difference you see belongs to the framework and not to the

@@ -3,7 +3,7 @@
 # Brand
 
 [README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
-[Playgrounds](PLAYGROUNDS.md) · **Brand**
+[Playgrounds](PLAYGROUNDS.md) · **Brand** · [Sponsors](SPONSORS.md)
 
 | File | Use |
 | --- | --- |

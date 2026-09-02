@@ -10,7 +10,7 @@
 [![docs](https://img.shields.io/badge/docs-quello--docs.vercel.app-e09000)](https://quello-docs.vercel.app)
 
 **README** · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
-[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md)
+[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md) · [Sponsors](SPONSORS.md)
 
 Point at any element in your browser and tell your AI agent: "quello". Visual element picker for
 Claude Code, Cursor, Codex, Windsurf & Copilot.
@@ -476,7 +476,7 @@ These only start paying off past roughly ten picks, which is why none of them ar
 ## Sponsor
 
 quello is MIT and has one maintainer. What sponsorship actually pays for is the boring half: eleven
-playgrounds that have to keep agreeing with the [compatibility matrix](#compatibility) while Vite,
+playgrounds that have to keep agreeing with the [compatibility matrix](COMPATIBILITY.md) while Vite,
 webpack, Next, Nuxt, Astro and the rest move underneath them.
 
 - **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly. Three tiers
