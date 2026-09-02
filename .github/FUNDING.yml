@@ -1,13 +1,17 @@
-# Turns on the "Sponsor" button at the top of the repository page and in the
-# sidebar. GitHub renders an entry only once the account behind it exists, so a
-# key added ahead of the account shows nothing rather than breaking the file.
+# The funding links GitHub shows behind the Sponsor button and in the "Sponsor
+# this project" panel. This file is only half of it: the button stays hidden
+# until Sponsorships is ticked under Settings → General → Features. GitHub also
+# renders an entry only once the account behind it exists, so a key added ahead
+# of its account shows nothing rather than breaking the file.
+#
+# Entries appear in the order listed here.
 
 github: [Linko91]
+buy_me_a_coffee: dverse
 
-# The rest stay commented until each account is open. GitHub renders them in the
-# order they appear here, so keep the one with the lowest friction first.
+# The rest stay commented until each account is open — handles included. The
+# ones below are placeholders, not accounts that exist.
 #
-# thanks_dev: u/gh/Linko91   # take the exact handle from the thanks.dev dashboard
-# ko_fi: linko91
-# polar: linko91
-# liberapay: linko91
+# thanks_dev: u/gh/<handle>
+# polar: <handle>
+# liberapay: <handle>
