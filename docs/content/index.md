@@ -259,3 +259,17 @@ links:
     size: xl
 ---
 ::
+
+::u-page-section
+---
+title: Built by one person
+description: quello is MIT, and the compatibility matrix only stays honest because someone keeps
+  checking it against eleven playgrounds. That is what sponsors pay for.
+links:
+  - label: Sponsor quello
+    to: /sponsor
+    trailingIcon: i-lucide-heart
+    color: neutral
+    variant: subtle
+---
+::

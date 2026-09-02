@@ -724,9 +724,14 @@ quello is MIT and has one maintainer. What sponsorship actually pays for is the 
 playgrounds that have to keep agreeing with the [compatibility matrix](#compatibility) while Vite,
 webpack, Next, Nuxt, Astro and the rest move underneath them.
 
-- **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly.
+- **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly. Three tiers
+  carry a listing; the amounts live on that page and nowhere in this repository, so they can change
+  without a commit.
 - **`npm fund`** — every published package carries the same link, so a project that already depends
   on quello can find it without leaving the terminal.
+
+Who is listed, what each tier carries, and the ways to help that are not money at all, are in
+[`SPONSORS.md`](SPONSORS.md) and on the [docs sponsor page](https://quello-docs.vercel.app/sponsor).
 
 Sponsoring buys no priority and no private support; the issue tracker stays first-come. It buys the
 time to keep that matrix honest.
