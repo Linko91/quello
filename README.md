@@ -65,92 +65,9 @@ The CLI is the one route that needs no install: `npx quello-cli` fetches and run
 which is what the Angular playground does. Add it with `npm i -D quello-cli` only if you would
 rather pin its version alongside the rest of your toolchain.
 
-With the package in place, one line of config wires it up — that is the next section. Start the dev
+With the package in place, one line of config wires it up — see [Usage](#usage). Start the dev
 server afterwards and the toolbar appears bottom right; if it does not, the plugin is running in a
 production build, where it is meant to be inert.
-
-## Usage
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite'
-import quello from 'vite-plugin-quello'
-
-export default defineConfig({
-  plugins: [quello()],
-})
-```
-
-Start the dev server, then:
-
-- **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; while picking
-  the button turns accent-purple and reads `picking…`. The combination is configurable — see
-  [plugin options](#plugin-options)
-- **Hover** highlights the element under the cursor and names its component
-- **Click** assigns the next number and pins a badge to the element
-- **Click a badge** to write a note for the agent, or remove that pick from there
-- **Click the pick counter** to open the [pick list](FEATURES.md#the-pick-list) — every pick, on
-  every page; **Clear all** lives at the bottom of it
-- **⚙** opens the [settings panel](FEATURES.md#settings-panel) (HTML capture, clipboard); **–**
-  collapses the toolbar
-- **Drag the ⠿ grip** to [move the toolbar](FEATURES.md#moving-and-collapsing-the-toolbar) anywhere
-- **Esc** closes the panel if it is open, otherwise leaves picker mode
-
-Picks survive a page reload: on load the runtime re-resolves each stored selector for the current URL.
-
-### What a pick records
-
-```jsonc
-{
-  "id": 2,
-  "label": "PICK 2",
-  "note": "make this full width on mobile",
-  "selector": "article.card:nth-of-type(2) > p",
-  "domPath": "html > body > div#app > main.page > section.card-list > article.card[2] > p",
-  "tag": "p",
-  "classes": [],
-  "attributes": {},
-  "text": "Vue component name and source file.",
-  "html": "<p>Vue component name and source file.</p>",
-  "rect": { "x": 861, "y": 222, "width": 198, "height": 32, "...": "..." },
-  "style": {
-    "display": "block",
-    "font": "13px/normal",
-    "fontWeight": "400",
-    "color": "rgb(238, 238, 238)",
-    "background": "rgba(0, 0, 0, 0)",
-    "padding": "0px",
-    "margin": "0px",
-    "gap": "normal",
-    "borderRadius": "0px"
-  },
-  "framework": {
-    "framework": "vue",
-    "component": "CardItem",
-    "file": "/abs/path/src/components/CardItem.vue"
-  },
-  "page": {
-    "url": "http://localhost:5175/",
-    "title": "quello · Vue playground"
-  },
-  "pickedAt": "2026-08-28T15:15:53.096Z"
-}
-```
-
-`attributes` is every attribute as written in the markup, in document order, with values
-whitespace-collapsed and truncated at 160 characters. Nothing is filtered out — `class` and `id`
-appear there too, even though `classes` already holds the cleaned-up list — because an attribute
-dump that silently omits attributes is worse than a slightly redundant one. A boolean attribute
-reads as an empty string, so a Vue root picks up `{ "id": "app", "data-v-app": "" }`.
-
-`style` is read from `getComputedStyle`, so it is what the element actually renders as rather than
-what a stylesheet asked for — enough to act on "make this bigger" or "why is this grey?" without
-anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
-always describes the element as it is now.
-
-How the toolbar itself behaves — dragging and collapsing it, how badges survive scrolling and route
-changes, what the four settings tabs control and what the pick list can do — is in
-[FEATURES.md](FEATURES.md).
 
 ## Compatibility
 
@@ -241,6 +158,89 @@ Two frameworks deliberately have no detector:
 
 Where nothing answers, `framework` is `null` and the selector, DOM path and text carry the pick on
 their own — which is enough for an agent, just with one more step.
+
+## Usage
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite'
+import quello from 'vite-plugin-quello'
+
+export default defineConfig({
+  plugins: [quello()],
+})
+```
+
+Start the dev server, then:
+
+- **Alt+Q** (or the wordmark button in the toolbar, bottom right) toggles picker mode; while picking
+  the button turns accent-purple and reads `picking…`. The combination is configurable — see
+  [plugin options](#plugin-options)
+- **Hover** highlights the element under the cursor and names its component
+- **Click** assigns the next number and pins a badge to the element
+- **Click a badge** to write a note for the agent, or remove that pick from there
+- **Click the pick counter** to open the [pick list](FEATURES.md#the-pick-list) — every pick, on
+  every page; **Clear all** lives at the bottom of it
+- **⚙** opens the [settings panel](FEATURES.md#settings-panel) (HTML capture, clipboard); **–**
+  collapses the toolbar
+- **Drag the ⠿ grip** to [move the toolbar](FEATURES.md#moving-and-collapsing-the-toolbar) anywhere
+- **Esc** closes the panel if it is open, otherwise leaves picker mode
+
+Picks survive a page reload: on load the runtime re-resolves each stored selector for the current URL.
+
+### What a pick records
+
+```jsonc
+{
+  "id": 2,
+  "label": "PICK 2",
+  "note": "make this full width on mobile",
+  "selector": "article.card:nth-of-type(2) > p",
+  "domPath": "html > body > div#app > main.page > section.card-list > article.card[2] > p",
+  "tag": "p",
+  "classes": [],
+  "attributes": {},
+  "text": "Vue component name and source file.",
+  "html": "<p>Vue component name and source file.</p>",
+  "rect": { "x": 861, "y": 222, "width": 198, "height": 32, "...": "..." },
+  "style": {
+    "display": "block",
+    "font": "13px/normal",
+    "fontWeight": "400",
+    "color": "rgb(238, 238, 238)",
+    "background": "rgba(0, 0, 0, 0)",
+    "padding": "0px",
+    "margin": "0px",
+    "gap": "normal",
+    "borderRadius": "0px"
+  },
+  "framework": {
+    "framework": "vue",
+    "component": "CardItem",
+    "file": "/abs/path/src/components/CardItem.vue"
+  },
+  "page": {
+    "url": "http://localhost:5175/",
+    "title": "quello · Vue playground"
+  },
+  "pickedAt": "2026-08-28T15:15:53.096Z"
+}
+```
+
+`attributes` is every attribute as written in the markup, in document order, with values
+whitespace-collapsed and truncated at 160 characters. Nothing is filtered out — `class` and `id`
+appear there too, even though `classes` already holds the cleaned-up list — because an attribute
+dump that silently omits attributes is worse than a slightly redundant one. A boolean attribute
+reads as an empty string, so a Vue root picks up `{ "id": "app", "data-v-app": "" }`.
+
+`style` is read from `getComputedStyle`, so it is what the element actually renders as rather than
+what a stylesheet asked for — enough to act on "make this bigger" or "why is this grey?" without
+anyone describing the element in prose. `rect` and `style` are re-read on reload, so a restored pick
+always describes the element as it is now.
+
+How the toolbar itself behaves — dragging and collapsing it, how badges survive scrolling and route
+changes, what the four settings tabs control and what the pick list can do — is in
+[FEATURES.md](FEATURES.md).
 
 #### Agent notes
 
