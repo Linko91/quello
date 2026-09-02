@@ -12,6 +12,17 @@ export default defineNuxtConfig({
     },
   },
 
+  // Docus' assistant module reads `options.enabled ?? hasAiGatewayAuth`, so leaving it
+  // undefined turns the AI assistant ON by itself wherever `AI_GATEWAY_API_KEY` or
+  // `VERCEL_OIDC_TOKEN` exist at build time — which Vercel injects on its own. That
+  // shipped a public `/mcp` server and a `/__docus__/assistant` route we never asked
+  // for. An explicit value always wins, so `false` keeps it off on every deploy.
+  docus: {
+    assistant: {
+      enabled: false,
+    },
+  },
+
   // Used for canonical tags. The sitemap does NOT read this: Docus prerenders it and
   // infers the URL from environment variables only — on Vercel, from
   // VERCEL_PROJECT_PRODUCTION_URL. See docs/README.md.

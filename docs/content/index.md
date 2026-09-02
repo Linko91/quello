@@ -1,6 +1,6 @@
 ---
 seo:
-  title: quello — point at it, then say "quello"
+  title: Point at it, then say "quello"
   description: A visual element picker for AI coding agents. Click elements in your
     running app; quello writes them to .quello/picks.json so your agent knows exactly
     which component you mean.
