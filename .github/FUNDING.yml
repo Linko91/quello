@@ -4,14 +4,17 @@
 # renders an entry only once the account behind it exists, so a key added ahead
 # of its account shows nothing rather than breaking the file.
 #
-# Entries appear in the order listed here.
+# Entries appear in the order listed here, so the ones someone can act on in a
+# click come first. thanks.dev is last on purpose: it pays maintainers out of a
+# company's dependency budget, which is not something a visitor does by
+# clicking.
 
 github: [Linko91]
 buy_me_a_coffee: dverse
+thanks_dev: u/gh/linko91
 
 # The rest stay commented until each account is open — handles included. The
 # ones below are placeholders, not accounts that exist.
 #
-# thanks_dev: u/gh/<handle>
 # polar: <handle>
 # liberapay: <handle>
