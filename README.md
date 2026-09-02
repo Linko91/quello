@@ -415,8 +415,6 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
 
 - **MCP server.** Let the agent read picks over MCP instead of from a file, so it works outside
   editors that read `CLAUDE.md`.
-- **Qwik playground.** The one framework left without a playground — what broke and the way back in
-  are in [PLAYGROUNDS.md](PLAYGROUNDS.md#the-missing-one-qwik).
 - **Source lines on React 19.** React 19's owner stacks give quello the file an element was written
   in, but the line in a stack frame belongs to the compiled module and browsers do not source-map
   `error.stack`. Next's dev server already resolves frames for its error overlay, at
