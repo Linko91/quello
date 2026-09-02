@@ -22,8 +22,8 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 > cover the ground. There is no MCP server yet.
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
-Built and maintained by one person. If quello saves you the paragraph you were about to write,
-you can [sponsor it](#sponsor).
+Maintained by one person. If it turns out to be useful to you, you can
+[sponsor it](#sponsor).
 
 ## Packages
 
@@ -475,12 +475,13 @@ These only start paying off past roughly ten picks, which is why none of them ar
 
 ## Sponsor
 
-quello is MIT and has one maintainer. What sponsorship actually pays for is the boring half: eleven
-playgrounds that have to keep agreeing with the [compatibility matrix](COMPATIBILITY.md) while Vite,
-webpack, Next, Nuxt, Astro and the rest move underneath them.
+quello is free and MIT-licensed, and it will stay that way. It is maintained by one person, and most
+of the work now is upkeep: eleven playgrounds that have to keep agreeing with the
+[compatibility matrix](COMPATIBILITY.md) as Vite, webpack, Next, Nuxt, Astro and the rest keep
+changing. Sponsoring helps cover the time that takes.
 
-- **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly. Three tiers
-  carry a listing; the amounts live on that page and nowhere in this repository, so they can change
+- **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly. Three tiers carry
+  a listing; the amounts live on that page and nowhere in this repository, so they can change
   without a commit.
 - **`npm fund`** — every published package carries the same link, so a project that already depends
   on quello can find it without leaving the terminal.
@@ -488,8 +489,8 @@ webpack, Next, Nuxt, Astro and the rest move underneath them.
 Who is listed, what each tier carries, and the ways to help that are not money at all, are in
 [`SPONSORS.md`](SPONSORS.md) and on the [docs sponsor page](https://quello-docs.vercel.app/sponsor).
 
-Sponsoring buys no priority and no private support; the issue tracker stays first-come. It buys the
-time to keep that matrix honest.
+Worth saying up front rather than leaving it implied: sponsoring does not come with priority or
+private support, and the issue tracker stays first-come for everyone.
 
 ## License
 

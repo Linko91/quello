@@ -262,7 +262,7 @@ links:
 
 ::u-page-section
 ---
-title: Built by one person
+title: Maintained by one person
 description: quello is MIT and free to use. Sponsoring helps cover the time it takes to keep
   it working as Vite, webpack, Next and the rest keep changing.
 links:
