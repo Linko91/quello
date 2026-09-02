@@ -2,7 +2,8 @@
 
 # Features
 
-← [README](README.md)
+[README](README.md) · [Compatibility](COMPATIBILITY.md) · **Features** ·
+[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md)
 
 What the toolbar does once it is on the page: where it sits and how it gets out of the way, how
 picks survive scrolling and route changes, and the preferences behind the **⚙** button. The

@@ -2,7 +2,8 @@
 
 # Compatibility
 
-← [README](README.md)
+[README](README.md) · **Compatibility** · [Features](FEATURES.md) ·
+[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md)
 
 Two questions decide whether quello works on a project, and they are independent:
 

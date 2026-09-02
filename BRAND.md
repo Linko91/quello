@@ -2,7 +2,8 @@
 
 # Brand
 
-← [README](README.md)
+[README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
+[Playgrounds](PLAYGROUNDS.md) · **Brand**
 
 | File | Use |
 | --- | --- |

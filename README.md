@@ -9,6 +9,9 @@
 [![license](https://img.shields.io/npm/l/@quello/core?label=license&color=e09000)](LICENSE)
 [![docs](https://img.shields.io/badge/docs-quello--docs.vercel.app-e09000)](https://quello-docs.vercel.app)
 
+**README** · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
+[Playgrounds](PLAYGROUNDS.md) · [Brand](BRAND.md)
+
 Point at any element in your browser and tell your AI agent: "quello". Visual element picker for
 Claude Code, Cursor, Codex, Windsurf & Copilot.
 
