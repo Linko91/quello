@@ -16,8 +16,7 @@ If you decide to, thank you — at this size it makes a real difference.
 
 ## What each tier carries
 
-Amounts live in one place only, on the [sponsors page](https://github.com/sponsors/Linko91), so they
-can change without a commit here.
+The amounts are on the [sponsors page](https://github.com/sponsors/Linko91).
 
 | Tier | Where you appear |
 | --- | --- |
@@ -25,17 +24,12 @@ can change without a commit here.
 | **Backer** | Your name and a link, in both, and in the README. |
 | **Partner** | Your logo and a link in all of the above, plus the docs homepage. |
 
-A one-time sponsorship is just as welcome. It simply does not come with a listing, because there is
-nothing recurring to list.
+A one-time sponsorship is just as welcome; it simply does not come with a listing.
 
 Worth saying up front rather than leaving it implied: sponsoring does not come with priority or
 private support, and the issue tracker stays first-come for everyone. It goes toward the upkeep.
 
 ## Current sponsors
-
-The block below is the only part that changes when someone sponsors, so it is fenced in markers —
-the same convention quello uses for the section it writes into your agent instructions file. Edit
-inside the fence; everything around it stays put.
 
 <!-- sponsors:start -->
 

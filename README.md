@@ -481,8 +481,7 @@ of the work now is upkeep: eleven playgrounds that have to keep agreeing with th
 changing. Sponsoring helps cover the time that takes.
 
 - **[GitHub Sponsors](https://github.com/sponsors/Linko91)** — one-off or monthly. Three tiers carry
-  a listing; the amounts live on that page and nowhere in this repository, so they can change
-  without a commit.
+  a listing; the amounts are on that page.
 - **`npm fund`** — every published package carries the same link, so a project that already depends
   on quello can find it without leaving the terminal.
 
