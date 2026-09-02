@@ -55,10 +55,3 @@ pnpm play:vue     # then open the URL it prints
 
 They never ship: `playgrounds/*` are private workspace packages, excluded from every published
 tarball. The rest of the repo's workflow is in [Development](README.md#development).
-
-## The missing one: Qwik
-
-Qwik's own dev server threw `Converting circular structure to JSON` on a hand-rolled scaffold, with
-or without quello in the config — so the playground was dropped rather than shipped broken. The
-integration path is the same `virtual:quello` that Nuxt, SvelteKit and Astro use, so this is a
-scaffolding job rather than an integration one: start from `npm create qwik@latest`.
