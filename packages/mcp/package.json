@@ -1,0 +1,60 @@
+{
+	"name": "@quello/mcp",
+	"version": "0.1.2",
+	"description": "MCP server for quello: reach the picks over Model Context Protocol instead of from a file.",
+	"license": "MIT",
+	"engines": {
+		"node": ">=18"
+	},
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"bin": {
+		"quello-mcp": "./dist/bin.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "vitest run"
+	},
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"quello",
+		"picker",
+		"ai",
+		"agent"
+	],
+	"dependencies": {
+		"@quello/core": "workspace:^",
+		"@quello/server": "workspace:^"
+	},
+	"devDependencies": {
+		"@types/node": "^26.4.0",
+		"tsup": "^8.5.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.11"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Linko91/quello.git",
+		"directory": "packages/mcp"
+	},
+	"homepage": "https://quello-docs.vercel.app",
+	"funding": "https://github.com/sponsors/Linko91",
+	"bugs": {
+		"url": "https://github.com/Linko91/quello/issues"
+	}
+}

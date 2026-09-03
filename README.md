@@ -19,7 +19,8 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 `PICK 2`, … Then you say *"make PICK 2 sticky"* and the agent knows exactly which component you mean.
 
 > **MVP status** — dev mode only. Vite, webpack, Next, or no bundler at all: eleven playgrounds
-> cover the ground. There is no MCP server yet.
+> cover the ground. Picks reach your agent through an agent file or over
+> [MCP](#reaching-the-picks-over-mcp).
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
 
 Maintained by one person. If it turns out to be useful to you, you can
@@ -35,6 +36,7 @@ Maintained by one person. If it turns out to be useful to you, you can
 | [`webpack-plugin-quello`](packages/webpack) | The same, for webpack and webpack-dev-server. |
 | [`@quello/next`](packages/next) | Next integration: a config wrapper, a component and a route. |
 | [`quello-cli`](packages/cli) | `npx quello-cli` — for projects with no bundler to hook into. |
+| [`@quello/mcp`](packages/mcp) | MCP server: the picks as tools, for editors that read no agent file. |
 
 Whether quello can get into your project, and what a pick will know once it is there, are two
 separate questions — [COMPATIBILITY.md](COMPATIBILITY.md) answers both, as a matrix of every
@@ -64,6 +66,10 @@ same names. quello needs **Node 18 or newer**, the same floor as the frameworks 
 
 The CLI needs no install at all: `npx quello-cli` fetches and runs it on the spot. Add it to
 `devDependencies` only if you would rather pin its version with the rest of your toolchain.
+
+[`@quello/mcp`](packages/mcp) is the one package that is not a way *in*: it is a way for your agent
+to reach the picks once one of the above put them there. Optional, and orthogonal to your builder —
+see [Reaching the picks over MCP](#reaching-the-picks-over-mcp).
 
 One line of config then wires it up — see [Usage](#usage). Start the dev server and the toolbar
 appears bottom right; if it does not, the plugin is running in a production build, where it is meant
@@ -376,6 +382,42 @@ The section is fenced in `<!-- quello:start -->` / `<!-- quello:end -->` markers
 rewritten, so your edits to it stick. Calling quello twice with two different `agentFile` values
 writes both, independently.
 
+## Reaching the picks over MCP
+
+The agent file above reaches every editor that reads an instructions file, and does nothing in the
+ones that do not. [`@quello/mcp`](packages/mcp) is the other way in: the picks as **tools**, so the
+agent is told they exist when it connects rather than having to be pointed at a file.
+
+```json
+{
+  "mcpServers": {
+    "quello": { "command": "npx", "args": ["-y", "@quello/mcp"] }
+  }
+}
+```
+
+Or, for Claude Code, `claude mcp add quello -- npx -y @quello/mcp`.
+
+| Tool | |
+| --- | --- |
+| `list_picks` | every pick, one line each — element, source file, note |
+| `get_pick` | one pick by number, every recorded field |
+| `resolve_picks` | the picks that carry a note, in `id` order, as a work list |
+
+Plus `quello://picks` and `quello://picks/{id}` as resources, for `@`-mentioning the picks into a
+chat, and two prompts — `resolve-picks` and `explain-pick` — that arrive with the picks already in
+them.
+
+Both routes are live at once and neither needs the other: `.quello/picks.json` stays the source of
+truth, and the MCP server reads it. It is **read-only** and writes nothing into your project — no
+`AGENTS.md`, no `.gitignore` entry — because it is the alternative to those, and a server asked to
+read a repository has no business editing it. There is no tool that clears or renumbers picks
+either: ids never shift, since `PICK 2` is a label you say out loud.
+
+You still need a plugin or the CLI to put the picker in the page; MCP only carries what the picker
+wrote. Full reference: [`packages/mcp`](packages/mcp) or
+[the docs](https://quello-docs.vercel.app/reference/mcp).
+
 ## Development
 
 ```bash
@@ -407,8 +449,6 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
 
 **Already scoped as v2**
 
-- **MCP server.** Let the agent read picks over MCP instead of from a file, so it works outside
-  editors that read `CLAUDE.md`.
 - **Source lines on React 19.** React 19's owner stacks give quello the file an element was written
   in, but the line in a stack frame belongs to the compiled module and browsers do not source-map
   `error.stack`. Next's dev server already resolves frames for its error overlay, at

@@ -95,8 +95,8 @@ description: The toolbar rides along with your dev server. Nothing to wire up, n
   3 · Say "quello"
 
   #description
-  `"make PICK 2 a link instead"`. Your agent reads the file and gets the selector, the source
-  file, the line and the computed styles.
+  `"make PICK 2 a link instead"`. Your agent reads the file — or asks over MCP — and gets the
+  selector, the source file, the line and the computed styles.
   :::
 ::
 
@@ -217,6 +217,18 @@ description: You know which element you mean. Getting an agent to know is the wo
   #description
   A Vite plugin, a webpack plugin, a Next package, or a CLI that runs beside whatever dev server
   you already have.
+  :::
+
+  :::u-page-feature
+  ---
+  icon: i-lucide-share-2
+  ---
+  #title
+  Two ways to your agent
+
+  #description
+  An agent file for editors that read one, and an MCP server for the rest — the picks as tools,
+  read-only.
   :::
 
   :::u-page-feature

@@ -14,6 +14,11 @@ Two questions decide whether quello works on a project, and they are independent
 So Vue on webpack gets in the webpack way and still reports Vue components, while Solid on Vite gets
 in the easy way and reports none. Neither axis constrains the other.
 
+How your *agent* then reaches the picks is a third question, and it is the same answer on every row:
+an agent file, or [`@quello/mcp`](packages/mcp) — see
+[Reaching the picks over MCP](README.md#reaching-the-picks-over-mcp). It depends on your editor
+rather than on your builder or framework, which is why it is not a column below.
+
 | Framework | Vite | webpack | Its own toolchain | No bundler | What a pick knows |
 | --- | --- | --- | --- | --- | --- |
 | **Vue** | ✅ plugin | ○ plugin | — | ○ CLI | component, file |
