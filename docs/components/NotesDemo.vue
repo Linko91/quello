@@ -103,6 +103,19 @@ function commit(key: 'a' | 'b', text: string): void {
   open.value = null
 }
 
+/**
+ * Opening an editor shows that pick's own note, so a pick without one opens
+ * empty. `commit` leaves the finished text in `draft` on purpose, and `draft` is
+ * shared by both editors — without seeding it here, the second pick's editor
+ * opened showing the first pick's sentence until typing overwrote it.
+ */
+function openEditor(key: 'a' | 'b'): void {
+  clearTyper()
+  typing.value = false
+  draft.value = notes.value[key]
+  open.value = key
+}
+
 /** The state the server renders, and the one a reduced-motion reader keeps. */
 function settled(): void {
   notes.value = { a: STEPS[0].note, b: STEPS[1].note }
@@ -130,12 +143,12 @@ function play(): void {
     moveTo(badgeAEl.value)
   })
   at(800, () => tap())
-  at(900, () => (open.value = 'a'))
+  at(900, () => openEditor('a'))
   at(1400, () => typeOut(STEPS[0].note))
   at(2700, () => commit('a', STEPS[0].note))
   at(3300, () => moveTo(badgeBEl.value))
   at(4000, () => tap())
-  at(4100, () => (open.value = 'b'))
+  at(4100, () => openEditor('b'))
   at(4600, () => typeOut(STEPS[1].note))
   at(5950, () => commit('b', STEPS[1].note))
   at(6600, () => (cursor.value = { ...cursor.value, shown: false }))
