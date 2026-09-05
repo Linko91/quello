@@ -2,261 +2,284 @@ import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  createQuelloMcpServer,
-  LATEST_PROTOCOL_VERSION,
-  SERVER_INSTRUCTIONS,
-  SERVER_VERSION,
-  SUPPORTED_PROTOCOL_VERSIONS,
-} from '../src/server'
-import type { QuelloMcpServer } from '../src/server'
-import {
-  INVALID_PARAMS,
-  INVALID_REQUEST,
-  METHOD_NOT_FOUND,
-  RESOURCE_NOT_FOUND,
-} from '../src/protocol'
-import type { JsonRpcFailure, JsonRpcSuccess } from '../src/protocol'
-import { writePicksFixture } from './fixtures'
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { SERVER_INSTRUCTIONS, SERVER_VERSION } from '../src/server'
+import { PICK_URI_TEMPLATE, PICKS_URI } from '../src/resources'
+import { connect, textOf } from './client'
+import { buyButton, writePicksFixture } from './fixtures'
 
 let root = ''
-let server: QuelloMcpServer
+let picksPath = ''
 
 beforeEach(async () => {
   root = await mkdtemp(join(tmpdir(), 'quello-mcp-server-'))
-  server = createQuelloMcpServer({ picksPath: join(root, '.quello', 'picks.json') })
+  picksPath = join(root, '.quello', 'picks.json')
 })
 
-let nextId = 0
-const send = async (method: string, params?: Record<string, unknown>) => {
-  const response = await server.handle({
-    jsonrpc: '2.0',
-    id: ++nextId,
-    method,
-    ...(params ? { params } : {}),
-  })
-  return response as JsonRpcSuccess & JsonRpcFailure
-}
+const client = () => connect({ picksPath })
 
-const resultOf = async <T>(method: string, params?: Record<string, unknown>): Promise<T> => {
-  const response = await send(method, params)
-  expect(response.error).toBeUndefined()
-  return response.result as T
-}
-
-describe('initialize', () => {
-  it('answers with capabilities, server info and instructions', async () => {
-    const result = await resultOf<Record<string, any>>('initialize', {
-      protocolVersion: LATEST_PROTOCOL_VERSION,
-      capabilities: {},
-      clientInfo: { name: 'test', version: '1' },
+describe('the handshake', () => {
+  it('reports its name and version', async () => {
+    expect((await client()).getServerVersion()).toMatchObject({
+      name: 'quello',
+      version: SERVER_VERSION,
     })
-    expect(result.protocolVersion).toBe(LATEST_PROTOCOL_VERSION)
-    expect(result.capabilities).toEqual({
-      tools: { listChanged: false },
-      resources: { subscribe: false, listChanged: false },
-      prompts: { listChanged: false },
-    })
-    expect(result.serverInfo).toEqual({ name: 'quello', version: SERVER_VERSION })
-    expect(result.instructions).toBe(SERVER_INSTRUCTIONS)
   })
 
-  it('agrees to any revision it supports', async () => {
-    for (const version of SUPPORTED_PROTOCOL_VERSIONS) {
-      const result = await resultOf<{ protocolVersion: string }>('initialize', {
-        protocolVersion: version,
-      })
-      expect(result.protocolVersion).toBe(version)
-    }
-  })
-
-  it('offers its own revision when asked for one it does not know', async () => {
-    for (const version of ['1999-01-01', undefined, 7]) {
-      const result = await resultOf<{ protocolVersion: string }>('initialize', {
-        protocolVersion: version,
-      })
-      expect(result.protocolVersion).toBe(LATEST_PROTOCOL_VERSION)
-    }
+  it('hands the agent the instructions on connect', async () => {
+    expect((await client()).getInstructions()).toBe(SERVER_INSTRUCTIONS)
   })
 
   it('takes the name and version it was built with', async () => {
-    const named = createQuelloMcpServer({ picksPath: '/nowhere', name: 'other', version: '9.9.9' })
-    const response = (await named.handle({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'initialize',
-    })) as JsonRpcSuccess
-    expect((response.result as { serverInfo: unknown }).serverInfo).toEqual({
-      name: 'other',
-      version: '9.9.9',
-    })
+    const named = await connect({ picksPath, name: 'other', version: '9.9.9' })
+    expect(named.getServerVersion()).toMatchObject({ name: 'other', version: '9.9.9' })
+  })
+
+  it('answers a ping', async () => {
+    await expect((await client()).ping()).resolves.toBeDefined()
   })
 })
 
-describe('the handshake', () => {
-  it('answers before initialize, being stateless — an editor that reconnects still works', async () => {
-    await writePicksFixture(root)
-    const result = await resultOf<{ tools: unknown[] }>('tools/list')
-    expect(result.tools).toHaveLength(3)
+describe('tools/list', () => {
+  it('offers exactly the three ways in', async () => {
+    const { tools } = await (await client()).listTools()
+    expect(tools.map((tool) => tool.name)).toEqual(['list_picks', 'get_pick', 'resolve_picks'])
   })
 
-  it('says nothing at all to a notification', async () => {
-    expect(await server.handle({ jsonrpc: '2.0', method: 'notifications/initialized' })).toBe(null)
+  it('declares every tool read-only, because picks belong to the toolbar', async () => {
+    const { tools } = await (await client()).listTools()
+    for (const tool of tools) {
+      expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false })
+    }
   })
 
-  it('ignores a notification it does not know, rather than erroring', async () => {
-    expect(await server.handle({ jsonrpc: '2.0', method: 'notifications/whatever' })).toBe(null)
+  it('gives every tool a title, a description and an object schema', async () => {
+    const { tools } = await (await client()).listTools()
+    for (const tool of tools) {
+      expect(tool.title).toBeTruthy()
+      expect((tool.description ?? '').length).toBeGreaterThan(40)
+      expect(tool.inputSchema.type).toBe('object')
+    }
   })
 
-  it('answers a ping with an empty result', async () => {
-    expect(await resultOf('ping')).toEqual({})
-  })
-})
+  it('publishes the argument schema the SDK built from the zod shapes', async () => {
+    const { tools } = await (await client()).listTools()
+    const listed = tools.find((tool) => tool.name === 'list_picks')
+    const properties = listed?.inputSchema.properties as Record<string, { description?: string }>
+    expect(Object.keys(properties)).toEqual(['detail', 'page', 'withNotes'])
+    // The `.describe()` calls reach the client, which is the whole point of them.
+    expect(properties.detail?.description).toContain('one line per pick')
 
-describe('listings', () => {
-  it('lists tools, resources, templates and prompts', async () => {
-    expect(await resultOf<{ tools: unknown[] }>('tools/list')).toHaveProperty('tools')
-    expect(await resultOf<{ resources: unknown[] }>('resources/list')).toHaveProperty('resources')
-    expect(
-      await resultOf<{ resourceTemplates: unknown[] }>('resources/templates/list'),
-    ).toHaveProperty('resourceTemplates')
-    expect(await resultOf<{ prompts: unknown[] }>('prompts/list')).toHaveProperty('prompts')
+    const single = tools.find((tool) => tool.name === 'get_pick')
+    expect(single?.inputSchema.required).toEqual(['id'])
+  })
+
+  it('teaches the agent the vocabulary the user will use', async () => {
+    const { tools } = await (await client()).listTools()
+    const listed = tools.find((tool) => tool.name === 'list_picks')
+    expect(listed?.description).toContain('PICK')
+    expect(listed?.description).toContain('quello')
+  })
+
+  it('has no write tool to find, by design', async () => {
+    const { tools } = await (await client()).listTools()
+    const names = tools.map((tool) => tool.name).join(' ')
+    for (const verb of ['clear', 'delete', 'write', 'set_note', 'update']) {
+      expect(names).not.toContain(verb)
+    }
   })
 })
 
 describe('tools/call', () => {
-  it('runs a tool and returns its text content', async () => {
+  it('runs a tool and returns its text', async () => {
     await writePicksFixture(root)
-    const result = await resultOf<{ content: Array<{ text: string }> }>('tools/call', {
-      name: 'list_picks',
-      arguments: {},
-    })
-    expect(result.content[0]?.text).toContain('3 picks:')
+    const result = await (await client()).callTool({ name: 'list_picks', arguments: {} })
+    expect(textOf(result)).toContain('3 picks:')
   })
 
-  it('works with no arguments key at all', async () => {
+  it('applies the filters', async () => {
     await writePicksFixture(root)
-    const result = await resultOf<{ content: Array<{ text: string }> }>('tools/call', {
-      name: 'resolve_picks',
-    })
-    expect(result.content[0]?.text).toContain('to resolve')
+    const connected = await client()
+    expect(
+      textOf(await connected.callTool({ name: 'list_picks', arguments: { withNotes: true } })),
+    ).toContain('1 pick with a note:')
+    expect(
+      textOf(await connected.callTool({ name: 'list_picks', arguments: { page: '/settings' } })),
+    ).not.toContain('PICK 1')
   })
 
-  it('needs a name', async () => {
-    const response = await send('tools/call', {})
-    expect(response.error).toMatchObject({ code: INVALID_PARAMS })
-    expect(response.error.message).toContain('requires a "name"')
-  })
-
-  it('rejects arguments that are not an object', async () => {
-    const response = await send('tools/call', { name: 'list_picks', arguments: [1, 2] })
-    expect(response.error).toMatchObject({ code: INVALID_PARAMS })
-  })
-
-  it('turns an unknown tool into an invalid-params error', async () => {
-    const response = await send('tools/call', { name: 'nope' })
-    expect(response.error.code).toBe(INVALID_PARAMS)
-    expect(response.error.message).toContain('Unknown tool "nope"')
-  })
-
-  it('reports a missing pick inside the result, not as a protocol error', async () => {
+  it('runs a tool that takes no arguments', async () => {
     await writePicksFixture(root)
-    const result = await resultOf<{ isError: boolean }>('tools/call', {
-      name: 'get_pick',
-      arguments: { id: 99 },
-    })
+    const result = await (await client()).callTool({ name: 'resolve_picks', arguments: {} })
+    expect(textOf(result)).toContain('1 pick to resolve, in order:')
+  })
+
+  it('returns one pick in full', async () => {
+    await writePicksFixture(root)
+    const result = await (await client()).callTool({ name: 'get_pick', arguments: { id: 2 } })
+    expect(textOf(result)).toContain('make this sticky on scroll')
+  })
+
+  it('takes an id given as a string, which agents do', async () => {
+    await writePicksFixture(root)
+    const result = await (await client()).callTool({ name: 'get_pick', arguments: { id: '2' } })
+    expect(result.isError).toBeFalsy()
+    expect(textOf(result)).toContain('PICK 2')
+  })
+
+  it('reports a missing pick in the result, for the agent to react to', async () => {
+    await writePicksFixture(root)
+    const result = await (await client()).callTool({ name: 'get_pick', arguments: { id: 99 } })
     expect(result.isError).toBe(true)
+    expect(textOf(result)).toContain('Picks currently on file: 1, 2, 3')
   })
-})
 
-describe('resources/read', () => {
-  it('reads a resource', async () => {
+  it('refuses arguments the schema rejects', async () => {
     await writePicksFixture(root)
-    const result = await resultOf<{ contents: Array<{ text: string }> }>('resources/read', {
-      uri: 'quello://picks/1',
-    })
-    expect(JSON.parse(result.contents[0]?.text ?? '')).toMatchObject({ id: 1 })
-  })
-
-  it('needs a uri', async () => {
-    const response = await send('resources/read', {})
-    expect(response.error).toMatchObject({ code: INVALID_PARAMS })
-  })
-
-  it('passes the resource-not-found code through', async () => {
-    const response = await send('resources/read', { uri: 'quello://nope' })
-    expect(response.error.code).toBe(RESOURCE_NOT_FOUND)
-  })
-})
-
-describe('prompts/get', () => {
-  it('returns a prompt', async () => {
-    await writePicksFixture(root)
-    const result = await resultOf<{ messages: unknown[] }>('prompts/get', {
-      name: 'resolve-picks',
-    })
-    expect(result.messages).toHaveLength(1)
-  })
-
-  it('needs a name', async () => {
-    expect((await send('prompts/get', {})).error.code).toBe(INVALID_PARAMS)
-  })
-})
-
-describe('bad input', () => {
-  it('refuses a message that is not JSON-RPC, quoting the id if it can find one', async () => {
-    const response = (await server.handle({ id: 4, method: 'ping' })) as JsonRpcFailure
-    expect(response.error.code).toBe(INVALID_REQUEST)
-    expect(response.id).toBe(4)
-  })
-
-  it('answers with a null id when there was no usable one', async () => {
-    for (const message of [null, 'ping', 42, [], { jsonrpc: '2.0' }]) {
-      const response = (await server.handle(message)) as JsonRpcFailure
-      expect(response.error.code).toBe(INVALID_REQUEST)
-      expect(response.id).toBe(null)
+    const connected = await client()
+    for (const args of [{ id: 'two' }, { id: true }, { id: 1.5 }, {}]) {
+      const result = await connected.callTool({ name: 'get_pick', arguments: args })
+      expect(result.isError).toBe(true)
+      expect(textOf(result)).toContain('Invalid arguments for tool get_pick')
     }
   })
 
-  it('refuses a JSON-RPC batch, which MCP no longer allows', async () => {
-    const response = (await server.handle([
-      { jsonrpc: '2.0', id: 1, method: 'ping' },
-    ])) as JsonRpcFailure
-    expect(response.error.code).toBe(INVALID_REQUEST)
+  it('refuses an out-of-range detail rather than guessing', async () => {
+    const result = await (await client()).callTool({
+      name: 'list_picks',
+      arguments: { detail: 'verbose' },
+    })
+    expect(result.isError).toBe(true)
   })
 
-  it('reports an unknown method as method-not-found', async () => {
-    const response = await send('picks/delete')
-    expect(response.error.code).toBe(METHOD_NOT_FOUND)
-    expect(response.error.message).toContain('picks/delete')
+  it('reports an unknown tool in the result, the way the SDK reports every tool failure', async () => {
+    const result = await (await client()).callTool({ name: 'delete_picks', arguments: {} })
+    expect(result.isError).toBe(true)
+    expect(textOf(result)).toContain('delete_picks')
   })
 
-  it('still answers when the picks path is a directory rather than a file', async () => {
-    // `readPicks` swallows its own EISDIR, so this ends up as an ordinary
-    // "nothing there" answer instead of a crash.
-    const broken = createQuelloMcpServer({ picksPath: root })
-    const listed = (await broken.handle({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: { name: 'list_picks', arguments: {} },
-    })) as JsonRpcSuccess
-    expect((listed.result as { content: Array<{ text: string }> }).content[0]?.text).toContain(
-      'No picks yet',
+  it('invokes a zero-argument tool with no arguments key at all', async () => {
+    await writePicksFixture(root)
+    const result = await (await client()).callTool({ name: 'resolve_picks' })
+    expect(result.isError).toBeFalsy()
+    expect(textOf(result)).toContain('to resolve')
+  })
+
+  it('re-reads the file on every call, because the user goes on picking', async () => {
+    await writePicksFixture(root, [buyButton])
+    const connected = await client()
+    expect(textOf(await connected.callTool({ name: 'list_picks', arguments: {} }))).toContain(
+      '1 pick:',
     )
+    await writePicksFixture(root)
+    expect(textOf(await connected.callTool({ name: 'list_picks', arguments: {} }))).toContain(
+      '3 picks:',
+    )
+  })
+})
 
-    const missing = (await broken.handle({
-      jsonrpc: '2.0',
-      id: 2,
-      method: 'resources/read',
-      params: { uri: 'quello://picks/1' },
-    })) as JsonRpcFailure
-    expect(missing.error.code).toBe(RESOURCE_NOT_FOUND)
+describe('resources', () => {
+  it('publishes the picks file and a template for one pick', async () => {
+    const connected = await client()
+    const { resources } = await connected.listResources()
+    expect(resources.map((resource) => resource.uri)).toContain(PICKS_URI)
+
+    const { resourceTemplates } = await connected.listResourceTemplates()
+    expect(resourceTemplates.map((template) => template.uriTemplate)).toContain(PICK_URI_TEMPLATE)
   })
 
-  it('never lets an error escape as a rejected promise', async () => {
-    const response = await server.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call' })
-    expect(response).toMatchObject({ jsonrpc: '2.0', id: 1 })
+  it('enumerates the picks that exist, not just the template', async () => {
+    await writePicksFixture(root)
+    const { resources } = await (await client()).listResources()
+    expect(resources.map((resource) => resource.uri)).toEqual(
+      expect.arrayContaining(['quello://picks/1', 'quello://picks/2', 'quello://picks/3']),
+    )
+    expect(resources.find((resource) => resource.uri === 'quello://picks/2')?.description).toContain(
+      'make this sticky',
+    )
+  })
+
+  it('reads the whole file back as the raw payload', async () => {
+    await writePicksFixture(root)
+    const { contents } = await (await client()).readResource({ uri: PICKS_URI })
+    expect(contents[0]).toMatchObject({ uri: PICKS_URI, mimeType: 'application/json' })
+    const parsed = JSON.parse(String(contents[0]?.text)) as { picks: Array<{ id: number }> }
+    expect(parsed.picks.map((pick) => pick.id)).toEqual([1, 2, 3])
+  })
+
+  it('reads one pick through the uri template', async () => {
+    await writePicksFixture(root)
+    const { contents } = await (await client()).readResource({ uri: 'quello://picks/2' })
+    const parsed = JSON.parse(String(contents[0]?.text)) as { id: number; note: string }
+    expect(parsed).toMatchObject({ id: 2, note: 'make this sticky on scroll' })
+  })
+
+  it('refuses a pick that is not there', async () => {
+    await writePicksFixture(root)
+    await expect((await client()).readResource({ uri: 'quello://picks/99' })).rejects.toThrow(
+      /No PICK 99/,
+    )
+  })
+
+  it('refuses a uri it does not serve', async () => {
+    const connected = await client()
+    for (const uri of ['quello://nope', 'file:///etc/passwd']) {
+      await expect(connected.readResource({ uri })).rejects.toThrow()
+    }
+  })
+})
+
+describe('prompts', () => {
+  it('offers the two the user would reach for', async () => {
+    const { prompts } = await (await client()).listPrompts()
+    expect(prompts.map((prompt) => prompt.name)).toEqual(['resolve-picks', 'explain-pick'])
+  })
+
+  it('describes each one, since that is what a slash-command menu shows', async () => {
+    const { prompts } = await (await client()).listPrompts()
+    for (const prompt of prompts) {
+      expect(prompt.title).toBeTruthy()
+      expect(prompt.description).toBeTruthy()
+    }
+  })
+
+  it('declares the id argument as required', async () => {
+    const { prompts } = await (await client()).listPrompts()
+    const explain = prompts.find((prompt) => prompt.name === 'explain-pick')
+    expect(explain?.arguments).toEqual([
+      expect.objectContaining({ name: 'id', required: true }),
+    ])
+  })
+
+  it('returns the work list already filled in', async () => {
+    await writePicksFixture(root)
+    const prompt = await (await client()).getPrompt({ name: 'resolve-picks' })
+    expect(prompt.messages[0]?.role).toBe('user')
+    expect(String(prompt.messages[0]?.content.text)).toContain('make this sticky on scroll')
+  })
+
+  it('returns one pick, embedded', async () => {
+    await writePicksFixture(root)
+    const prompt = await (await client()).getPrompt({
+      name: 'explain-pick',
+      arguments: { id: '1' },
+    })
+    expect(String(prompt.messages[0]?.content.text)).toContain('src/components/BuyButton.vue:12')
+  })
+
+  it('refuses an id that is not on file, and one that is not a number', async () => {
+    await writePicksFixture(root)
+    const connected = await client()
+    await expect(
+      connected.getPrompt({ name: 'explain-pick', arguments: { id: '99' } }),
+    ).rejects.toThrow(/no PICK 99/)
+    await expect(
+      connected.getPrompt({ name: 'explain-pick', arguments: { id: 'two' } }),
+    ).rejects.toThrow()
+  })
+
+  it('rejects an unknown prompt', async () => {
+    await expect((await client()).getPrompt({ name: 'nope' })).rejects.toThrow(/nope/)
   })
 })
 

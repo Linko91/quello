@@ -1,47 +1,32 @@
 /**
- * MCP method dispatch: one decoded message in, one response (or nothing, for a
- * notification) out.
+ * The server: an SDK `McpServer` with quello's tools, resources and prompts
+ * registered on it.
  *
- * Deliberately stateless. A server that remembered whether `initialize` had been
- * called would have one more way to be wrong than one that does not, and every
- * answer here is a fresh read of the picks file anyway.
+ * The protocol itself — the JSON-RPC envelope, the handshake, version
+ * negotiation, transports, schema validation — belongs to
+ * `@modelcontextprotocol/sdk`. What is left here is which capabilities exist and
+ * what they answer with.
  */
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
-  failure,
-  INTERNAL_ERROR,
-  INVALID_PARAMS,
-  INVALID_REQUEST,
-  isJsonRpcRequest,
-  isNotification,
-  METHOD_NOT_FOUND,
-  RpcError,
-  success,
-} from './protocol'
-import type { JsonRpcId, JsonRpcRequest, JsonRpcResponse } from './protocol'
-import { getPrompt, PROMPTS } from './prompts'
-import { readResource, RESOURCE_TEMPLATES, RESOURCES } from './resources'
-import { callTool, TOOLS } from './tools'
+  explainPickPrompt,
+  explainPickPromptHandler,
+  resolvePicksPrompt,
+  resolvePicksPromptHandler,
+} from './prompts'
+import {
+  listPickResources,
+  pickResource,
+  picksResource,
+  readPickResource,
+  readPicksResource,
+} from './resources'
+import { getPick, getPickTool, listPicks, listPicksTool, resolvePicks, resolvePicksTool } from './tools'
 import type { ToolContext } from './tools'
 
 /** Keep in step with this package's `version` — a test asserts they match. */
 export const SERVER_VERSION = '0.1.2'
 export const SERVER_NAME = 'quello'
-
-/** The revision this server is written against. */
-export const LATEST_PROTOCOL_VERSION = '2025-06-18'
-
-/**
- * Revisions we answer to. The surface here — tools, resources, prompts, no
- * batching — is the same across all of them, so a client asking for any of these
- * gets what it asked for; anything else is answered with our own, which is what
- * the spec asks a server to do.
- */
-export const SUPPORTED_PROTOCOL_VERSIONS: readonly string[] = [
-  '2025-11-25',
-  '2025-06-18',
-  '2025-03-26',
-  '2024-11-05',
-]
 
 /**
  * Handed to the agent on connect, so it knows what a PICK is before the user
@@ -65,131 +50,44 @@ export interface QuelloMcpOptions {
   version?: string
 }
 
-export interface QuelloMcpServer {
-  readonly picksPath: string
-  /** `null` for a notification, which must not be answered. */
-  handle(message: unknown): Promise<JsonRpcResponse | null>
-}
-
-function negotiate(requested: unknown): string {
-  return typeof requested === 'string' && SUPPORTED_PROTOCOL_VERSIONS.includes(requested)
-    ? requested
-    : LATEST_PROTOCOL_VERSION
-}
-
-/** An id we can quote back even when the envelope was malformed. */
-function salvageId(message: unknown): JsonRpcId | null {
-  if (!message || typeof message !== 'object') return null
-  const id = (message as { id?: unknown }).id
-  return typeof id === 'string' || typeof id === 'number' ? id : null
-}
-
-function paramsOf(message: JsonRpcRequest): Record<string, unknown> {
-  return message.params ?? {}
-}
-
-function requiredName(params: Record<string, unknown>, what: string): string {
-  const name = params.name
-  if (typeof name !== 'string' || name === '') {
-    throw new RpcError(INVALID_PARAMS, `${what} requires a "name"`)
-  }
-  return name
-}
-
-function objectArg(value: unknown, key: string): Record<string, unknown> | undefined {
-  if (value === undefined || value === null) return undefined
-  if (typeof value !== 'object' || Array.isArray(value)) {
-    throw new RpcError(INVALID_PARAMS, `${key} must be an object`)
-  }
-  return value as Record<string, unknown>
-}
-
-export function createQuelloMcpServer(options: QuelloMcpOptions): QuelloMcpServer {
+/** Build the server. Connect it to a transport to start answering. */
+export function createQuelloMcpServer(options: QuelloMcpOptions): McpServer {
   const context: ToolContext = { picksPath: options.picksPath }
-  const serverInfo = {
-    name: options.name ?? SERVER_NAME,
-    version: options.version ?? SERVER_VERSION,
-  }
 
-  async function dispatch(message: JsonRpcRequest): Promise<unknown> {
-    const params = paramsOf(message)
+  const server = new McpServer(
+    { name: options.name ?? SERVER_NAME, version: options.version ?? SERVER_VERSION },
+    { instructions: SERVER_INSTRUCTIONS },
+  )
 
-    switch (message.method) {
-      case 'initialize':
-        return {
-          protocolVersion: negotiate(params.protocolVersion),
-          capabilities: {
-            tools: { listChanged: false },
-            // No `subscribe`: watching the file for changes would be a second way
-            // to learn something a fresh `tools/call` already tells you.
-            resources: { subscribe: false, listChanged: false },
-            prompts: { listChanged: false },
-          },
-          serverInfo,
-          instructions: SERVER_INSTRUCTIONS,
-        }
+  server.registerTool(listPicksTool.name, listPicksTool.config, (args) =>
+    listPicks(args, context),
+  )
+  server.registerTool(getPickTool.name, getPickTool.config, (args) => getPick(args, context))
+  server.registerTool(resolvePicksTool.name, resolvePicksTool.config, () => resolvePicks(context))
 
-      case 'ping':
-        return {}
+  server.registerResource(picksResource.name, picksResource.uri, picksResource.config, (uri) =>
+    readPicksResource(uri.href, context),
+  )
 
-      case 'tools/list':
-        return { tools: TOOLS }
-
-      case 'tools/call':
-        return callTool(
-          requiredName(params, 'tools/call'),
-          objectArg(params.arguments, 'arguments'),
-          context,
-        )
-
-      case 'resources/list':
-        return { resources: RESOURCES }
-
-      case 'resources/templates/list':
-        return { resourceTemplates: RESOURCE_TEMPLATES }
-
-      case 'resources/read': {
-        const uri = params.uri
-        if (typeof uri !== 'string' || uri === '') {
-          throw new RpcError(INVALID_PARAMS, 'resources/read requires a "uri"')
-        }
-        return readResource(uri, context)
-      }
-
-      case 'prompts/list':
-        return { prompts: PROMPTS }
-
-      case 'prompts/get':
-        return getPrompt(
-          requiredName(params, 'prompts/get'),
-          objectArg(params.arguments, 'arguments'),
-          context,
-        )
-
-      default:
-        throw new RpcError(METHOD_NOT_FOUND, `Unknown method "${message.method}"`)
-    }
-  }
-
-  return {
-    picksPath: options.picksPath,
-    async handle(message: unknown): Promise<JsonRpcResponse | null> {
-      if (!isJsonRpcRequest(message)) {
-        return failure(salvageId(message), INVALID_REQUEST, 'Not a JSON-RPC 2.0 request')
-      }
-      // Notifications get no answer at all, not even an error: there is no id to
-      // address one to. Unknown ones are ignored, as the spec requires.
-      if (isNotification(message)) return null
-
-      const id = message.id as JsonRpcId
-      try {
-        return success(id, await dispatch(message))
-      } catch (error) {
-        if (error instanceof RpcError) {
-          return failure(id, error.code, error.message, error.data)
-        }
-        return failure(id, INTERNAL_ERROR, (error as Error).message)
-      }
+  server.registerResource(
+    pickResource.name,
+    // The `list` callback enumerates the picks that exist right now, so a client
+    // can offer them one by one instead of only as a template to fill in by hand.
+    new ResourceTemplate(pickResource.template, { list: () => listPickResources(context) }),
+    pickResource.config,
+    (uri, variables) => {
+      // A template variable is `string | string[]`; this one is never repeated.
+      const id = Array.isArray(variables.id) ? variables.id[0] : variables.id
+      return readPickResource(uri.href, String(id ?? ''), context)
     },
-  }
+  )
+
+  server.registerPrompt(resolvePicksPrompt.name, resolvePicksPrompt.config, () =>
+    resolvePicksPromptHandler(context),
+  )
+  server.registerPrompt(explainPickPrompt.name, explainPickPrompt.config, (args) =>
+    explainPickPromptHandler(args, context),
+  )
+
+  return server
 }

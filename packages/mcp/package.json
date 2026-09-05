@@ -38,8 +38,10 @@
 		"agent"
 	],
 	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.30.0",
 		"@quello/core": "workspace:^",
-		"@quello/server": "workspace:^"
+		"@quello/server": "workspace:^",
+		"zod": "^4.5.4"
 	},
 	"devDependencies": {
 		"@types/node": "^26.4.0",

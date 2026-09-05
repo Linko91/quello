@@ -415,7 +415,15 @@ read a repository has no business editing it. There is no tool that clears or re
 either: ids never shift, since `PICK 2` is a label you say out loud.
 
 You still need a plugin or the CLI to put the picker in the page; MCP only carries what the picker
-wrote. Full reference: [`packages/mcp`](packages/mcp) or
+wrote.
+
+It is built on the official [`@modelcontextprotocol/sdk`](https://www.npmjs.com/package/@modelcontextprotocol/sdk),
+which owns the protocol — envelope, handshake, version negotiation, transport, and the JSON Schema
+generated from each tool's zod shape. That makes it the one quello package with a third-party
+dependency, and it buys conformance that tracks the spec through a version bump rather than through
+this repository. `@quello/core` stays dependency-free; none of this reaches the browser.
+
+Full reference: [`packages/mcp`](packages/mcp) or
 [the docs](https://quello-docs.vercel.app/reference/mcp).
 
 ## Development

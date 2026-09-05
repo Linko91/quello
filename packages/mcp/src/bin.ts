@@ -6,11 +6,11 @@
  * `AGENTS.md`, no `.gitignore` entry. It *is* the alternative to those, and an
  * MCP server that edited the repo it was asked to read would be a surprise.
  */
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import process from 'node:process'
 import { HELP, parseArgs } from './args'
 import { locatePicks } from './locate'
 import { createQuelloMcpServer, SERVER_VERSION } from './server'
-import { serveStdio } from './stdio'
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
@@ -41,7 +41,8 @@ async function main(): Promise<void> {
   )
 
   const server = createQuelloMcpServer({ picksPath: location.path })
-  await serveStdio(server, process.stdin, process.stdout)
+  // Resolves when stdin closes, which is how an editor shuts an MCP server down.
+  await server.connect(new StdioServerTransport())
 }
 
 main().catch((error: unknown) => {

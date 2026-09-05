@@ -1,10 +1,16 @@
+/**
+ * The tool handlers on their own. The SDK's part — validation, dispatch, error
+ * mapping — is covered in `server.test.ts` through a real client; this is what
+ * each tool actually answers.
+ */
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { callTool, TOOLS } from '../src/tools'
-import { RpcError } from '../src/protocol'
-import { allPicks, buyButton, sidebar, writePicksFixture } from './fixtures'
+import { getPick, listPicks, pickId, resolvePicks, TOOL_NAMES } from '../src/tools'
+import type { ListPicksArgs } from '../src/tools'
+import { allPicks, buyButton, writePicksFixture } from './fixtures'
+import { textOf } from './client'
 
 let root = ''
 let picksPath = ''
@@ -17,108 +23,94 @@ beforeEach(async () => {
   await mkdir(join(root, '.quello'), { recursive: true })
 })
 
-const call = async (name: string, args?: Record<string, unknown>) =>
-  callTool(name, args, { picksPath })
+const list = async (args: ListPicksArgs = {}) => textOf(await listPicks(args, { picksPath }))
+const single = (id: number) => getPick({ id }, { picksPath })
+const resolve = async () => textOf(await resolvePicks({ picksPath }))
 
-const bodyOf = async (name: string, args?: Record<string, unknown>) => {
-  const result = await call(name, args)
-  return result.content[0]?.text ?? ''
-}
-
-describe('TOOLS', () => {
-  it('offers exactly the three ways in', () => {
-    expect(TOOLS.map((tool) => tool.name)).toEqual(['list_picks', 'get_pick', 'resolve_picks'])
-  })
-
-  it('declares every tool read-only, because picks belong to the toolbar', () => {
-    for (const tool of TOOLS) {
-      expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false })
-    }
-  })
-
-  it('gives every tool a title, a description and an object schema', () => {
-    for (const tool of TOOLS) {
-      expect(tool.title).toBeTruthy()
-      expect(tool.description.length).toBeGreaterThan(40)
-      expect(tool.inputSchema.type).toBe('object')
-      expect(tool.inputSchema.additionalProperties).toBe(false)
-    }
-  })
-
-  it('teaches the agent the vocabulary the user will use', () => {
-    const listed = TOOLS.find((tool) => tool.name === 'list_picks')
-    expect(listed?.description).toContain('PICK')
-    expect(listed?.description).toContain('quello')
-  })
-
-  it('requires an id on get_pick and nothing on resolve_picks', () => {
-    expect(TOOLS.find((tool) => tool.name === 'get_pick')?.inputSchema.required).toEqual(['id'])
-    expect(TOOLS.find((tool) => tool.name === 'resolve_picks')?.inputSchema.required).toBeUndefined()
+describe('TOOL_NAMES', () => {
+  it('is the set the instructions promise', () => {
+    expect(TOOL_NAMES).toEqual(['list_picks', 'get_pick', 'resolve_picks'])
   })
 })
 
-describe('list_picks', () => {
+describe('pickId', () => {
+  it('takes a number and a numeric string', () => {
+    expect(pickId.parse(2)).toBe(2)
+    expect(pickId.parse('2')).toBe(2)
+  })
+
+  it('refuses what z.coerce.number() would quietly accept', () => {
+    // `true` would coerce to 1 and `null` to 0 — both real picks.
+    for (const value of [true, null, 1.5, 'two', '', {}, -1, 0]) {
+      expect(pickId.safeParse(value).success).toBe(false)
+    }
+  })
+})
+
+describe('listPicks', () => {
   it('lists what is on file', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('list_picks')
+    const body = await list()
     expect(body).toContain('3 picks:')
     expect(body).toContain('PICK 2')
     expect(body).toContain(picksPath)
   })
 
   it('says the file is not there yet, rather than pretending it is empty', async () => {
-    const body = await bodyOf('list_picks')
+    const body = await list()
     expect(body).toContain('not created yet')
     expect(body).toContain('No picks yet')
   })
 
   it('distinguishes an empty file from a missing one', async () => {
     await writePicksFixture(root, [])
-    const body = await bodyOf('list_picks')
+    const body = await list()
     expect(body).not.toContain('not created yet')
     expect(body).toContain('No picks yet')
   })
 
   it('reports when the picks were written, not when they were read', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('list_picks')
+    const body = await list()
     // `readPicks` restamps `updatedAt` to now, so a correct header can only come
     // from the file's mtime.
     const stamp = body.match(/updated (\S+)/)?.[1] ?? ''
-    expect(Date.parse(stamp)).toBeLessThanOrEqual(Date.now())
-    await new Promise((resolve) => setTimeout(resolve, 5))
-    expect(await bodyOf('list_picks')).toContain(stamp)
+    // Within a second of now either way: an mtime carries sub-millisecond
+    // precision that the ISO string rounds, so it can land a tick in the future.
+    expect(Math.abs(Date.parse(stamp) - Date.now())).toBeLessThan(1000)
+    // And it does not move when the file is only read.
+    await new Promise((settle) => setTimeout(settle, 5))
+    expect(await list()).toContain(stamp)
   })
 
   it('filters to one page', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('list_picks', { page: '/settings' })
+    const body = await list({ page: '/settings' })
     expect(body).toContain('PICK 2')
     expect(body).not.toContain('PICK 1')
   })
 
   it('filters to the picks that carry a note', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('list_picks', { withNotes: true })
-    expect(body).toContain('1 pick with a note:')
+    expect(await list({ withNotes: true })).toContain('1 pick with a note:')
   })
 
   it('says what it looked for when a filter matched nothing', async () => {
     await writePicksFixture(root, [buyButton])
-    expect(await bodyOf('list_picks', { withNotes: true })).toContain('No picks with a note.')
-    expect(await bodyOf('list_picks', { page: '/nope' })).toContain('pages matching "/nope"')
+    expect(await list({ withNotes: true })).toContain('No picks with a note.')
+    expect(await list({ page: '/nope' })).toContain('pages matching "/nope"')
   })
 
   it('expands every field on request', async () => {
     await writePicksFixture(root)
-    expect(await bodyOf('list_picks', { detail: 'full' })).toContain('dom path')
+    expect(await list({ detail: 'full' })).toContain('dom path')
   })
 
   it('re-reads the file on every call, because the user goes on picking', async () => {
     await writePicksFixture(root, [buyButton])
-    expect(await bodyOf('list_picks')).toContain('1 pick:')
+    expect(await list()).toContain('1 pick:')
     await writePicksFixture(root, allPicks)
-    expect(await bodyOf('list_picks')).toContain('3 picks:')
+    expect(await list()).toContain('3 picks:')
   })
 
   it('drops a malformed pick instead of failing the call', async () => {
@@ -127,62 +119,48 @@ describe('list_picks', () => {
       JSON.stringify({ version: 1, picks: [buyButton, { nope: true }, null] }),
       'utf8',
     )
-    expect(await bodyOf('list_picks')).toContain('1 pick:')
+    expect(await list()).toContain('1 pick:')
   })
 
   it('survives a picks file that is not JSON at all', async () => {
     await writeFile(picksPath, 'not json', 'utf8')
-    expect(await bodyOf('list_picks')).toContain('No picks yet')
-  })
-
-  it('refuses arguments of the wrong type, as a protocol error', async () => {
-    await expect(call('list_picks', { page: 7 })).rejects.toThrow(RpcError)
-    await expect(call('list_picks', { withNotes: 'yes' })).rejects.toThrow('must be a boolean')
-    await expect(call('list_picks', { detail: 'verbose' })).rejects.toThrow(
-      'must be one of summary, full',
-    )
+    expect(await list()).toContain('No picks yet')
   })
 })
 
-describe('get_pick', () => {
+describe('getPick', () => {
   it('returns every field of the pick asked for', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('get_pick', { id: 1 })
+    const body = textOf(await single(1))
     expect(body).toContain('PICK 1 — Buy now')
     expect(body).toContain('src/components/BuyButton.vue:12')
     expect(body).toContain('dom path')
   })
 
-  it('accepts an id handed over as a string, which agents do', async () => {
-    await writePicksFixture(root)
-    expect(await bodyOf('get_pick', { id: '2' })).toContain('PICK 2')
-  })
-
   it('reports a missing pick as an error the agent can act on, listing what exists', async () => {
     await writePicksFixture(root)
-    const result = await call('get_pick', { id: 99 })
+    const result = await single(99)
     expect(result.isError).toBe(true)
-    expect(result.content[0]?.text).toContain('no PICK 99')
-    expect(result.content[0]?.text).toContain('1, 2, 3')
+    expect(textOf(result)).toContain('no PICK 99')
+    expect(textOf(result)).toContain('1, 2, 3')
   })
 
   it('explains how to make a pick when there are none yet', async () => {
-    const result = await call('get_pick', { id: 1 })
+    const result = await single(1)
     expect(result.isError).toBe(true)
-    expect(result.content[0]?.text).toContain('Alt+Q')
+    expect(textOf(result)).toContain('Alt+Q')
   })
 
-  it('refuses an id that is not an integer', async () => {
-    for (const id of [undefined, 'two', 1.5, {}, null]) {
-      await expect(call('get_pick', { id })).rejects.toThrow('id must be an integer')
-    }
+  it('marks a found pick as not an error', async () => {
+    await writePicksFixture(root)
+    expect((await single(1)).isError).toBeUndefined()
   })
 })
 
-describe('resolve_picks', () => {
+describe('resolvePicks', () => {
   it('returns the noted picks as a numbered plan', async () => {
     await writePicksFixture(root)
-    const body = await bodyOf('resolve_picks')
+    const body = await resolve()
     expect(body).toContain('1 pick to resolve, in order:')
     expect(body).toContain('1. PICK 2 —')
     expect(body).toContain('make this sticky on scroll')
@@ -190,31 +168,11 @@ describe('resolve_picks', () => {
 
   it('tells the agent to leave the picks file alone', async () => {
     await writePicksFixture(root)
-    expect(await bodyOf('resolve_picks')).toContain('Do not edit the picks file')
+    expect(await resolve()).toContain('Do not edit the picks file')
   })
 
   it('says there is nothing to resolve when no pick carries a note', async () => {
     await writePicksFixture(root, [buyButton])
-    expect(await bodyOf('resolve_picks')).toContain('carries a note')
-  })
-
-  it('ignores arguments it was not expecting', async () => {
-    await writePicksFixture(root, [sidebar])
-    expect(await bodyOf('resolve_picks', { extra: true })).toContain('1 pick to resolve')
-  })
-})
-
-describe('an unknown tool', () => {
-  it('comes back as a protocol error that names the real ones', async () => {
-    await expect(call('delete_picks')).rejects.toThrow(
-      'Unknown tool "delete_picks". Available: list_picks, get_pick, resolve_picks.',
-    )
-  })
-
-  it('has no write tool to find, by design', () => {
-    const names = TOOLS.map((tool) => tool.name).join(' ')
-    for (const verb of ['clear', 'delete', 'write', 'set_note', 'update']) {
-      expect(names).not.toContain(verb)
-    }
+    expect(await resolve()).toContain('carries a note')
   })
 })

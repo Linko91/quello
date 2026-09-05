@@ -111,20 +111,33 @@ protocol and nothing else.
 The server is also importable, for a process that would rather host it than spawn one:
 
 ```ts
-import { createQuelloMcpServer, serveStdio } from '@quello/mcp'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { createQuelloMcpServer } from '@quello/mcp'
 
 const server = createQuelloMcpServer({ picksPath: '/path/to/.quello/picks.json' })
-await serveStdio(server, process.stdin, process.stdout)
+await server.connect(new StdioServerTransport())
 ```
 
-`server.handle(message)` takes one decoded JSON-RPC message and returns the response, or `null` for a
-notification — so any transport you like can sit in front of it.
+`createQuelloMcpServer` returns the SDK's `McpServer` with everything registered on it, so any
+transport the SDK ships works — `StreamableHTTPServerTransport` included, if you ever want to reach
+the picks over HTTP rather than over a pipe.
 
-## Zero dependencies
+The tool handlers are exported on their own too (`listPicks`, `getPick`, `resolvePicks`), each taking
+a `{ picksPath }` context, for reading picks without a protocol in the way.
 
-Beyond quello's own packages, none. MCP over stdio is JSON-RPC 2.0 in newline-delimited JSON, which
-is a small enough thing to own outright — and the rest of quello hand-rolls its HTTP for the same
-reason.
+## Built on the official SDK
+
+This is the one quello package with a third-party dependency:
+[`@modelcontextprotocol/sdk`](https://www.npmjs.com/package/@modelcontextprotocol/sdk) owns the
+protocol — the JSON-RPC envelope, the handshake, version negotiation, the stdio transport, and the
+JSON Schema clients see, which it generates from the zod shapes the tools declare.
+
+That means conformance tracks the spec through `pnpm up` rather than through this repository, which
+is the right trade for a protocol that is still moving. It is a `dependency`, not a `devDependency`,
+because it ships inside this package — but the package as a whole is still something you only
+install in development.
+
+`@quello/core` remains dependency-free; nothing here reaches the browser.
 
 ## Getting quello into the page
 
