@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // `ignoreDeprecations` covers the `baseUrl` tsup always passes to its .d.ts step (TS5101).
+  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"], "ignoreDeprecations": "6.0" },
+  "include": ["src"]
+}
