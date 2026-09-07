@@ -1,6 +1,6 @@
 {
 	"name": "@quello/mcp",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"description": "MCP server for quello: reach the picks over Model Context Protocol instead of from a file.",
 	"license": "MIT",
 	"engines": {
