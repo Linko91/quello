@@ -25,7 +25,7 @@ import { getPick, getPickTool, listPicks, listPicksTool, resolvePicks, resolvePi
 import type { ToolContext } from './tools'
 
 /** Keep in step with this package's `version` — a test asserts they match. */
-export const SERVER_VERSION = '0.2.0'
+export const SERVER_VERSION = '0.2.1'
 export const SERVER_NAME = 'quello'
 
 /**
