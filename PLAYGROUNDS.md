@@ -5,7 +5,8 @@
 [README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
 **Playgrounds** · [Brand](BRAND.md) · [Sponsors](SPONSORS.md)
 
-Eleven manual test apps, one per framework and builder combination. They mirror each other:
+Twelve manual test apps, one per framework and builder combination — plus a second React one, since
+React is the only framework where the *version* changes what a pick knows. They mirror each other:
 same three routes, same content, so a difference you see belongs to the framework and not to the
 page.
 
@@ -28,20 +29,38 @@ Each one is a row of the [compatibility matrix](COMPATIBILITY.md), running:
 | Playground | Port | | Playground | Port |
 | --- | --- | --- | --- | --- |
 | [`vue`](playgrounds/vue) | 5175 | | [`vanilla`](playgrounds/vanilla) | 5181 |
-| [`react`](playgrounds/react) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
+| [`react18`](playgrounds/react18) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
 | [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
 | [`nuxt`](playgrounds/nuxt) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
-| [`astro`](playgrounds/astro) | 5179 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
-| [`next`](playgrounds/next) | 5180 | | | |
+| [`astro`](playgrounds/astro) | 5179 | | [`react19`](playgrounds/react19) | 5185 |
+| [`next`](playgrounds/next) | 5180 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
 
 ```bash
-pnpm play:vue     pnpm play:react   pnpm play:svelte   pnpm play:solid
-pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro  pnpm play:next
-pnpm play:webpack pnpm play:angular pnpm play:vanilla
+pnpm play:vue     pnpm play:react18 pnpm play:react19  pnpm play:svelte
+pnpm play:solid   pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro
+pnpm play:next    pnpm play:webpack pnpm play:angular  pnpm play:vanilla
 ```
 
 Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
 looks like in practice.
+
+## The two React playgrounds
+
+`react18` and `react19` are the same app on the same Vite 6 and the same
+`@vitejs/plugin-react` — the *only* difference is `react`, `react-dom` and their types. That is
+deliberate: React's source location follows the React version rather than the bundler, so holding
+everything else still is what makes the difference legible. Run both and pick the same feature card:
+
+| | `react18` (5176) | `react19` (5185) |
+| --- | --- | --- |
+| React | 18.3.1 | 19.2.8 |
+| Read from | `_debugSource` | the owner stack in `_debugStack` |
+| A pick carries | component, file, **line**, column | component, file |
+
+React 19 removed `_debugSource`, and a stack frame addresses the compiled module rather than the
+source, so the line is gone and the file arrives module-relative
+(`/src/components/FeatureCard.tsx`) instead of absolute. The reasoning is in
+[Compatibility](COMPATIBILITY.md); `react19` is where you confirm it by hand.
 
 The playgrounds consume the packages' built `dist/` rather than their source, so run `pnpm build`
 (or `pnpm dev` for watch mode) before starting one — otherwise you are exercising the previous

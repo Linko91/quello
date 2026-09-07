@@ -16,7 +16,7 @@ export function App() {
 
   // The pick's `page.title` should differ per route, so keep the document title in step.
   useEffect(() => {
-    document.title = `${TITLES[pathname] ?? 'Not found'} · quello React playground`
+    document.title = `${TITLES[pathname] ?? 'Not found'} · quello React 18 playground`
     window.scrollTo(0, 0)
   }, [pathname])
 
@@ -29,7 +29,7 @@ export function App() {
         <Route path="/article" element={<ArticlePage />} />
       </Routes>
       <footer className="site-footer">
-        quello · React playground — three routes, all of them longer than the viewport.
+        quello · React 18 playground — three routes, all of them longer than the viewport.
       </footer>
     </>
   )
