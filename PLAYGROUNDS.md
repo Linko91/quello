@@ -5,10 +5,10 @@
 [README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
 **Playgrounds** · [Brand](BRAND.md) · [Sponsors](SPONSORS.md)
 
-Twelve manual test apps, one per framework and builder combination — plus a second React one, since
-React is the only framework where the *version* changes what a pick knows. They mirror each other:
-same three routes, same content, so a difference you see belongs to the framework and not to the
-page.
+Thirteen manual test apps, one per framework and builder combination — plus a second React and a
+second Nuxt, kept because in both cases the *major version* changes something quello has to deal
+with. They mirror each other: same three routes, same content, so a difference you see belongs to
+the framework and not to the page.
 
 ## The three shared routes
 
@@ -31,14 +31,16 @@ Each one is a row of the [compatibility matrix](COMPATIBILITY.md), running:
 | [`vue`](playgrounds/vue) | 5175 | | [`vanilla`](playgrounds/vanilla) | 5181 |
 | [`react18`](playgrounds/react18) | 5176 | | [`webpack`](playgrounds/webpack) | 5182 |
 | [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
-| [`nuxt`](playgrounds/nuxt) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
+| [`nuxt3`](playgrounds/nuxt3) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
 | [`astro`](playgrounds/astro) | 5179 | | [`react19`](playgrounds/react19) | 5185 |
 | [`next`](playgrounds/next) | 5180 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
+| [`nuxt4`](playgrounds/nuxt4) | 5188 | | | |
 
 ```bash
 pnpm play:vue     pnpm play:react18 pnpm play:react19  pnpm play:svelte
-pnpm play:solid   pnpm play:nuxt    pnpm play:sveltekit  pnpm play:astro
-pnpm play:next    pnpm play:webpack pnpm play:angular  pnpm play:vanilla
+pnpm play:solid   pnpm play:nuxt3   pnpm play:nuxt4    pnpm play:sveltekit
+pnpm play:astro   pnpm play:next    pnpm play:webpack  pnpm play:angular
+pnpm play:vanilla
 ```
 
 Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
@@ -61,6 +63,30 @@ React 19 removed `_debugSource`, and a stack frame addresses the compiled module
 source, so the line is gone and the file arrives module-relative
 (`/src/components/FeatureCard.tsx`) instead of absolute. The reasoning is in
 [Compatibility](COMPATIBILITY.md); `react19` is where you confirm it by hand.
+
+## The two Nuxt playgrounds
+
+`nuxt3` and `nuxt4` run the same app on the two Nuxt majors. What a pick knows is identical — both
+report the Vue component and its file — but the two differ in where quello *writes*, which is worth
+seeing before a Nuxt 4 user reports it as a bug:
+
+| | `nuxt3` (5178) | `nuxt4` (5188) |
+| --- | --- | --- |
+| Nuxt | 3.21.11 | 4.5.2 |
+| Bundled Vite | 7.3.6 | 8.2.2 |
+| App lives in | the project root | `app/` |
+| `.quello/` and `AGENTS.md` land in | the project root | **`app/`** |
+
+Nuxt 4 moved the app under `app/` and made that the Vite root. quello resolves its project files
+against the Vite root, so on Nuxt 4 they land inside `app/` rather than beside `package.json`. Picks
+still work — this is about where the files appear, not whether picking does. Point `picksFile` and
+`agentFile` up one level if you would rather have them at the root:
+
+```ts
+quello({ picksFile: '../.quello/picks.json', agentFile: '../AGENTS.md' })
+```
+
+The playgrounds leave the default in place deliberately, so the behaviour stays visible.
 
 The playgrounds consume the packages' built `dist/` rather than their source, so run `pnpm build`
 (or `pnpm dev` for watch mode) before starting one — otherwise you are exercising the previous
