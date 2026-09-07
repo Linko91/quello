@@ -8,7 +8,7 @@ integrations — pick the one that matches your builder and it comes along:
 
 | | |
 | --- | --- |
-| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7 |
+| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7, 8 |
 | [`webpack-plugin-quello`](https://www.npmjs.com/package/webpack-plugin-quello) | webpack 5 |
 | [`@quello/next`](https://www.npmjs.com/package/@quello/next) | Next 14, 15, 16 |
 | [`quello-cli`](https://www.npmjs.com/package/quello-cli) | the CLI, for everything else |

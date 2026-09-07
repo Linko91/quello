@@ -1,5 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "noEmit": true, "jsx": "react-jsx", "types": [] },
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": [],
+    // The react19 playground puts @types/react@19 in the workspace root, where
+    // react-router-dom's own .d.ts files find it before this package's @types/react@18.
+    // Mixing the two makes every router component "not a valid JSX element type",
+    // so pin `react` to the copy this playground actually runs against.
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
+    }
+  },
   "include": ["src", "vite.config.ts"]
 }

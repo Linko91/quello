@@ -46,7 +46,7 @@ looks like in practice.
 
 ## The two React playgrounds
 
-`react18` and `react19` are the same app on the same Vite 6 and the same
+`react18` and `react19` are the same app on the same Vite 8 and the same
 `@vitejs/plugin-react` — the *only* difference is `react`, `react-dom` and their types. That is
 deliberate: React's source location follows the React version rather than the bundler, so holding
 everything else still is what makes the difference legible. Run both and pick the same feature card:

@@ -90,21 +90,30 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
 
   let picksPath = ''
   let root = process.cwd()
+  let serving = false
 
   const runtime = { endpoint: PICKS_ROUTE, shortcut, textLimit, htmlMode, htmlLimit, theme }
 
   return {
     name: 'vite-plugin-quello',
-    apply: 'serve',
     enforce: 'post',
 
+    /**
+     * Deliberately not `apply: 'serve'`. A project that imports `virtual:quello`
+     * still *bundles* that import in a production build — the dev guard around it
+     * (`if (dev) import('virtual:quello')`) runs at runtime, long after the
+     * bundler has had to resolve the id. Rollup only warned about the unresolved
+     * import; Rolldown, which Vite 8 builds on, fails the build outright. So the
+     * id resolves in every mode and `load` decides what it is worth: the runtime
+     * while serving, an empty module in a build.
+     */
     resolveId(id) {
       return id === VIRTUAL_ID ? RESOLVED_VIRTUAL_ID : null
     },
 
     load(id) {
       if (id !== RESOLVED_VIRTUAL_ID) return null
-      if (!enabled) return 'export {}'
+      if (!enabled || !serving) return 'export {}'
       return [
         `import { createQuello } from ${JSON.stringify(coreEsmPath())}`,
         `createQuello(${JSON.stringify(runtime)})`,
@@ -114,11 +123,12 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
 
     configResolved(config) {
       root = config.root
+      serving = config.command === 'serve'
       picksPath = resolvePicksPath(root, picksFile)
     },
 
     async buildStart() {
-      if (!enabled) return
+      if (!enabled || !serving) return
       if (writeAgentFile) {
         try {
           await ensureAgentFile(root, { file: agentFile, picksFile })

@@ -145,7 +145,7 @@ This package reads picks; something still has to put the picker in your app.
 
 | | |
 | --- | --- |
-| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7 — and Nuxt, SvelteKit, Astro |
+| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7, 8 — and Nuxt, SvelteKit, Astro |
 | [`webpack-plugin-quello`](https://www.npmjs.com/package/webpack-plugin-quello) | webpack 5 |
 | [`@quello/next`](https://www.npmjs.com/package/@quello/next) | Next 14, 15, 16 |
 | [`quello-cli`](https://www.npmjs.com/package/quello-cli) | anything else |
