@@ -42,6 +42,10 @@ Reading the table:
   client-only file.
 - **webpack** needs [`webpack-plugin-quello`](README.md#webpack), which adds the tag through
   `html-webpack-plugin` and the endpoint through `webpack-dev-server`.
+- **Nuxt** works the same on both majors, and a pick knows the same things. Nuxt 4 makes `app/` the
+  Vite root, which is why the plugin writes `.quello/` and the agent file against the *project* root
+  — the nearest directory above with a `package.json` — rather than against whatever Vite serves.
+  Both majors are exercised: [`nuxt3`](playgrounds/nuxt3) and [`nuxt4`](playgrounds/nuxt4).
 - **Its own toolchain** means a dev server quello cannot configure. Angular's is the case in the
   playgrounds: [`npx quello-cli`](README.md#no-bundler-or-a-bundler-quello-cannot-reach) runs the
   endpoint on its own port and the page carries a script tag pointing at it. The same answer works

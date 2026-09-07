@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { features, sections } from '../content'
 
-useHead({ title: 'Overview · quello Nuxt playground' })
+useHead({ title: 'Overview · quello Nuxt 3 playground' })
 const clicks = ref(0)
 </script>
 

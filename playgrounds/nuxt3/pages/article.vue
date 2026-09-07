@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { changelog, sections } from '../content'
 
-useHead({ title: 'Article · quello Nuxt playground' })
+useHead({ title: 'Article · quello Nuxt 3 playground' })
 const email = ref('')
 const topic = ref('bug')
 </script>

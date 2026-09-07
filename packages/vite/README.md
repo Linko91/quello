@@ -62,7 +62,7 @@ correct and still ships no quello code.
 | Option | Default | |
 | --- | --- | --- |
 | `enabled` | `true` | Turn the plugin off without removing it from the config. |
-| `picksFile` | `.quello/picks.json` | Where picks are persisted, relative to the Vite root. |
+| `picksFile` | `.quello/picks.json` | Where picks are persisted, relative to the project root. |
 | `shortcut` | `alt+q` | Declared in full — `ctrl+shift+p`, `f2`. Nothing is implied. |
 | `textLimit` | `120` | Characters of element text kept per pick. |
 | `writeAgentFile` | `true` | Write the quello instructions on first run. |

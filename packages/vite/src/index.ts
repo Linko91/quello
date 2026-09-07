@@ -6,6 +6,7 @@ import {
   DEFAULT_PICKS_FILE,
   ensureAgentFile,
   ensureGitignored,
+  findProjectRoot,
   PICKS_ROUTE,
   resolvePicksPath,
   runtimeAttrs,
@@ -33,7 +34,12 @@ const RESOLVED_VIRTUAL_ID = '\0virtual:quello'
 export interface QuelloPluginOptions {
   /** Turn the plugin off without removing it from the config. Defaults to `true`. */
   enabled?: boolean
-  /** Where picks are persisted, relative to the Vite root. Defaults to `.quello/picks.json`. */
+  /**
+   * Where picks are persisted, relative to the project root — the nearest
+   * directory above Vite's root holding a `package.json`, which on Nuxt 4 and on
+   * any `root: 'src'` config is not the same thing. Defaults to
+   * `.quello/picks.json`.
+   */
   picksFile?: string
   /**
    * Keyboard shortcut that toggles picker mode, declared in full — `alt+q`,
@@ -122,7 +128,11 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     },
 
     configResolved(config) {
-      root = config.root
+      // Vite's root is what it serves, not necessarily where the project lives:
+      // Nuxt 4 points it at `app/`, and so does any config with `root: 'src'`.
+      // Picks, the agent file and the .gitignore entry are project files, so they
+      // follow the package rather than the served directory.
+      root = findProjectRoot(config.root)
       serving = config.command === 'serve'
       picksPath = resolvePicksPath(root, picksFile)
     },
