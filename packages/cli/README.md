@@ -58,6 +58,8 @@ npx quello-cli . --serve    # also serve this folder, for a plain html/js/css pr
 | `-p, --port <n>` | port to listen on — default `5100` |
 | `--host <host>` | host to bind — default `127.0.0.1` |
 | `--shortcut <s>` | picker shortcut, e.g. `"ctrl+shift+p"` — default `alt+q` |
+| `--visibility-shortcut <s>` | hide and show quello — default `alt+shift+q` |
+| `--hidden` | start with quello hidden; the shortcut brings it back |
 | `--agent-file <f>` | agent instructions file — default `AGENTS.md` |
 | `--no-agent-file` | do not write one |
 | `--no-gitignore` | do not add the picks directory to `.gitignore` |

@@ -42,6 +42,13 @@ export interface QuelloNextOptions {
    * just as well. Defaults to `alt+q`.
    */
   shortcut?: string
+  /**
+   * Keyboard shortcut that hides the overlay and brings it back, declared the
+   * same way as `shortcut`. Defaults to `alt+shift+q`.
+   */
+  visibilityShortcut?: string
+  /** Whether the overlay is on the page at startup. Defaults to `true`. */
+  visible?: boolean
   /** Characters of element text kept per pick. Defaults to `120`. */
   textLimit?: number
   /** Write the quello instructions into an agent file on first run. Defaults to `true`. */
@@ -87,6 +94,8 @@ const DEFAULTS: ResolvedQuelloOptions = {
   basePath: DEFAULT_BASE_PATH,
   picksFile: DEFAULT_PICKS_FILE,
   shortcut: 'alt+q',
+  visibilityShortcut: 'alt+shift+q',
+  visible: true,
   textLimit: 120,
   writeAgentFile: true,
   agentFile: DEFAULT_AGENT_FILE,

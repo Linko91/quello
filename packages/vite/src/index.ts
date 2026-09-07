@@ -47,6 +47,13 @@ export interface QuelloPluginOptions {
    * just as well. Defaults to `alt+q`.
    */
   shortcut?: string
+  /**
+   * Keyboard shortcut that hides the overlay and brings it back, declared the
+   * same way as `shortcut`. Defaults to `alt+shift+q`.
+   */
+  visibilityShortcut?: string
+  /** Whether the overlay is on the page at startup. Defaults to `true`. */
+  visible?: boolean
   /** Characters of element text kept per pick. Defaults to `120`. */
   textLimit?: number
   /** Write the quello instructions into an agent file on first run. Defaults to `true`. */
@@ -85,6 +92,8 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
     enabled = true,
     picksFile = DEFAULT_PICKS_FILE,
     shortcut = 'alt+q',
+    visibilityShortcut = 'alt+shift+q',
+    visible = true,
     textLimit = 120,
     writeAgentFile = true,
     agentFile = DEFAULT_AGENT_FILE,
@@ -98,7 +107,16 @@ export default function quello(options: QuelloPluginOptions = {}): Plugin {
   let root = process.cwd()
   let serving = false
 
-  const runtime = { endpoint: PICKS_ROUTE, shortcut, textLimit, htmlMode, htmlLimit, theme }
+  const runtime = {
+    endpoint: PICKS_ROUTE,
+    shortcut,
+    visibilityShortcut,
+    visible,
+    textLimit,
+    htmlMode,
+    htmlLimit,
+    theme,
+  }
 
   return {
     name: 'vite-plugin-quello',

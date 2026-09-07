@@ -45,6 +45,8 @@ The plugin attaches to the dev server's middleware and does nothing in a product
 | `enabled` | `true` | Turn the plugin off without removing it from the config. |
 | `picksFile` | `.quello/picks.json` | Where picks are persisted, relative to the compiler context. |
 | `shortcut` | `alt+q` | Full combination — `ctrl+shift+p`, `f2`. |
+| `visibilityShortcut` | `alt+shift+q` | Hides quello and brings it back. |
+| `visible` | `true` | Whether the overlay is on the page at startup. |
 | `textLimit` | `120` | Characters of element text kept per pick. |
 | `writeAgentFile` | `true` | Write the quello instructions on first run. |
 | `agentFile` | `AGENTS.md` | Relative to the compiler context. |

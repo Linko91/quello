@@ -22,6 +22,13 @@ export interface QuelloWebpackOptions {
   picksFile?: string
   /** Full combination, e.g. `alt+q`, `ctrl+shift+p`, `f2`. */
   shortcut?: string
+  /**
+   * Keyboard shortcut that hides the overlay and brings it back, declared the
+   * same way as `shortcut`. Defaults to `alt+shift+q`.
+   */
+  visibilityShortcut?: string
+  /** Whether the overlay is on the page at startup. Defaults to `true`. */
+  visible?: boolean
   textLimit?: number
   /** Write the quello instructions into an agent file on first run. Defaults to `true`. */
   writeAgentFile?: boolean
@@ -66,6 +73,8 @@ export default class QuelloWebpackPlugin {
       enabled: options.enabled ?? true,
       picksFile: options.picksFile ?? DEFAULT_PICKS_FILE,
       shortcut: options.shortcut ?? 'alt+q',
+      visibilityShortcut: options.visibilityShortcut ?? 'alt+shift+q',
+      visible: options.visible ?? true,
       textLimit: options.textLimit ?? 120,
       writeAgentFile: options.writeAgentFile ?? true,
       agentFile: options.agentFile ?? DEFAULT_AGENT_FILE,
@@ -77,8 +86,18 @@ export default class QuelloWebpackPlugin {
   }
 
   private runtime() {
-    const { shortcut, textLimit, htmlMode, htmlLimit, theme } = this.options
-    return { endpoint: PICKS_ROUTE, shortcut, textLimit, htmlMode, htmlLimit, theme }
+    const { shortcut, visibilityShortcut, visible, textLimit, htmlMode, htmlLimit, theme } =
+      this.options
+    return {
+      endpoint: PICKS_ROUTE,
+      shortcut,
+      visibilityShortcut,
+      visible,
+      textLimit,
+      htmlMode,
+      htmlLimit,
+      theme,
+    }
   }
 
   /** The script tag to paste into a hand-written template. */

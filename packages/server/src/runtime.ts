@@ -35,6 +35,8 @@ export const DEFAULT_AGENT_FILE = 'AGENTS.md'
 export interface RuntimeOptions {
   endpoint?: string
   shortcut?: string
+  visibilityShortcut?: string
+  visible?: boolean
   textLimit?: number
   htmlMode?: string
   htmlLimit?: number
@@ -54,6 +56,9 @@ export function runtimeAttrs(options: RuntimeOptions): Record<string, string> {
   }
   set('endpoint', options.endpoint ?? PICKS_ROUTE)
   set('shortcut', options.shortcut)
+  set('visibility-shortcut', options.visibilityShortcut)
+  // `set` skips undefined, and `true` is the default, so only `false` is worth emitting.
+  if (options.visible === false) set('visible', 'false')
   set('text-limit', options.textLimit)
   set('html-mode', options.htmlMode)
   set('html-limit', options.htmlLimit)

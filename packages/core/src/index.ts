@@ -7,6 +7,7 @@ export { applyTheme, DEFAULT_THEME, normalizeTheme, THEME_VARS } from './theme'
 export type { QuelloTheme } from './theme'
 export {
   DEFAULT_SHORTCUT,
+  DEFAULT_VISIBILITY_SHORTCUT,
   formatShortcut,
   matchesShortcut,
   needsTypingGuard,

@@ -6,6 +6,7 @@ import { collapseText, domPath, stableClasses, uniqueSelector } from './selector
 import { collectHtml, DEFAULT_SETTINGS, loadSettings, normalizeSettings, saveSettings } from './settings'
 import {
   DEFAULT_SHORTCUT,
+  DEFAULT_VISIBILITY_SHORTCUT,
   formatShortcut,
   matchesShortcut,
   needsTypingGuard,
@@ -80,8 +81,10 @@ export class QuelloPicker implements QuelloInstance {
   private readonly transport: PicksTransport
   private readonly textLimit: number
   private readonly shortcut: Shortcut
+  private readonly visibilityShortcut: Shortcut
   private readonly entries: Entry[] = []
   private isEnabled = false
+  private isVisible = true
   private currentSettings: QuelloSettings
   private nextId = 1
   private hovered: Element | null = null
@@ -91,6 +94,10 @@ export class QuelloPicker implements QuelloInstance {
   constructor(options: QuelloOptions = {}) {
     this.textLimit = options.textLimit ?? DEFAULT_TEXT_LIMIT
     this.shortcut = parseShortcut(options.shortcut ?? DEFAULT_SHORTCUT)
+    this.visibilityShortcut = parseShortcut(
+      options.visibilityShortcut ?? DEFAULT_VISIBILITY_SHORTCUT,
+      DEFAULT_VISIBILITY_SHORTCUT,
+    )
     this.transport = new PicksTransport(
       options.endpoint === undefined ? DEFAULT_ENDPOINT : options.endpoint,
     )
@@ -122,7 +129,48 @@ export class QuelloPicker implements QuelloInstance {
     // so the URL itself is what gets watched.
     this.urlTimer = window.setInterval(this.onLocationMaybeChanged, URL_POLL_MS)
     void this.restore()
+    if (options.visible === false) this.hide()
     if (options.autoEnable) this.enable()
+    this.announce()
+  }
+
+  /**
+   * One line on start, naming both shortcuts. It is the only way to discover the
+   * visibility one, and the only way back when `visible: false` means there is no
+   * toolbar to look at.
+   */
+  private announce(): void {
+    const pick = formatShortcut(this.shortcut)
+    const visibility = formatShortcut(this.visibilityShortcut)
+    console.log(
+      `%cquello%c ${pick} to pick · ${visibility} to hide and show quello`,
+      'font-weight:700;color:#e09000',
+      'color:inherit',
+    )
+  }
+
+  get visible(): boolean {
+    return this.isVisible
+  }
+
+  show(): void {
+    if (this.isVisible) return
+    this.isVisible = true
+    this.overlay.setVisible(true)
+  }
+
+  hide(): void {
+    if (!this.isVisible) return
+    // Picking with nothing drawn would leave someone clicking blind, so hiding
+    // leaves picker mode as well. Showing again does not re-enter it.
+    this.disable()
+    this.isVisible = false
+    this.overlay.setVisible(false)
+  }
+
+  toggleVisibility(): void {
+    if (this.isVisible) this.hide()
+    else this.show()
   }
 
   get enabled(): boolean {
@@ -412,8 +460,8 @@ export class QuelloPicker implements QuelloInstance {
    * Combinations that hold Alt, Ctrl or Cmd are left alone, since those do not
    * collide with typing.
    */
-  private isTypingTarget(event: KeyboardEvent): boolean {
-    if (!needsTypingGuard(this.shortcut)) return false
+  private isTypingTarget(event: KeyboardEvent, shortcut: Shortcut): boolean {
+    if (!needsTypingGuard(shortcut)) return false
     const target = event.composedPath()[0]
     if (!(target instanceof HTMLElement)) return false
     return (
@@ -460,8 +508,18 @@ export class QuelloPicker implements QuelloInstance {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    if (matchesShortcut(event, this.shortcut) && !this.isTypingTarget(event)) {
+    if (
+      matchesShortcut(event, this.visibilityShortcut) &&
+      !this.isTypingTarget(event, this.visibilityShortcut)
+    ) {
       event.preventDefault()
+      this.toggleVisibility()
+      return
+    }
+    if (matchesShortcut(event, this.shortcut) && !this.isTypingTarget(event, this.shortcut)) {
+      event.preventDefault()
+      // Reaching for the picker while quello is hidden means you want it back.
+      if (!this.isVisible) this.show()
       this.toggle()
       return
     }

@@ -11,6 +11,9 @@ function readOptions(): QuelloOptions {
   const options: QuelloOptions = {}
   if (data.quelloEndpoint) options.endpoint = data.quelloEndpoint
   if (data.quelloShortcut) options.shortcut = data.quelloShortcut
+  if (data.quelloVisibilityShortcut) options.visibilityShortcut = data.quelloVisibilityShortcut
+  // Only `false` means anything here: absent is the default, which is visible.
+  if (data.quelloVisible === 'false') options.visible = false
   if (data.quelloTextLimit) options.textLimit = Number(data.quelloTextLimit)
   if (data.quelloHtmlMode) options.htmlMode = data.quelloHtmlMode as QuelloOptions['htmlMode']
   if (data.quelloHtmlLimit) options.htmlLimit = Number(data.quelloHtmlLimit)
