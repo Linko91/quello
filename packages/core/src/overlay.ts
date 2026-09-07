@@ -540,6 +540,18 @@ export class Overlay {
     this.applyLayout()
   }
 
+  /**
+   * Show or hide everything quello draws — toolbar, badges and the hover
+   * outline alike, since they all live under this one host.
+   *
+   * Set inline rather than through the `hidden` attribute: `:host { all: initial }`
+   * resets the `display: none` that `[hidden]` would otherwise bring, and an
+   * inline style is the one thing that reset cannot reach past.
+   */
+  setVisible(visible: boolean): void {
+    this.host.style.display = visible ? '' : 'none'
+  }
+
   // --- toolbar placement -------------------------------------------------
 
   private dragOptions() {

@@ -13,6 +13,12 @@ export interface Shortcut {
 
 export const DEFAULT_SHORTCUT = 'alt+q'
 
+/**
+ * Takes the whole overlay off the page and brings it back. A sibling of the
+ * picker shortcut on purpose: one hand, one key away from it.
+ */
+export const DEFAULT_VISIBILITY_SHORTCUT = 'alt+shift+q'
+
 const MODIFIERS: Record<string, keyof Omit<Shortcut, 'key'>> = {
   alt: 'alt',
   opt: 'alt',

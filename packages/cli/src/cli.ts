@@ -23,6 +23,8 @@ interface Args {
   agentFile: string
   gitignorePicks: boolean
   shortcut?: string
+  visibilityShortcut?: string
+  visible: boolean
 }
 
 function parse(argv: string[]): Args {
@@ -36,6 +38,7 @@ function parse(argv: string[]): Args {
     writeAgentFile: true,
     agentFile: DEFAULT_AGENT_FILE,
     gitignorePicks: true,
+    visible: true,
   }
   const rest: string[] = []
   for (let i = 0; i < argv.length; i++) {
@@ -43,6 +46,8 @@ function parse(argv: string[]): Args {
     if (arg === '--port' || arg === '-p') args.port = Number(argv[++i])
     else if (arg === '--host') args.host = String(argv[++i])
     else if (arg === '--shortcut') args.shortcut = String(argv[++i])
+    else if (arg === '--visibility-shortcut') args.visibilityShortcut = String(argv[++i])
+    else if (arg === '--hidden') args.visible = false
     else if (arg === '--serve' || arg === '-s') args.serve = true
     else if (arg === '--agent-file') args.agentFile = String(argv[++i])
     else if (arg === '--no-agent-file') args.writeAgentFile = false
@@ -72,6 +77,8 @@ Options
   -p, --port <n>      port to listen on (default 5100)
       --host <host>   host to bind (default 127.0.0.1)
       --shortcut <s>  picker shortcut, e.g. "ctrl+shift+p" (default alt+q)
+      --visibility-shortcut <s>  hide and show quello (default alt+shift+q)
+      --hidden          start with quello hidden; the shortcut brings it back
       --agent-file <f>  agent instructions file (default AGENTS.md)
       --no-agent-file   do not write one
       --no-gitignore    do not add .quello/ to .gitignore
@@ -129,6 +136,8 @@ async function main(): Promise<void> {
     const attrs = runtimeAttrs({
       endpoint: `${origin}${PICKS_ROUTE}`,
       ...(args.shortcut ? { shortcut: args.shortcut } : {}),
+      ...(args.visibilityShortcut ? { visibilityShortcut: args.visibilityShortcut } : {}),
+      ...(args.visible ? {} : { visible: false }),
     })
     const attrText = Object.entries(attrs)
       .map(([name, value]) => `${name}="${value}"`)

@@ -139,10 +139,24 @@ export interface QuelloOptions {
    * `ctrl+shift+p`, `f2`. Defaults to `alt+q`.
    */
   shortcut?: string
+  /**
+   * Keyboard shortcut that hides the whole overlay and brings it back, declared
+   * the same way as `shortcut`. Defaults to `alt+shift+q`.
+   *
+   * Hiding leaves the picks alone — they are on disk, and they come back with
+   * their badges when the overlay does.
+   */
+  visibilityShortcut?: string
   /** Maximum number of characters kept from an element's text. */
   textLimit?: number
   /** Start with picker mode already enabled. */
   autoEnable?: boolean
+  /**
+   * Whether the overlay is on the page at startup. Defaults to `true`. With
+   * `false` quello loads but stays out of the way until the visibility shortcut
+   * summons it — which the console line printed on start names.
+   */
+  visible?: boolean
   /** Initial value for the `htmlMode` setting, used until the user changes it in the panel. */
   htmlMode?: QuelloHtmlMode
   /** Initial value for the `htmlLimit` setting. */
@@ -156,6 +170,12 @@ export interface QuelloInstance {
   disable(): void
   toggle(): void
   readonly enabled: boolean
+  /** Put the overlay back on the page. */
+  show(): void
+  /** Take the overlay off the page. Leaves picker mode, since picking blind helps nobody. */
+  hide(): void
+  toggleVisibility(): void
+  readonly visible: boolean
   getPicks(): QuelloPick[]
   /** Attach (or, with an empty string, clear) the agent note on a pick. */
   setNote(id: number, note: string): void

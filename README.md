@@ -187,7 +187,31 @@ bookmarks. So you can annotate five elements in the browser and then type four w
 Notes belong to you, not to the element: re-reading a pick after a reload or a route change keeps
 its note intact.
 
-### The shortcut
+### The shortcuts
+
+There are two, and they are declared the same way. `shortcut` toggles picker mode; `visibilityShortcut`
+takes quello off the page and brings it back, for when the toolbar is sitting on the thing you are
+trying to look at.
+
+```ts
+quello({
+  shortcut: 'alt+q',                 // toggle picker mode — the default
+  visibilityShortcut: 'alt+shift+q', // hide and show quello — the default
+  visible: true,                     // whether it is on the page at startup
+})
+```
+
+Hiding leaves picker mode as well: picking with nothing drawn would have you clicking blind. Your
+picks are untouched — they are on disk, and their badges come back with the overlay. Reaching for
+the picker shortcut while quello is hidden brings it back too, since that is plainly what you meant.
+
+With `visible: false` quello loads but stays out of the way until you summon it. That would be a
+good way to lose it entirely, so **on start it prints one line to the console** naming both
+shortcuts:
+
+```
+quello  Alt+Q to pick · Alt+Shift+Q to hide and show quello
+```
 
 `shortcut` is a whole combination, not a key with `Alt` assumed around it, so anything works:
 
@@ -303,6 +327,8 @@ quello({
   enabled: true,                    // turn off without removing the plugin
   picksFile: '.quello/picks.json',  // relative to the project root
   shortcut: 'alt+q',                // full combination, nothing implied
+  visibilityShortcut: 'alt+shift+q',// hides quello and brings it back
+  visible: true,                    // whether the overlay is on the page at startup
   textLimit: 120,                   // characters of element text kept per pick
   writeAgentFile: true,             // write the agent instructions on first run
   agentFile: 'AGENTS.md',           // or CLAUDE.md, GEMINI.md, .github/copilot-instructions.md…

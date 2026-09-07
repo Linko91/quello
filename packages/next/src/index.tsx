@@ -46,6 +46,8 @@ export function Quello(props: QuelloNextOptions = {}): ReactElement | null {
   const attrs = runtimeAttrs({
     endpoint: `${options.basePath}/${PICKS_SEGMENT}`,
     shortcut: options.shortcut,
+    visibilityShortcut: options.visibilityShortcut,
+    visible: options.visible,
     textLimit: options.textLimit,
     htmlMode: options.htmlMode,
     htmlLimit: options.htmlLimit,

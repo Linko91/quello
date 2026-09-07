@@ -64,6 +64,8 @@ correct and still ships no quello code.
 | `enabled` | `true` | Turn the plugin off without removing it from the config. |
 | `picksFile` | `.quello/picks.json` | Where picks are persisted, relative to the project root. |
 | `shortcut` | `alt+q` | Declared in full — `ctrl+shift+p`, `f2`. Nothing is implied. |
+| `visibilityShortcut` | `alt+shift+q` | Hides quello and brings it back. Declared the same way. |
+| `visible` | `true` | Whether the overlay is on the page at startup. |
 | `textLimit` | `120` | Characters of element text kept per pick. |
 | `writeAgentFile` | `true` | Write the quello instructions on first run. |
 | `agentFile` | `AGENTS.md` | Any path works: `CLAUDE.md`, `GEMINI.md`. |
