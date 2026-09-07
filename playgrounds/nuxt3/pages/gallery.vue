@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { groups, tiles } from '../content'
 
-useHead({ title: 'Gallery · quello Nuxt playground' })
+useHead({ title: 'Gallery · quello Nuxt 3 playground' })
 const active = ref<(typeof groups)[number]>('all')
 const shown = computed(() => (active.value === 'all' ? tiles : tiles.filter((t) => t.group === active.value)))
 </script>
