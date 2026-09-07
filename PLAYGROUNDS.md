@@ -66,27 +66,21 @@ source, so the line is gone and the file arrives module-relative
 
 ## The two Nuxt playgrounds
 
-`nuxt3` and `nuxt4` run the same app on the two Nuxt majors. What a pick knows is identical — both
-report the Vue component and its file — but the two differ in where quello *writes*, which is worth
-seeing before a Nuxt 4 user reports it as a bug:
+`nuxt3` and `nuxt4` run the same app on the two Nuxt majors, and a pick knows the same things on
+both — the Vue component and its file. What they exercise is the structural difference:
 
 | | `nuxt3` (5178) | `nuxt4` (5188) |
 | --- | --- | --- |
 | Nuxt | 3.21.11 | 4.5.2 |
 | Bundled Vite | 7.3.6 | 8.2.2 |
 | App lives in | the project root | `app/` |
-| `.quello/` and `AGENTS.md` land in | the project root | **`app/`** |
+| Vite's root | the project root | `app/` |
 
-Nuxt 4 moved the app under `app/` and made that the Vite root. quello resolves its project files
-against the Vite root, so on Nuxt 4 they land inside `app/` rather than beside `package.json`. Picks
-still work — this is about where the files appear, not whether picking does. Point `picksFile` and
-`agentFile` up one level if you would rather have them at the root:
-
-```ts
-quello({ picksFile: '../.quello/picks.json', agentFile: '../AGENTS.md' })
-```
-
-The playgrounds leave the default in place deliberately, so the behaviour stays visible.
+That second row is why the pair exists. Nuxt 4 moved the app under `app/` and made that Vite's root,
+and quello used to write `.quello/`, `AGENTS.md` and the `.gitignore` entry there — inside the source
+directory rather than beside `package.json`, where an agent looks. The plugin now resolves those
+against the **project** root (the nearest directory above Vite's root with a `package.json`), so both
+playgrounds put them in the same place. `nuxt4` is where that stays honest.
 
 The playgrounds consume the packages' built `dist/` rather than their source, so run `pnpm build`
 (or `pnpm dev` for watch mode) before starting one — otherwise you are exercising the previous

@@ -296,7 +296,7 @@ module, so the import still bundles and ships nothing.
 ```ts
 quello({
   enabled: true,                    // turn off without removing the plugin
-  picksFile: '.quello/picks.json',  // relative to the Vite root
+  picksFile: '.quello/picks.json',  // relative to the project root
   shortcut: 'alt+q',                // full combination, nothing implied
   textLimit: 120,                   // characters of element text kept per pick
   writeAgentFile: true,             // write the agent instructions on first run
@@ -349,7 +349,7 @@ page.
 
 ## The `.quello/` directory
 
-The dev server writes picks to `.quello/picks.json` in your Vite root, pretty-printed and ordered by
+The dev server writes picks to `.quello/picks.json` in your project root, pretty-printed and ordered by
 `id`. It is a scratch file describing your current browser session, so it does not belong in a
 commit — quello adds it to your `.gitignore` on first run:
 

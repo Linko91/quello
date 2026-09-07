@@ -1,5 +1,6 @@
 export { DEFAULT_AGENT_FILE, ensureAgentFile, section } from './agent-file'
 export { alreadyIgnored, ensureGitignored, ignorePattern } from './gitignore'
+export { findProjectRoot } from './project-root'
 export type { GitignoreResult } from './gitignore'
 export type { AgentFileOptions, AgentFileResult } from './agent-file'
 export {

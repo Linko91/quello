@@ -158,12 +158,6 @@ playgrounds/*/AGENTS.md
 playgrounds/*/CLAUDE.md
 # …and the .gitignore quello adds beside them, which the root already covers
 playgrounds/*/.gitignore
-# Nuxt 4 puts the app in app/, and that is the Vite root, so quello writes its
-# project files one level deeper there than in every other playground.
-playgrounds/*/app/AGENTS.md
-playgrounds/*/app/CLAUDE.md
-playgrounds/*/app/.gitignore
-playgrounds/*/app/.quello/
 
 .claude/skills
 
