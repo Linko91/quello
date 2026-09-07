@@ -1,8 +1,9 @@
+![quello — "Point at it, then say quello": a visual element picker for AI coding agents, on Vite, webpack, Next, Nuxt, Vue, React, Svelte, Astro and Angular](assets/quello-social.png)
+
 <img src="assets/quello-mark.svg" alt="" width="52" align="left" hspace="14" vspace="4">
 
 # quello
 
-![quello — "Point at it, then say quello": a visual element picker for AI coding agents, on Vite, webpack, Next, Nuxt, Vue, React, Svelte, Astro and Angular](assets/quello-social.png)
 
 [![npm](https://img.shields.io/npm/v/@quello/core?label=npm&color=e09000)](https://www.npmjs.com/package/@quello/core)
 [![dependencies](https://img.shields.io/badge/dependencies-zero-e09000)](packages/core/package.json)
