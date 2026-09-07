@@ -19,6 +19,7 @@ export {
 } from './runtime'
 export type { RuntimeOptions } from './runtime'
 export {
+  CLIENT_PATH_ENV,
   clientBundlePath,
   coreEsmPath,
   MAX_BODY_BYTES,
