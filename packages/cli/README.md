@@ -80,7 +80,7 @@ Use the plugin instead — the script tag is injected for you.
 
 | | |
 | --- | --- |
-| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7 |
+| [`vite-plugin-quello`](https://www.npmjs.com/package/vite-plugin-quello) | Vite 5, 6, 7, 8 |
 | [`webpack-plugin-quello`](https://www.npmjs.com/package/webpack-plugin-quello) | webpack 5 |
 | [`@quello/next`](https://www.npmjs.com/package/@quello/next) | Next 14, 15, 16 |
 

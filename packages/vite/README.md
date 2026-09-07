@@ -48,8 +48,14 @@ if (dev) import('virtual:quello')
 
 ## Dev-only, by construction
 
-The plugin is `apply: 'serve'`. It does not exist in a production build — nothing to tree-shake,
-nothing to remember to remove.
+A production build gets nothing from the plugin: no script tag, no agent file, no runtime in the
+bundle — nothing to tree-shake, nothing to remember to remove.
+
+The one thing it still does in a build is **resolve `virtual:quello` to an empty module**. It has
+to: the dev guard around the import (`if (dev) import('virtual:quello')`) is a runtime check, so
+the bundler still has to resolve that id while building. Rollup only warned about it; Rolldown,
+which Vite 8 builds on, fails the build outright. Resolving it to `export {}` keeps the build
+correct and still ships no quello code.
 
 ## Options
 
