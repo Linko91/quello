@@ -18,7 +18,7 @@ Claude Code, Cursor, Codex, Windsurf & Copilot.
 You pick elements in the running app; quello writes them to `.quello/picks.json` as `PICK 1`,
 `PICK 2`, … Then you say *"make PICK 2 sticky"* and the agent knows exactly which component you mean.
 
-> **MVP status** — dev mode only. Vite, webpack, Next, or no bundler at all: eleven playgrounds
+> **MVP status** — dev mode only. Vite, webpack, Next, or no bundler at all: twelve playgrounds
 > cover the ground. Picks reach your agent through an agent file or over
 > [MCP](#reaching-the-picks-over-mcp).
 > See [Ideas, not built yet](#ideas-not-built-yet) for what else is parked and why.
@@ -463,6 +463,9 @@ Parked deliberately, with the reasoning, so picking one up later does not start 
   `/__nextjs_original-stack-frame`; asking it at pick time would put the line back. Vite has no
   equivalent endpoint, so the general answer is probably to fetch the module's source map and
   resolve the frame in the browser — worth doing once, in `@quello/core`, for every React project.
+  The [`react18` and `react19` playgrounds](PLAYGROUNDS.md#the-two-react-playgrounds) are the same
+  app on the same bundler and differ only in the React version, so they are where this would be
+  measured: today the first reports a line and the second does not.
 
 **Pick list**
 
@@ -524,7 +527,7 @@ These only start paying off past roughly ten picks, which is why none of them ar
 ## Sponsor
 
 quello is free and MIT-licensed, and it will stay that way. It is maintained by one person, and most
-of the work now is upkeep: eleven playgrounds that have to keep agreeing with the
+of the work now is upkeep: twelve playgrounds that have to keep agreeing with the
 [compatibility matrix](COMPATIBILITY.md) as Vite, webpack, Next, Nuxt, Astro and the rest keep
 changing. Sponsoring helps cover the time that takes.
 

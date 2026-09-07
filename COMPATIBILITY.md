@@ -65,8 +65,12 @@ framework rather than the integration route — with one exception worth knowing
 > addresses the **compiled** module and a browser does not run `error.stack` through source maps, so
 > on React 19 a pick carries the file without the line — a file the agent can search beats a line
 > number that quietly points at the wrong element. Next's App Router bundles React 19 whatever your
-> `package.json` says, which is why its row stops at the file; the Vite playground on React 18.3.1
-> still reports the line, and will stop when it upgrades.
+> `package.json` says, which is why its row stops at the file.
+>
+> Both halves are exercised by hand: [`react18`](playgrounds/react18) and
+> [`react19`](playgrounds/react19) are the same app on the same Vite and the same
+> `@vitejs/plugin-react`, differing only in the React version, so picking the same element in each
+> shows the line appear and disappear. See [the two React playgrounds](PLAYGROUNDS.md#the-two-react-playgrounds).
 
 `selector, path, text` is the floor, and it is enough for an agent to find the code — see
 [what a pick can know](#what-a-pick-can-know) for why Solid and Astro sit there.
@@ -79,7 +83,7 @@ one that recognises the element answers:
 | Framework | Read from | Yields |
 | --- | --- | --- |
 | **Vue** | `__vueParentComponent`, or a `data-v-inspector` attribute | name, source file |
-| **React** | the `__reactFiber$…` key, walked up to the nearest named component | name, file and line *when the JSX compiler annotates them* |
+| **React** | the `__reactFiber$…` key, walked up to the nearest named component; then `_debugSource` (React ≤ 18) or the owner stack in `_debugStack` (React 19) | name, file, and the line *when the JSX compiler annotates it* |
 | **Svelte** | `__svelte_meta.loc`, left on every element the dev build creates | name, file, line, column |
 | **Angular** | `window.ng.getComponent` / `getOwningComponent`, Ivy's debug API | name |
 
