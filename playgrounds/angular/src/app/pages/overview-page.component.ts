@@ -13,7 +13,7 @@ import { features, sections } from '../content'
           this page points at that origin.
         </p>
         <div class="badge-row">
-          <span class="pill">Angular 19</span>
+          <span class="pill">Angular 22</span>
           <span class="pill">quello CLI</span>
           <span class="pill">3 routes</span>
           <span class="pill">sticky nav + rail</span>
