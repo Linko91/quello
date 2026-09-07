@@ -2,6 +2,8 @@
 
 # quello
 
+![quello — "Point at it, then say quello": a visual element picker for AI coding agents, on Vite, webpack, Next, Nuxt, Vue, React, Svelte, Astro and Angular](assets/quello-social.png)
+
 [![npm](https://img.shields.io/npm/v/@quello/core?label=npm&color=e09000)](https://www.npmjs.com/package/@quello/core)
 [![dependencies](https://img.shields.io/badge/dependencies-zero-e09000)](packages/core/package.json)
 [![node](https://img.shields.io/node/v/@quello/core?label=node&color=e09000)](https://nodejs.org)
@@ -103,6 +105,8 @@ Start the dev server, then:
 - **Esc** closes the panel if it is open, otherwise leaves picker mode
 
 Picks survive a page reload: on load the runtime re-resolves each stored selector for the current URL.
+
+![Picking elements in a running app while .quello/picks.json fills in beside it, written on every pick](assets/quello-demo.gif)
 
 ### What a pick records
 
