@@ -111,9 +111,19 @@ function fiberOf(el: Element): ReactFiber | null {
   return null
 }
 
-/** Frames belonging to the framework rather than to the code that was written. */
+/**
+ * Frames belonging to the framework rather than to the code that was written.
+ *
+ * `/_next/static/chunks/` is there for Turbopack, the default from Next 16 on.
+ * webpack named its dev modules after the source — `webpack-internal:///(rsc)/./app/page.tsx`
+ * normalises straight back to `app/page.tsx` — while a Turbopack frame points at
+ * the chunk that happens to contain the module, `/_next/static/chunks/_0ltyzvd._.js`.
+ * That is a real file, which is exactly the problem: an agent would open it and
+ * find a bundle. Reporting no file at all leaves the component name, the selector
+ * and the DOM path, all of which lead somewhere.
+ */
 const INTERNAL_FRAME =
-  /(?:\/node_modules\/|next\/dist\/|react-dom|react-jsx|react-stack|react-server|<anonymous>|\[native code\])/
+  /(?:\/node_modules\/|next\/dist\/|\/_next\/static\/chunks\/|react-dom|react-jsx|react-stack|react-server|<anonymous>|\[native code\])/
 
 /**
  * Reduce a stack frame's file to something a developer would recognise:
