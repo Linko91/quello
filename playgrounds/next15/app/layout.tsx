@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Quello } from '@quello/next'
 import './style.css'
 
-export const metadata = { title: 'quello · Next playground' }
+export const metadata = { title: 'quello · Next 15 playground' }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </nav>
         {children}
         <footer className="site-footer">
-          quello · Next playground — three routes, all of them longer than the viewport.
+          quello · Next 15 playground — three routes, all of them longer than the viewport.
         </footer>
         <Quello />
       </body>

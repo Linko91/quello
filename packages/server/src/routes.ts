@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { CLIENT_ROUTE, PICKS_ROUTE } from './runtime'
@@ -13,8 +14,26 @@ export const MAX_BODY_BYTES = 2_000_000
 
 const requireFrom = createRequire(import.meta.url)
 
+/**
+ * An absolute path to the runtime, published by an integration that could
+ * resolve it from plain Node.
+ *
+ * `require.resolve` with a literal specifier is something a bundler reads
+ * statically and rewrites to its own module id. Turbopack — the default from
+ * Next 16 on — turns the call below into
+ * `[project]/…/quello.client.js [app-route] (ecmascript)`: a module reference,
+ * not a file, so reading it fails. Code inside a bundle has no way to undo that,
+ * so the answer has to come from outside one. `@quello/next` sets this in
+ * `next.config`, which Next evaluates in Node before any bundling happens.
+ */
+export const CLIENT_PATH_ENV = 'QUELLO_CLIENT_PATH'
+
 /** Absolute path of the prebuilt, self-executing core runtime. */
 export function clientBundlePath(): string {
+  // Checked rather than trusted: a stale value from an older process would
+  // otherwise turn a working resolve into a 500.
+  const declared = process.env[CLIENT_PATH_ENV]
+  if (declared && existsSync(declared)) return declared
   return requireFrom.resolve('@quello/core/client')
 }
 

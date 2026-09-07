@@ -10,7 +10,7 @@
  */
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
-import { resolvePicksPath } from '@quello/server'
+import { CLIENT_PATH_ENV, clientBundlePath, resolvePicksPath } from '@quello/server'
 import { PICKS_SEGMENT } from '@quello/server/runtime'
 import { OPTIONS_ENV, resolveOptions } from './options'
 import type { QuelloNextOptions, ResolvedQuelloOptions } from './options'
@@ -143,13 +143,25 @@ export function withQuello<T extends NextConfigLike>(
   // `process.env` read is resolved at build time rather than at run time.
   process.env[OPTIONS_ENV] = serialized
 
+  // Where the runtime actually is. This file is the last place Next runs in plain
+  // Node before it starts bundling, and the route that serves the runtime does not
+  // get that luxury: Turbopack rewrites the `require.resolve` inside
+  // `@quello/server` into one of its own module ids, and reading that fails. So
+  // resolve it here, while `require.resolve` still means what it says.
+  const clientPath = clientBundlePath()
+  process.env[CLIENT_PATH_ENV] = clientPath
+
   ensureProjectFiles(root, resolved)
   const created = resolved.scaffoldRoute ? scaffoldRoute(root, resolved) : null
   announce(root, resolved, created)
 
   return {
     ...nextConfig,
-    env: { ...(nextConfig.env ?? {}), [OPTIONS_ENV]: serialized },
+    env: {
+      ...(nextConfig.env ?? {}),
+      [OPTIONS_ENV]: serialized,
+      [CLIENT_PATH_ENV]: clientPath,
+    },
   }
 }
 

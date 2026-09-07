@@ -42,6 +42,11 @@ Reading the table:
   client-only file.
 - **webpack** needs [`webpack-plugin-quello`](README.md#webpack), which adds the tag through
   `html-webpack-plugin` and the endpoint through `webpack-dev-server`.
+- **Next**'s row depends on the bundler under it, not on Next. Both majors read React 19 owner
+  stacks, but a webpack frame names the source (`app/page.tsx`) while a Turbopack frame — the default
+  from Next 16 on — names the chunk holding the module. quello drops the second rather than reporting
+  a bundle as your source file, so a Next 16 pick carries the component without a file.
+  [`next15`](playgrounds/next15) and [`next16`](playgrounds/next16) run both.
 - **Nuxt** works the same on both majors, and a pick knows the same things. Nuxt 4 makes `app/` the
   Vite root, which is why the plugin writes `.quello/` and the agent file against the *project* root
   — the nearest directory above with a `package.json` — rather than against whatever Vite serves.

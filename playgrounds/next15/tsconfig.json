@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "preserve",
+    "types": ["node"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    // The next16 playground puts @types/react@19 in the workspace, where Next's
+    // generated route types reach it before this package's @types/react@18. The
+    // two disagree about `ReactNode` (19 admits `bigint`), which fails the build
+    // on the layout's own `children`. Pin `react` to the copy this app runs on.
+    "paths": {
+      "react": ["./node_modules/@types/react"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

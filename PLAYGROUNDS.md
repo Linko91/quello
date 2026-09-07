@@ -5,10 +5,10 @@
 [README](README.md) · [Compatibility](COMPATIBILITY.md) · [Features](FEATURES.md) ·
 **Playgrounds** · [Brand](BRAND.md) · [Sponsors](SPONSORS.md)
 
-Thirteen manual test apps, one per framework and builder combination — plus a second React and a
-second Nuxt, kept because in both cases the *major version* changes something quello has to deal
-with. They mirror each other: same three routes, same content, so a difference you see belongs to
-the framework and not to the page.
+Fourteen manual test apps, one per framework and builder combination — plus a second React, Nuxt and
+Next, kept because in each case the *major version* changes something quello has to deal with. They
+mirror each other: same three routes, same content, so a difference you see belongs to the framework
+and not to the page.
 
 ## The three shared routes
 
@@ -33,14 +33,14 @@ Each one is a row of the [compatibility matrix](COMPATIBILITY.md), running:
 | [`svelte`](playgrounds/svelte) | 5177 | | [`solid`](playgrounds/solid) | 5183 |
 | [`nuxt3`](playgrounds/nuxt3) | 5178 | | [`sveltekit`](playgrounds/sveltekit) | 5184 |
 | [`astro`](playgrounds/astro) | 5179 | | [`react19`](playgrounds/react19) | 5185 |
-| [`next`](playgrounds/next) | 5180 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
-| [`nuxt4`](playgrounds/nuxt4) | 5188 | | | |
+| [`next15`](playgrounds/next15) | 5180 | | [`angular`](playgrounds/angular) | 5186 (+5187) |
+| [`nuxt4`](playgrounds/nuxt4) | 5188 | | [`next16`](playgrounds/next16) | 5189 |
 
 ```bash
 pnpm play:vue     pnpm play:react18 pnpm play:react19  pnpm play:svelte
 pnpm play:solid   pnpm play:nuxt3   pnpm play:nuxt4    pnpm play:sveltekit
-pnpm play:astro   pnpm play:next    pnpm play:webpack  pnpm play:angular
-pnpm play:vanilla
+pnpm play:astro   pnpm play:next15  pnpm play:next16   pnpm play:webpack
+pnpm play:angular pnpm play:vanilla
 ```
 
 Angular runs two processes — `ng serve` on 5186 and `quello` on 5187 — which is what the CLI route
@@ -81,6 +81,26 @@ and quello used to write `.quello/`, `AGENTS.md` and the `.gitignore` entry ther
 directory rather than beside `package.json`, where an agent looks. The plugin now resolves those
 against the **project** root (the nearest directory above Vite's root with a `package.json`), so both
 playgrounds put them in the same place. `nuxt4` is where that stays honest.
+
+## The two Next playgrounds
+
+`next15` and `next16` are the same app on the two Next majors. The difference that matters is not
+Next itself but the **bundler underneath it**: Next 16 makes Turbopack the default, and Turbopack
+names its dev modules differently from webpack.
+
+| | `next15` (5180) | `next16` (5189) |
+| --- | --- | --- |
+| Next | 15.5.24 | 16.3.4 |
+| Bundler | webpack | Turbopack |
+| React | 18.3.1 | 19.2.8 |
+| A pick carries | component, **file** | component |
+
+Both run React 19 internally — the App Router bundles it whatever `package.json` says — so both read
+owner stacks. On webpack a frame reads `webpack-internal:///(rsc)/./app/page.tsx` and normalises
+back to `app/page.tsx`. Turbopack points at the chunk that happens to hold the module,
+`/_next/static/chunks/_0ltyzvd._.js`, which is a real file and exactly the wrong one: an agent would
+open it and find a bundle. quello drops that frame rather than reporting it, so a Turbopack pick
+carries the component name, the selector and the DOM path — all of which lead somewhere.
 
 The playgrounds consume the packages' built `dist/` rather than their source, so run `pnpm build`
 (or `pnpm dev` for watch mode) before starting one — otherwise you are exercising the previous
