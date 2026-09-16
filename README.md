@@ -29,6 +29,25 @@ You pick elements in the running app; quello writes them to `.quello/picks.json`
 Maintained by one person. If it turns out to be useful to you, you can
 [sponsor it](#sponsor).
 
+## Not an inspector
+
+Your browser's element picker and your framework's inspector — Vue DevTools, Svelte Inspector,
+Nuxt DevTools — answer the same first question: *which element is this?* The difference is what
+happens once you click.
+
+| | The inspector | quello |
+| --- | --- | --- |
+| **On click** | opens your editor at that line | appends the pick to `.quello/picks.json` |
+| **Who reads it** | you | your agent |
+| **How many** | one, and it is gone | as many as you need, numbered `PICK 1`, `PICK 2`, … |
+| **After a reload** | nothing to keep | every pick is re-resolved and its badge comes back |
+| **What it carries** | file and line | selector, text, attributes, computed styles — and component, file and line where the framework exposes them |
+| **Instructions** | — | a note on any pick, then *"resolve the picks"* |
+
+The inspector is the right tool when your next step is *open this file*. quello is for when the
+next step is *tell the agent which ones I mean* — and by the time you type, the agent already knows
+what you clicked.
+
 ## Packages
 
 | Package | Description |
