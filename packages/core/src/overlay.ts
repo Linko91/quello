@@ -582,7 +582,10 @@ export class Overlay {
     // the puck appears where the toolbar's controls just were, not somewhere else.
     const before = this.dock.getBoundingClientRect()
     this.compact = compact
-    if (compact) this.togglePanel(false)
+    if (compact) {
+      this.togglePanel(false)
+      this.togglePicksList(false)
+    }
     this.applyLayout()
 
     if (this.position) {
