@@ -1,5 +1,6 @@
 import { iconSvg, logoSvg, markSvg } from './brand'
 import { clampToViewport, draggable, EDGE_MARGIN } from './drag'
+import { guardFocus } from './focus-guard'
 import { PicksList, PICKS_LIST_STYLES } from './picks-list'
 import { SettingsPanel, SETTINGS_PANEL_STYLES } from './settings-panel'
 import { applyTheme } from './theme'
@@ -426,6 +427,13 @@ export class Overlay {
   private readonly noteEditor: HTMLElement
   private readonly noteInput: HTMLTextAreaElement
   private noteFor: number | null = null
+  /** The page element that had focus before the note editor took it. */
+  private focusBeforeNote: HTMLElement | null = null
+  /**
+   * The page element focused when quello was last pressed: a press on a badge blurs it
+   * (to the body) before the click that opens the note.
+   */
+  private focusBeforePress: HTMLElement | null = null
 
   private readonly nodes = new Map<number, BadgeNodes>()
   private readonly teardown: Array<() => void> = []
@@ -533,6 +541,12 @@ export class Overlay {
     )
     window.addEventListener('resize', this.onResize)
     this.teardown.push(() => window.removeEventListener('resize', this.onResize))
+    this.teardown.push(guardFocus(this.host))
+    const onPress = (): void => {
+      this.focusBeforePress = pageFocus(this.host)
+    }
+    this.host.addEventListener('pointerdown', onPress, true)
+    this.teardown.push(() => this.host.removeEventListener('pointerdown', onPress, true))
   }
 
   mount(): void {
@@ -715,7 +729,7 @@ export class Overlay {
     remove.addEventListener('click', () => {
       const id = this.noteFor
       this.noteFor = null // drop the note: the pick is going away
-      this.noteEditor.hidden = true
+      this.hideNoteEditor()
       if (id !== null) this.handlers.onRemovePick(id)
     })
     row.append(hint, remove)
@@ -730,7 +744,9 @@ export class Overlay {
 
   /** Open the note editor for a pick, anchored to its badge. */
   openNote(id: number, note: string): void {
-    if (this.noteFor !== null && this.noteFor !== id) this.closeNote()
+    if (this.noteFor !== null && this.noteFor !== id) this.saveNote()
+    if (this.noteFor === null) this.focusBeforeNote = pageFocus(this.host) ?? this.focusBeforePress
+    this.focusBeforePress = null
     this.noteFor = id
     const heading = this.noteEditor.querySelector('h3')
     if (heading) heading.textContent = `Note for PICK ${id}`
@@ -744,11 +760,28 @@ export class Overlay {
 
   /** Every way out of the editor keeps what was typed; an empty note clears it. */
   closeNote(): void {
+    if (this.noteFor === null) return
+    this.saveNote()
+    this.hideNoteEditor()
+  }
+
+  private saveNote(): void {
     const id = this.noteFor
     if (id === null) return
     this.noteFor = null
-    this.noteEditor.hidden = true
     this.handlers.onNoteChange(id, this.noteInput.value)
+  }
+
+  /**
+   * Hide the editor and, if focus was still in it, hand it back to where it was
+   * on the page — a field in a modal keeps working as if quello was never there.
+   */
+  private hideNoteEditor(): void {
+    const hadFocus = this.noteEditor.contains(this.root.activeElement)
+    this.noteEditor.hidden = true
+    const previous = this.focusBeforeNote
+    this.focusBeforeNote = null
+    if (hadFocus && previous?.isConnected) previous.focus({ preventScroll: true })
   }
 
   /**
@@ -968,6 +1001,13 @@ export class Overlay {
     for (const off of this.teardown) off()
     this.host.remove()
   }
+}
+
+/** The page element holding focus now, if any: never quello's host or the bare body. */
+function pageFocus(host: HTMLElement): HTMLElement | null {
+  const active = document.activeElement
+  if (!(active instanceof HTMLElement) || active === host || active === document.body) return null
+  return active
 }
 
 /** Minimal stand-in so `setPicks` stays callable with badges alone (tests, direct use). */
